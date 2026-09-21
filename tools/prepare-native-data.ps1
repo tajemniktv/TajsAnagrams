@@ -21,7 +21,7 @@ function Fetch([string]$Url, [string]$Path) {
         Copy-Item -LiteralPath (Join-Path $SourceDirectory (Split-Path -Leaf $Path)) -Destination $Path
         return
     }
-    Invoke-WebRequest -Uri $Url -OutFile "$Path.partial" -UserAgent 'TajsAnagrams-native-data/1.0 (https://github.com/tajemniktv/AnagramSolver)' -TimeoutSec 120
+    Invoke-WebRequest -Uri $Url -OutFile "$Path.partial" -UserAgent 'TajsAnagrams-native-data/1.0 (https://github.com/tajemniktv/TajsAnagrams)' -TimeoutSec 120
     Move-Item -LiteralPath "$Path.partial" -Destination $Path
 }
 foreach ($directory in @('dictionary', 'ngrams', 'wordnet31/dict')) {

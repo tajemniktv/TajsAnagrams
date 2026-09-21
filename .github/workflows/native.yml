@@ -23,6 +23,13 @@ jobs:
       - run: cargo +stable test --locked -p anagram-core -p anagram-cli
       - run: cargo +stable build --locked -p anagram-cli
       - run: python tools/generate_contracts.py --check
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - run: npm ci
+        working-directory: contracts
+      - run: npm run check
+        working-directory: contracts
       - run: python -m pip install jsonschema==4.26.0
       - run: python tests/parity/contracts.py
       - run: python tests/parity/generation.py

@@ -1,6 +1,10 @@
 # One owner for preflight, migration, provisioning and executable publication.
 # Rollback covers synchronous failures; a process/power failure retains recovery
 # snapshots and a journal in the project's .codex/temp for manual recovery.
+# journal.previous.json is the prior published generation; journal.next.json may
+# be incomplete. Flushed files and atomic journal replacement do not make the
+# transaction crash-atomic: moves can precede journal publication, and filesystem
+# metadata/storage durability after power loss is not guaranteed.
 function Assert-DesktopPath([string]$Path, [switch]$Tree) {
     $ancestor = [IO.Path]::GetFullPath($Path)
     while ($ancestor) {
@@ -73,7 +77,19 @@ function New-DesktopInstallPlan {
 
 function Add-DesktopJournal($Tx, $Entry) {
     $Tx.Journal.Add($Entry)
-    ConvertTo-Json -InputObject @($Tx.Journal.ToArray()) -Depth 5 | Set-Content -LiteralPath (Join-Path $Tx.Recovery 'journal.json') -Encoding utf8
+    $journal = Join-Path $Tx.Recovery 'journal.json'
+    $next = Join-Path $Tx.Recovery 'journal.next.json'
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-Json -InputObject @($Tx.Journal.ToArray()) -Depth 5))
+    $stream = [IO.File]::Open($next, [IO.FileMode]::Create, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try {
+        $stream.Write($bytes, 0, $bytes.Length)
+        $stream.Flush($true)
+    } finally { $stream.Dispose() }
+    if ([IO.File]::Exists($journal)) {
+        [IO.File]::Replace($next, $journal, (Join-Path $Tx.Recovery 'journal.previous.json'))
+    } else {
+        [IO.File]::Move($next, $journal)
+    }
 }
 function Complete-DesktopStep($Tx, [string]$Name) { & $Tx.AfterStep $Name }
 function New-DesktopDirectory($Tx, [string]$Path) {
@@ -97,6 +113,8 @@ function Save-DesktopFile($Tx, [string]$Destination) {
     if (Test-Path -LiteralPath $Destination) {
         $original = Join-Path $Tx.Recovery ([guid]::NewGuid().ToString('N') + '.original')
         [IO.File]::Copy($Destination, $original, $false)
+        $snapshot = [IO.File]::Open($original, [IO.FileMode]::Open, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        try { $snapshot.Flush($true) } finally { $snapshot.Dispose() }
         if ((Get-FileHash -LiteralPath $Destination).Hash -ne (Get-FileHash -LiteralPath $original).Hash) { throw "Snapshot verification failed: $Destination" }
     }
     Add-DesktopJournal $Tx ([pscustomobject]@{ Kind='file'; Source=$original; Destination=$Destination })

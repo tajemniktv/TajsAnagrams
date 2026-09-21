@@ -231,7 +231,7 @@ fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
     tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(error)?.block_on(async {
         let work = async {
             let client = reqwest::Client::builder().connect_timeout(Duration::from_secs(15))
-                .user_agent(concat!("TajsAnagrams/", env!("CARGO_PKG_VERSION"), " (https://github.com/tajemniktv/AnagramSolver)"))
+                .user_agent(concat!("TajsAnagrams/", env!("CARGO_PKG_VERSION"), " (https://github.com/tajemniktv/TajsAnagrams)"))
                 .read_timeout(Duration::from_secs(30)).timeout(Duration::from_secs(3600)).build().map_err(error)?;
             let mut response = client.get(url).send().await.map_err(error)?.error_for_status().map_err(error)?;
             let mut file = fs::File::create_new(output).map_err(error)?;
@@ -491,7 +491,7 @@ mod tests {
                 assert!(request.contains(concat!(
                     "user-agent: tajsanagrams/",
                     env!("CARGO_PKG_VERSION"),
-                    " (https://github.com/tajemniktv/anagramsolver)"
+                    " (https://github.com/tajemniktv/tajsanagrams)"
                 )));
                 write!(
                     stream,

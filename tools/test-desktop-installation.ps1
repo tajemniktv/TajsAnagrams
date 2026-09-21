@@ -40,6 +40,41 @@ function Run-Fixture($f, [scriptblock]$After = {}, [scriptblock]$Activate = {}) 
     Invoke-DesktopInstallation -Plan $plan -Candidate $f.Candidate -CreateShortcut $link -Activate $Activate -AfterStep $After | Out-Null
 }
 $steps = [Collections.Generic.List[string]]::new()
+# Exercise real publication failures, not a mocked serializer: the last complete
+# generation must survive, while in-memory rollback still includes the new entry.
+$recovery = Join-Path $root 'journal-publication'
+[void][IO.Directory]::CreateDirectory($recovery)
+$tx = @{ Recovery=$recovery; Journal=[Collections.Generic.List[object]]::new() }
+$journal = Join-Path $recovery 'journal.json'
+$previous = Join-Path $recovery 'journal.previous.json'
+foreach ($number in 1..3) { Add-DesktopJournal $tx ([pscustomobject]@{ Kind='directory'; Destination="directory-$number" }) }
+Assert-True (@(Get-Content -LiteralPath $journal -Raw | ConvertFrom-Json).Count -eq 3) 'Current journal generation missing'
+Assert-True (@(Get-Content -LiteralPath $previous -Raw | ConvertFrom-Json).Count -eq 2) 'Previous journal generation missing'
+$beforeJournal = [IO.File]::ReadAllText($journal)
+foreach ($blockedPath in @((Join-Path $recovery 'journal.next.json'), $journal)) {
+    $held = [IO.File]::Open($blockedPath, [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+    $count = $tx.Journal.Count
+    try {
+        $failed = $false
+        try { Add-DesktopJournal $tx ([pscustomobject]@{ Kind='directory'; Destination='unpublished' }) } catch { $failed = $true }
+        Assert-True $failed 'Expected locked-file journal publication failure'
+        Assert-True ($tx.Journal.Count -eq $count + 1) 'Publication failure lost in-memory rollback entry'
+    } finally { $held.Dispose() }
+    Assert-True ([IO.File]::ReadAllText($journal) -eq $beforeJournal) 'Publication failure damaged the committed journal'
+}
+$rollbackFile = Join-Path $recovery 'rollback-target.txt'
+Write-Fixture $rollbackFile 'original content'
+$tx = @{ Recovery=$recovery; Journal=[Collections.Generic.List[object]]::new() }
+$held = [IO.File]::Open($journal, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+try {
+    $failed = $false
+    try { $null = Save-DesktopFile $tx $rollbackFile } catch { $failed = $true }
+    Assert-True $failed 'Expected snapshot journal publication failure'
+} finally { $held.Dispose() }
+Write-Fixture $rollbackFile 'changed content'
+Undo-DesktopInstallation $tx
+Assert-True ([IO.File]::ReadAllText($rollbackFile) -eq 'original content') 'Snapshot rollback failed after journal publication failure'
+Write-Output 'Journal checks passed: generation rotation, write/replace failure preservation, and snapshot rollback.'
 $f = New-Fixture 'success'
 Run-Fixture $f { param($step) $steps.Add($step) }
 $installed = Join-Path $f.LocalData 'Programs/TajemnikTV/TajsAnagrams'
