@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "testing_anagram_solver",
+      "split": "test",
+      "source": "testinganagramsolver",
+      "relevance": {"Testing Anagram Solver": 3},
+      "negatives": ["Solver Testing Anagram", "Anagram Solver Testing", "A German Signs To Travel", "Given Games Translator"],
+      "provenance": "Project product sanity fixture; curated, not externally derived"
+    },
+    {
+      "id": "knowledge_power",
+      "split": "test",
+      "source": "knowledgeispower",
+      "relevance": {"Knowledge Is Power": 3},
+      "negatives": ["Power Is Knowledge", "Is Power Knowledge"],
+      "provenance": "Project ordering registry: knowledge_power; familiar aphorism"
+    },
+    {
+      "id": "actions_words",
+      "split": "test",
+      "source": "actionsspeaklouderthanwords",
+      "relevance": {"Actions Speak Louder Than Words": 3},
+      "negatives": ["Words Speak Louder Than Actions", "Actions Louder Speak Than Words", "The Track Downloads Persuasion"],
+      "provenance": "Project ordering registry: actions_words; familiar aphorism"
+    },
+    {
+      "id": "voldemort_reveal",
+      "split": "test",
+      "source": "iamlordvoldemort",
+      "relevance": {"I Am Lord Voldemort": 3},
+      "negatives": ["Voldemort I Am Lord", "Lord Am I Voldemort"],
+      "provenance": "Project ordering registry: voldemort_reveal; proper-name fictional title"
+    },
+    {
+      "id": "small_birds",
+      "split": "validation",
+      "source": "smallbirdssingatdawn",
+      "relevance": {"Small Birds Sing At Dawn": 3},
+      "negatives": ["At Dawn Sing Small Birds", "Small Sing Birds At Dawn"],
+      "provenance": "Project ordering registry: birds_dawn; authored ordinary clause"
+    },
+    {
+      "id": "keys_table",
+      "split": "validation",
+      "source": "thekeysareonyourtable",
+      "relevance": {"The Keys Are On Your Table": 3},
+      "negatives": ["Your Table Are On The Keys", "The Table Are On Your Keys"],
+      "provenance": "Project ordering registry: keys_table; authored ordinary clause"
+    },
+    {
+      "id": "quiet_machine",
+      "split": "train",
+      "source": "thismachinerunsquietly",
+      "relevance": {"This Machine Runs Quietly": 3},
+      "negatives": ["Quietly Runs This Machine", "Machine This Runs Quietly"],
+      "provenance": "Project ordering registry: machine_quietly; authored ordinary clause"
+    }
+  ]
+}
