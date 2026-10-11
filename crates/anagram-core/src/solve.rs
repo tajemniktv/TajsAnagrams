@@ -87,7 +87,7 @@ fn one_worker() -> usize {
     1
 }
 fn corpus(e: std::io::Error) -> Error {
-    Error::new("corpus_error", e.to_string())
+    Error::corpus(e)
 }
 
 pub fn solve(request: &Request, paths: Paths<'_>) -> std::result::Result<Result, Error> {
@@ -239,33 +239,42 @@ fn run(
     cache: Option<&crate::cache::Config<'_>>,
 ) -> std::result::Result<Result, Error> {
     validate(request)?;
+    let mut corpus_budget = limits.corpus_read_budget();
     let model = paths
         .model
-        .map(|p| crate::learned::Model::load_controlled(p, control))
+        .map(|p| crate::learned::Model::load_controlled_with_budget(p, control, &mut corpus_budget))
         .transpose()
         .map_err(corpus)?;
     if let Some(identity) = model.as_ref().and_then(crate::learned::Model::identity) {
         progress.status.versions.data.push(identity.clone());
     }
-    let unigram_source = Snapshot::load(paths.unigrams, "unigrams", control).map_err(corpus)?;
+    let unigram_source =
+        Snapshot::load_with_budget(paths.unigrams, "unigrams", control, &mut corpus_budget)
+            .map_err(corpus)?;
     progress
         .status
         .versions
         .data
         .push(unigram_source.identity.clone());
-    let dictionary = Snapshot::load(paths.dictionary, "dictionary", control).map_err(corpus)?;
+    let dictionary =
+        Snapshot::load_with_budget(paths.dictionary, "dictionary", control, &mut corpus_budget)
+            .map_err(corpus)?;
     progress
         .status
         .versions
         .data
         .push(dictionary.identity.clone());
-    let bigram_source = Snapshot::load(paths.bigrams, "bigrams", control).map_err(corpus)?;
+    let bigram_source =
+        Snapshot::load_with_budget(paths.bigrams, "bigrams", control, &mut corpus_budget)
+            .map_err(corpus)?;
     progress
         .status
         .versions
         .data
         .push(bigram_source.identity.clone());
-    let (mut lex, identities) = WordNet::load_identified(paths.wordnet, control).map_err(corpus)?;
+    let (mut lex, identities) =
+        WordNet::load_identified_with_budget(paths.wordnet, control, &mut corpus_budget)
+            .map_err(corpus)?;
     progress.status.versions.data.extend(identities);
     let phrase = paths
         .phrase
@@ -273,11 +282,11 @@ fn run(
         .transpose()
         .map_err(corpus)?;
     if let Some(index) = &phrase {
-        progress
-            .status
-            .versions
-            .data
-            .push(index.identity().map_err(corpus)?);
+        progress.status.versions.data.push(
+            index
+                .identity_with_budget(&mut corpus_budget)
+                .map_err(corpus)?,
+        );
     }
     progress.status.versions.data_complete = true;
     let mut cache_store = cache

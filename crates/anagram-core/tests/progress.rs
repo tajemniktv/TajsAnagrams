@@ -577,6 +577,29 @@ fn queued_timeout_and_running_policy_failure_are_distinct() {
 }
 
 #[test]
+fn oversized_synthetic_corpus_fails_with_a_typed_read_budget_error() {
+    let corpora = Corpora::new();
+    let limits = DeploymentLimits {
+        max_corpus_role_bytes: Some(1024),
+        max_total_corpus_bytes: Some(1),
+        ..Default::default()
+    };
+    let mut events = Vec::new();
+    let error = match corpora.run(&limits, &Control::default(), &mut |event| {
+        events.push(event.clone())
+    }) {
+        Err(error) => error,
+        Ok(_) => panic!("oversized corpus should be rejected"),
+    };
+    assert_eq!(error.code, "corpus_too_large");
+    assert!(error.message.contains("aggregate byte limit of 1"));
+    assert_eq!(
+        events.last().unwrap().error.as_ref().unwrap().code,
+        "corpus_too_large"
+    );
+}
+
+#[test]
 fn cancellation_during_finalization_never_claims_published_rows() {
     let corpora = Corpora::new();
     let control = Control::default();

@@ -3,11 +3,24 @@ use crate::{control::Control, normalize_letters, request::Error, solve::Request}
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize, schemars::JsonSchema)]
+/// Bound to the preparation tools' existing maximum size for one corpus source.
+pub const DEFAULT_MAX_CORPUS_ROLE_BYTES: usize = 2 * 1024 * 1024 * 1024;
+/// Finite aggregate input budget. Parser allocations and SQLite pages are
+/// additional; this is not a process heap limit.
+pub const DEFAULT_MAX_TOTAL_CORPUS_BYTES: usize = 3 * 1024 * 1024 * 1024;
+
+#[derive(Clone, Debug, Deserialize, Serialize, schemars::JsonSchema)]
 #[serde(default, deny_unknown_fields)]
 pub struct DeploymentLimits {
     #[schemars(range(min = 1, max = 9007199254740991_u64))]
     pub max_input_bytes: Option<usize>,
+    /// Maximum source bytes per corpus role: file bytes, decompressed title
+    /// bytes, or canonical phrase-index JSON bytes.
+    #[schemars(range(min = 1, max = 9007199254740991_u64))]
+    pub max_corpus_role_bytes: Option<usize>,
+    /// Maximum aggregate corpus source bytes within one intake phase.
+    #[schemars(range(min = 1, max = 9007199254740991_u64))]
+    pub max_total_corpus_bytes: Option<usize>,
     #[schemars(range(min = 1, max = 9007199254740991_u64))]
     pub max_normalized_letters: Option<usize>,
     #[schemars(range(min = 1, max = 9007199254740991_u64))]
@@ -22,10 +35,28 @@ pub struct DeploymentLimits {
     pub timeout_ms: Option<u64>,
 }
 
+impl Default for DeploymentLimits {
+    fn default() -> Self {
+        Self {
+            max_input_bytes: None,
+            max_corpus_role_bytes: Some(DEFAULT_MAX_CORPUS_ROLE_BYTES),
+            max_total_corpus_bytes: Some(DEFAULT_MAX_TOTAL_CORPUS_BYTES),
+            max_normalized_letters: None,
+            max_candidates: None,
+            max_deep_analyzed: None,
+            max_beam_width: None,
+            max_retained_orders: None,
+            timeout_ms: None,
+        }
+    }
+}
+
 impl DeploymentLimits {
     pub fn validate(&self) -> Result<(), Error> {
         let values = [
             self.max_input_bytes,
+            self.max_corpus_role_bytes,
+            self.max_total_corpus_bytes,
             self.max_normalized_letters,
             self.max_candidates,
             self.max_deep_analyzed,
@@ -44,6 +75,13 @@ impl DeploymentLimits {
             ));
         }
         Ok(())
+    }
+
+    pub fn corpus_read_budget(&self) -> crate::provenance::CorpusReadBudget {
+        crate::provenance::CorpusReadBudget::new(
+            self.max_corpus_role_bytes,
+            self.max_total_corpus_bytes,
+        )
     }
 
     /// Reject rather than silently narrowing a requested semantic workload.
@@ -144,6 +182,36 @@ mod tests {
         assert_eq!(
             policy.admit_deep(4).unwrap_err().code,
             "deployment_limit_exceeded"
+        );
+    }
+
+    #[test]
+    fn corpus_read_limits_default_to_finite_budgets_and_reject_zero() {
+        let defaults = DeploymentLimits::default();
+        assert_eq!(
+            defaults.max_corpus_role_bytes,
+            Some(DEFAULT_MAX_CORPUS_ROLE_BYTES)
+        );
+        assert_eq!(
+            defaults.max_total_corpus_bytes,
+            Some(DEFAULT_MAX_TOTAL_CORPUS_BYTES)
+        );
+        let from_empty_policy: DeploymentLimits = serde_json::from_str("{}").unwrap();
+        assert_eq!(
+            from_empty_policy.max_corpus_role_bytes,
+            Some(DEFAULT_MAX_CORPUS_ROLE_BYTES)
+        );
+        let from_disabled_policy: DeploymentLimits =
+            serde_json::from_str("{\"max_total_corpus_bytes\":null}").unwrap();
+        assert_eq!(from_disabled_policy.max_total_corpus_bytes, None);
+
+        let invalid = DeploymentLimits {
+            max_corpus_role_bytes: Some(0),
+            ..defaults
+        };
+        assert_eq!(
+            invalid.validate().unwrap_err().code,
+            "invalid_deployment_limits"
         );
     }
 }

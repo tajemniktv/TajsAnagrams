@@ -228,6 +228,14 @@ pub const FORMAT_VERSION: u32 = 2;
 /// Deployment deadlines and observer/job identity are deliberately not semantic
 /// inputs; only successful completed computations may be stored under this key.
 pub fn ranked_key(request: &solve::Request, versions: &Versions) -> Result<String, Error> {
+    ranked_key_with_build_id(request, versions, env!("ANAGRAM_CORE_BUILD_ID"))
+}
+
+fn ranked_key_with_build_id(
+    request: &solve::Request,
+    versions: &Versions,
+    build_id: &str,
+) -> Result<String, Error> {
     solve::validate(request)?;
     if !versions.data_complete || versions.engine.is_empty() || versions.ranking.is_empty() {
         return Err(Error::new(
@@ -270,9 +278,43 @@ pub fn ranked_key(request: &solve::Request, versions: &Versions) -> Result<Strin
         FORMAT_VERSION,
         &versions.engine,
         &versions.ranking,
+        build_id,
         data,
         semantic,
     ))
     .map_err(encode)?;
     Ok(format!("{:x}", Sha256::digest(bytes)))
+}
+
+#[cfg(test)]
+mod build_identity_tests {
+    use super::*;
+
+    #[test]
+    fn cache_identity_changes_when_the_core_build_identity_changes() {
+        let fixtures: serde_json::Value =
+            serde_json::from_str(include_str!("../../../contracts/fixtures.json")).unwrap();
+        let value = fixtures
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|value| value["schema"] == "SolveRequest" && value["valid"] == true)
+            .unwrap()["value"]
+            .clone();
+        let request: solve::Request = serde_json::from_value(value).unwrap();
+        let versions = Versions {
+            engine: env!("CARGO_PKG_VERSION").to_owned(),
+            ranking: "native-ranking-v2".to_owned(),
+            data: vec![crate::provenance::Snapshot::absent("dictionary")],
+            data_complete: true,
+        };
+        assert_eq!(
+            ranked_key(&request, &versions).unwrap(),
+            ranked_key_with_build_id(&request, &versions, env!("ANAGRAM_CORE_BUILD_ID")).unwrap()
+        );
+        assert_ne!(
+            ranked_key_with_build_id(&request, &versions, "build-a").unwrap(),
+            ranked_key_with_build_id(&request, &versions, "build-b").unwrap()
+        );
+    }
 }

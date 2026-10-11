@@ -1,6 +1,8 @@
 //! Offline native tooling. Writes are staged next to explicit outputs and never
 //! overwrite an existing model/corpus. No solver subprocess or Python dependency.
-use anagram_core::{control::Control, request::Error};
+use anagram_core::{
+    control::Control, policy::DeploymentLimits, provenance::CorpusReadBudget, request::Error,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -12,6 +14,13 @@ use std::{
 };
 fn err(e: impl std::fmt::Display) -> Error {
     Error::new("tool_error", e.to_string())
+}
+fn corpus_err(e: io::Error) -> Error {
+    if e.kind() == io::ErrorKind::FileTooLarge {
+        Error::corpus(e)
+    } else {
+        err(e)
+    }
 }
 pub fn is_command(name: &str) -> bool {
     matches!(
@@ -47,14 +56,22 @@ fn stage(path: &Path) -> Result<tempfile::NamedTempFile, Error> {
     tempfile::NamedTempFile::new_in(parent).map_err(err)
 }
 pub fn run(args: &[OsString], control: &Control) -> Result<Value, Error> {
+    run_with_limits(args, control, &DeploymentLimits::default())
+}
+
+pub fn run_with_limits(
+    args: &[OsString],
+    control: &Control,
+    limits: &DeploymentLimits,
+) -> Result<Value, Error> {
     if args
         .first()
         .is_some_and(|arg| arg.to_string_lossy().starts_with("ranker-"))
     {
         let bytes = read_stdin(control, 16 * 1024 * 1024)?;
-        run_with_input(args, control, &mut io::Cursor::new(bytes))
+        run_with_input_and_limits(args, control, &mut io::Cursor::new(bytes), limits)
     } else {
-        run_with_input(args, control, &mut io::empty())
+        run_with_input_and_limits(args, control, &mut io::empty(), limits)
     }
 }
 
@@ -92,8 +109,21 @@ pub fn run_with_input(
     control: &Control,
     source: &mut dyn Read,
 ) -> Result<Value, Error> {
+    run_with_input_and_limits(args, control, source, &DeploymentLimits::default())
+}
+
+pub fn run_with_input_and_limits(
+    args: &[OsString],
+    control: &Control,
+    source: &mut dyn Read,
+    limits: &DeploymentLimits,
+) -> Result<Value, Error> {
+    limits.validate()?;
+    let mut budget = limits.corpus_read_budget();
     match args.first().and_then(|a| a.to_str()).unwrap_or("") {
-        "ranker-build" if (2..=3).contains(&args.len()) => build_groups(args, control, source),
+        "ranker-build" if (2..=3).contains(&args.len()) => {
+            build_groups(args, control, source, &mut budget)
+        }
         "ranker-train" if args.len() == 2 => {
             #[derive(Deserialize)]
             struct Training {
@@ -113,8 +143,12 @@ pub fn run_with_input(
             )
         }
         "ranker-rank" if args.len() == 2 => {
-            let model = anagram_core::learned::Model::load_controlled(Path::new(&args[1]), control)
-                .map_err(err)?;
+            let model = anagram_core::learned::Model::load_controlled_with_budget(
+                Path::new(&args[1]),
+                control,
+                &mut budget,
+            )
+            .map_err(corpus_err)?;
             let items: Vec<anagram_core::learned::Item> = input(control, source)?;
             serde_json::to_value(
                 anagram_core::learned::rank_result(&items, Some(&model), control).map_err(err)?,
@@ -122,15 +156,19 @@ pub fn run_with_input(
             .map_err(err)
         }
         "prepare-dictionary" if args.len() == 4 => {
-            let unigrams = anagram_core::lexicon::Unigrams::load(
-                control.reader(BufReader::new(File::open(&args[2]).map_err(err)?)),
-            )
-            .map_err(err)?;
+            let unigrams = anagram_core::lexicon::Unigrams::load(BufReader::new(budget.reader(
+                File::open(&args[2]).map_err(err)?,
+                "unigrams",
+                control,
+            )))
+            .map_err(corpus_err)?;
             let mut words = BTreeSet::new();
-            for line in anagram_core::lexicon::decoded_lines(
-                control.reader(BufReader::new(File::open(&args[1]).map_err(err)?)),
-            ) {
-                let word = anagram_core::normalize_letters(&line.map_err(err)?);
+            for line in anagram_core::lexicon::decoded_lines(BufReader::new(budget.reader(
+                File::open(&args[1]).map_err(err)?,
+                "dictionary",
+                control,
+            ))) {
+                let word = anagram_core::normalize_letters(&line.map_err(corpus_err)?);
                 if !word.is_empty() {
                     words.insert(word);
                 }
@@ -158,7 +196,7 @@ pub fn run_with_input(
                 json!({"dictionary":args[3].to_string_lossy(),"words":words.len(),"extra_short_words":extra}),
             )
         }
-        "build-phrases" if args.len() >= 3 => build_phrases(args, control),
+        "build-phrases" if args.len() >= 3 => build_phrases(args, control, &mut budget),
         _ => Err(err(
             "Usage: ranker-build WORDNET [PHRASE_DB] < cases.json | ranker-train NEW_MODEL < groups.json | ranker-rank MODEL < items.json | prepare-dictionary BASE UNIGRAMS NEW_DICTIONARY | build-phrases NEW_DB TITLE_FILE[.gz] ...",
         )),
@@ -169,6 +207,7 @@ fn build_groups(
     args: &[OsString],
     control: &Control,
     source: &mut dyn Read,
+    budget: &mut CorpusReadBudget,
 ) -> Result<Value, Error> {
     use anagram_core::corpus_ranking::PhraseCorpus;
     #[derive(Deserialize)]
@@ -212,14 +251,21 @@ fn build_groups(
             "Training pool requires at least two retained orders and a finite nonnegative phrase bonus",
         ));
     }
-    let lex = anagram_core::wordnet::WordNet::load_identified(Path::new(&args[1]), control)
-        .map_err(err)?
-        .0;
+    let lex = anagram_core::wordnet::WordNet::load_identified_with_budget(
+        Path::new(&args[1]),
+        control,
+        budget,
+    )
+    .map_err(corpus_err)?
+    .0;
     let phrase = args
         .get(2)
         .map(|p| anagram_core::phrase_index::PhraseIndex::open_controlled(Path::new(p), control))
         .transpose()
         .map_err(err)?;
+    if let Some(index) = &phrase {
+        index.identity_with_budget(budget).map_err(corpus_err)?;
+    }
     let token = regex::Regex::new(r"[A-Za-z]+(?:['’][A-Za-z]+)?").unwrap();
     let normalize = |s: &str| {
         token
@@ -293,8 +339,12 @@ fn build_groups(
     Ok(json!({"groups":groups,"skipped":skipped,"build_options":options}))
 }
 
-fn build_phrases(args: &[OsString], control: &Control) -> Result<Value, Error> {
-    crate::phrase_builder::build(
+fn build_phrases(
+    args: &[OsString],
+    control: &Control,
+    budget: &mut CorpusReadBudget,
+) -> Result<Value, Error> {
+    crate::phrase_builder::build_with_budget(
         Path::new(&args[1]),
         &args[2..]
             .iter()
@@ -302,5 +352,6 @@ fn build_phrases(args: &[OsString], control: &Control) -> Result<Value, Error> {
             .collect::<Vec<_>>(),
         crate::phrase_builder::default_workers(),
         control,
+        budget,
     )
 }

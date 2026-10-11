@@ -1,13 +1,65 @@
 //! Read-only SQLite phrase corpus. Each worker owns its connection.
-use crate::contracts::{DataIdentity, DataRepresentation};
 use crate::corpus_ranking::PhraseCorpus;
+use crate::{
+    contracts::{DataIdentity, DataRepresentation},
+    provenance::CorpusReadBudget,
+};
 use rusqlite::{Connection, OpenFlags, params_from_iter};
 use sha2::{Digest, Sha256};
 use std::{
     collections::{HashMap, HashSet},
-    io,
+    io::{self, Write},
     path::Path,
 };
+
+struct DigestWriter<'a> {
+    digest: &'a mut Sha256,
+    budget: &'a mut CorpusReadBudget,
+    control: &'a crate::control::Control,
+    bytes: usize,
+}
+
+impl Write for DigestWriter<'_> {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        for chunk in bytes.chunks(16 * 1024) {
+            self.control.check_io()?;
+            let total = self
+                .bytes
+                .checked_add(chunk.len())
+                .ok_or_else(|| io::Error::other("Phrase identity size overflow"))?;
+            self.budget.charge("phrase_index", chunk.len())?;
+            self.digest.update(chunk);
+            self.bytes = total;
+        }
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+fn hash_json_line<T: serde::Serialize>(
+    digest: &mut Sha256,
+    value: &T,
+    budget: &mut CorpusReadBudget,
+    control: &crate::control::Control,
+) -> io::Result<usize> {
+    let mut writer = DigestWriter {
+        digest,
+        budget,
+        control,
+        bytes: 0,
+    };
+    serde_json::to_writer(&mut writer, value).map_err(|error| {
+        io::Error::new(
+            error.io_error_kind().unwrap_or(io::ErrorKind::InvalidData),
+            error,
+        )
+    })?;
+    writer.write_all(b"\n")?;
+    Ok(writer.bytes)
+}
 
 pub struct PhraseIndex {
     connection: Connection,
@@ -51,15 +103,28 @@ impl PhraseIndex {
 
     /// Canonical logical identity, not a hash of SQLite pages or WAL files.
     pub fn identity(&self) -> io::Result<DataIdentity> {
+        self.identity_with_budget(&mut CorpusReadBudget::default())
+    }
+
+    /// Hash logical rows incrementally while enforcing the execution's corpus
+    /// byte budget. A row's source text length is checked before allocating it.
+    pub fn identity_with_budget(&self, budget: &mut CorpusReadBudget) -> io::Result<DataIdentity> {
         self.control.check_io()?;
-        let (kind, schema): (String, String) = self
-            .connection
-            .query_row(
-                "SELECT type, sql FROM sqlite_schema WHERE name='ngrams' COLLATE NOCASE",
-                [],
-                |row| Ok((row.get(0)?, row.get(1)?)),
-            )
-            .map_err(error)?;
+        let mut schema_statement = self.connection.prepare(
+            "SELECT type, sql, length(CAST(sql AS BLOB)) FROM sqlite_schema WHERE name='ngrams' COLLATE NOCASE"
+        ).map_err(error)?;
+        let mut schema_rows = schema_statement.query([]).map_err(error)?;
+        let schema_row = schema_rows
+            .next()
+            .map_err(error)?
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Missing ngrams table"))?;
+        let schema_bytes =
+            usize::try_from(schema_row.get::<_, i64>(2).map_err(error)?).map_err(|_| {
+                io::Error::new(io::ErrorKind::InvalidData, "negative phrase schema length")
+            })?;
+        budget.ensure_fits("phrase_index", schema_bytes)?;
+        let kind: String = schema_row.get(0).map_err(error)?;
+        let schema: String = schema_row.get(1).map_err(error)?;
         if kind != "table" {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -68,18 +133,21 @@ impl PhraseIndex {
         }
         let mut statement = self
             .connection
-            .prepare("SELECT text, n, count FROM ngrams ORDER BY text COLLATE BINARY, n, count")
+            .prepare("SELECT text, n, count, length(CAST(text AS BLOB)) FROM ngrams ORDER BY text COLLATE BINARY, n, count")
             .map_err(error)?;
         let mut rows = statement.query([]).map_err(error)?;
         let mut digest = Sha256::new();
         // Collations can affect lookup semantics even for identical visible rows.
-        let mut header = serde_json::to_vec(&("schema", schema)).map_err(io::Error::other)?;
-        header.push(b'\n');
-        let mut bytes = header.len() as u64;
-        digest.update(header);
+        let header_bytes = hash_json_line(&mut digest, &("schema", schema), budget, &self.control)?;
+        let mut bytes = u64::try_from(header_bytes).map_err(io::Error::other)?;
         let mut previous = None;
         while let Some(row) = rows.next().map_err(error)? {
             self.control.check_io()?;
+            let text_bytes = row.get::<_, Option<i64>>(3).map_err(error)?.unwrap_or(0);
+            let text_bytes = usize::try_from(text_bytes).map_err(|_| {
+                io::Error::new(io::ErrorKind::InvalidData, "negative phrase text length")
+            })?;
+            budget.ensure_fits("phrase_index", text_bytes)?;
             let record = (
                 row.get::<_, Option<String>>(0).map_err(error)?,
                 row.get::<_, Option<i64>>(1).map_err(error)?,
@@ -91,14 +159,13 @@ impl PhraseIndex {
                     "Duplicate phrase keys have no deterministic lookup identity",
                 ));
             }
-            previous = Some(record.0.clone());
-            let mut encoded = serde_json::to_vec(&record).map_err(io::Error::other)?;
-            encoded.push(b'\n');
+            let record_bytes = hash_json_line(&mut digest, &record, budget, &self.control)?;
             bytes = bytes
-                .checked_add(encoded.len() as u64)
+                .checked_add(u64::try_from(record_bytes).map_err(io::Error::other)?)
                 .ok_or_else(|| io::Error::other("Phrase identity size overflow"))?;
-            digest.update(encoded);
+            previous = Some(record.0);
         }
+        self.control.check_io()?;
         Ok(DataIdentity {
             role: "phrase_index".to_owned(),
             representation: DataRepresentation::PhraseRowsV1,

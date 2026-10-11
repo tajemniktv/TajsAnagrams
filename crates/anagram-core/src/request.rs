@@ -6,7 +6,12 @@ use crate::{
     normalize_letters,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, io::BufRead, sync::atomic::AtomicBool, time::Instant};
+use std::{
+    collections::BTreeSet,
+    io::{self, BufRead},
+    sync::atomic::AtomicBool,
+    time::Instant,
+};
 
 #[derive(Deserialize, Serialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -66,6 +71,15 @@ impl Error {
             code,
             message: message.into(),
         }
+    }
+
+    pub fn corpus(error: io::Error) -> Self {
+        let code = if error.kind() == io::ErrorKind::FileTooLarge {
+            "corpus_too_large"
+        } else {
+            "corpus_error"
+        };
+        Self::new(code, error.to_string())
     }
 }
 
@@ -345,7 +359,7 @@ fn generate_inner(
         )
         .map_err(|e| match check() {
             Err(reason) => Error::new(reason, reason),
-            Ok(()) => Error::new("corpus_error", e.to_string()),
+            Ok(()) => Error::corpus(e),
         })?;
         vocabulary_size = candidates.len();
         vocabulary.extend(candidates.iter().map(|c| c.word.clone()));

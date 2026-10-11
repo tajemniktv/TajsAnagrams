@@ -1,13 +1,10 @@
 //! Optional explicit-feature linear ranker. Never enabled implicitly.
 use crate::contracts::{DataIdentity, DataRepresentation};
 use crate::ordering::Candidate;
+use crate::provenance::{CorpusReadBudget, Snapshot};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{
-    collections::HashMap,
-    io::{self, Read},
-    path::Path,
-};
+use std::{collections::HashMap, io, path::Path};
 
 pub const SCHEMA: &str = "anagram-explicit-ranker-1";
 pub const FEATURE_NAMES: [&str; 18] = [
@@ -148,21 +145,37 @@ impl Model {
         Self::load_controlled(path, &crate::control::Control::default())
     }
     pub fn load_controlled(path: &Path, control: &crate::control::Control) -> io::Result<Self> {
+        Self::load_controlled_with_budget(path, control, &mut CorpusReadBudget::default())
+    }
+
+    pub fn load_controlled_with_budget(
+        path: &Path,
+        control: &crate::control::Control,
+        budget: &mut CorpusReadBudget,
+    ) -> io::Result<Self> {
+        // Models keep their established hard cap and also consume the solve's
+        // per-role and aggregate corpus read budgets.
+        let snapshot = match Snapshot::load_with_budget_and_file_limit(
+            path,
+            "learned_model",
+            control,
+            budget,
+            Some(65_536),
+        ) {
+            Err(error)
+                if error.kind() == io::ErrorKind::FileTooLarge
+                    && error.to_string().contains("file byte limit of 65536") =>
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "ranker model exceeds 64 KiB",
+                ));
+            }
+            Err(error) => return Err(error),
+            Ok(snapshot) => snapshot,
+        };
         control.check_io()?;
-        // A model has 18 weights; reject oversized input before unbounded parsing.
-        let mut bytes = Vec::new();
-        control
-            .reader(std::fs::File::open(path)?)
-            .take(65537)
-            .read_to_end(&mut bytes)?;
-        if bytes.len() > 65536 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "ranker model exceeds 64 KiB",
-            ));
-        }
-        control.check_io()?;
-        let result = Self::from_json(&bytes);
+        let result = Self::from_json(snapshot.bytes());
         control.check_io()?;
         result
     }

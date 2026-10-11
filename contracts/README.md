@@ -49,7 +49,9 @@ explicit bounds keep user expressions from introducing unbounded backtracking.
 
 `candidate_budget: 0` means unlimited generation. A deployment with a finite
 candidate limit rejects it. Without an explicit policy this development CLI is
-local-only and unbounded; that default is not a public-service configuration.
+local-only and candidate generation is unbounded; file-backed corpus reads still
+default to 2 GiB per role and 3 GiB aggregate. This is not a public-service
+configuration.
 `kind: generation_only` explicitly distinguishes unranked word bags. `stop` is
 `exhausted`, `candidate_cap`, `cancelled`, or `timed_out`; only the first proves
 complete enumeration. The extra-bag probe distinguishes exact cap exhaustion
@@ -61,7 +63,7 @@ loading is an error with code `timed_out`, not a false empty/exhausted result.
 Failures exit with status 2 and emit `{schema_version: 1, error: {code, message}}`.
 Stable codes include `unsupported_version`, `invalid_limits`,
 `invalid_word`, `empty_input`, `conflicting_constraints`, `unavailable_letters`,
-`impossible_hints`, `missing_frequency_data`, `corpus_error`, `invalid_search`,
+`impossible_hints`, `missing_frequency_data`, `corpus_error`, `corpus_too_large`, `invalid_search`,
 `usage`, `input_error`, `request_too_large`, `invalid_json`, `invalid_timeout`,
 `invalid_ranking_limits`, `invalid_regex`, `ranking_error`,
 `invalid_deployment_limits`, `deployment_limit_exceeded`, `invalid_job_id`,
@@ -211,15 +213,18 @@ an entirely unusable requested set returns `impossible_hints`.
 
 Both CLI operations accept `--limits policy.json` (at most 64 KiB). The generated
 `DeploymentLimits` contract is separate from the semantic request. Every field
-defaults to `null` (no deployment limit); unknown fields and invalid numeric
-limits are rejected. The future service must supply its own fixed policy, not
-accept a caller-selected policy file.
+is optional; unknown fields and invalid numeric limits are rejected. Corpus byte
+limits default to 2 GiB per role and 3 GiB aggregate. Omit them to use those
+defaults, or set them to `null` to disable a byte limit for trusted local
+tooling. Other optional limits default to `null`. The future service must supply
+its own fixed policy, not accept a caller-selected policy file.
 
 Supported fields: `max_input_bytes` (UTF-8 bytes of the target text),
-`max_normalized_letters`, `max_candidates`, `max_deep_analyzed`, `max_beam_width`,
-`max_retained_orders`, and `timeout_ms`. Count/size limits are positive exact
-integers; zero timeout is an immediate deadline. The CLI's separate 1 MiB JSON
-body limit remains in force.
+`max_corpus_role_bytes`, `max_total_corpus_bytes`, `max_normalized_letters`,
+`max_candidates`, `max_deep_analyzed`, `max_beam_width`, `max_retained_orders`,
+and `timeout_ms`. Count/size limits are positive exact integers; zero timeout is
+an immediate deadline. The CLI's separate 1 MiB JSON body limit remains in
+force.
 
 Requests exceeding admission limits return `deployment_limit_exceeded`; the
 engine does **not** silently change the candidate budget, beam, or retained
@@ -229,7 +234,8 @@ reject a request after generation/preparation. Policy deadlines share cancellati
 with the caller and can shorten, never extend, an existing `--timeout-ms` deadline.
 Malformed policy configuration returns `invalid_deployment_limits` before request
 execution. Library callers use `solve_with_limits`; the ordinary local wrapper
-supplies the explicit unbounded policy.
+uses the finite corpus byte defaults while leaving the semantic-work limits
+unbounded.
 
 ## Ranked execution progress
 

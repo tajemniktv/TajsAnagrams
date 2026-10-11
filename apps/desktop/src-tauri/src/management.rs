@@ -120,6 +120,7 @@ fn tool_output(
 pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, String> {
     c.validate()?;
     let mut text_stats = serde_json::Map::new();
+    let mut budget = anagram_core::provenance::CorpusReadBudget::default();
     for (role, path, tokens) in [
         ("dictionary", &c.dictionary, 0),
         ("unigrams", &c.unigrams, 1),
@@ -127,9 +128,11 @@ pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, St
     ] {
         let mut valid = 0_u64;
         let mut ignored = 0_u64;
-        for line in anagram_core::lexicon::decoded_lines(
-            control.reader(BufReader::new(fs::File::open(path).map_err(error)?)),
-        ) {
+        for line in anagram_core::lexicon::decoded_lines(BufReader::new(budget.reader(
+            fs::File::open(path).map_err(error)?,
+            role,
+            control,
+        ))) {
             let line = line.map_err(error)?;
             let fields: Vec<_> = line.split_whitespace().collect();
             let accepted = if tokens == 0 {
@@ -296,7 +299,12 @@ fn prepare(
     let wordnet = root.join("wordnet");
     fs::create_dir(&wordnet).map_err(error)?;
     let archive = fs::File::open(root.join("wordnet.tar.gz")).map_err(error)?;
-    let mut archive = tar::Archive::new(control.reader(flate2::read::GzDecoder::new(archive)));
+    let mut archive_budget = anagram_core::provenance::CorpusReadBudget::default();
+    let mut archive = tar::Archive::new(archive_budget.reader(
+        flate2::read::GzDecoder::new(archive),
+        "wordnet_archive",
+        control,
+    ));
     let required = [
         "index.noun",
         "index.verb",

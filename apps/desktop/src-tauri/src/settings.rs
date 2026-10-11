@@ -73,6 +73,7 @@ pub fn limits() -> DeploymentLimits {
         max_beam_width: Some(512),
         max_retained_orders: Some(128),
         timeout_ms: Some(120_000),
+        ..DeploymentLimits::default()
     }
 }
 impl Default for Settings {

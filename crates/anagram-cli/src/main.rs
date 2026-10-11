@@ -6,7 +6,7 @@ use anagram_core::{
 };
 use std::{
     fs::File,
-    io::{self, BufReader, Read},
+    io::{BufReader, Read},
     time::{Duration, Instant},
 };
 
@@ -143,7 +143,7 @@ fn run_inner(
     if let Some(command) = args.first().and_then(|a| a.to_str())
         && utilities::is_command(command)
     {
-        return utilities::run(args, control);
+        return utilities::run_with_limits(args, control, limits);
     }
     if !(ranked && (5..=7).contains(&args.len())
         || !ranked && (args.len() == 2 || args.len() == 3) && args[0] == "generate")
@@ -190,18 +190,21 @@ fn run_inner(
         serde_json::from_str(&input).map_err(|e| Error::new("invalid_json", e.to_string()))?;
     anagram_core::request::validate(&request)?;
     limits.admit_generation(&request)?;
-    let dictionary = File::open(&args[1]).map_err(|e| Error::new("corpus_error", e.to_string()))?;
+    let dictionary = File::open(&args[1]).map_err(Error::corpus)?;
+    let mut corpus_budget = limits.corpus_read_budget();
     let unigrams = args
         .get(2)
         .map(|path| {
             let file = File::open(path)?;
-            Unigrams::load(control.reader(BufReader::new(file)))
+            Unigrams::load(BufReader::new(
+                corpus_budget.reader(file, "unigrams", control),
+            ))
         })
         .transpose()
-        .map_err(|e: io::Error| Error::new("corpus_error", e.to_string()))?;
+        .map_err(Error::corpus)?;
     let result = generate_controlled(
         &request,
-        control.reader(BufReader::new(dictionary)),
+        BufReader::new(corpus_budget.reader(dictionary, "dictionary", control)),
         unigrams.as_ref(),
         control,
     )?;

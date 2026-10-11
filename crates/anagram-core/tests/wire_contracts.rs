@@ -29,7 +29,7 @@ fn shared_request_and_progress_fixtures_match_rust_deserialization() {
             .or_insert(0usize) += 1;
     }
     for (schema, count) in [
-        ("DeploymentLimits", 4),
+        ("DeploymentLimits", 6),
         ("GenerateRequest", 5),
         ("SolveRequest", 1),
         ("JobStatus", 1),

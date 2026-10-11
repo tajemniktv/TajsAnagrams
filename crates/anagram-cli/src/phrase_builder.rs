@@ -1,5 +1,5 @@
 //! Bounded parallel title parsing with one SQLite writer and atomic publication.
-use anagram_core::{control::Control, request::Error};
+use anagram_core::{control::Control, provenance::CorpusReadBudget, request::Error};
 use rayon::prelude::*;
 use serde_json::{Value, json};
 use std::{
@@ -52,6 +52,22 @@ pub fn build(
     workers: usize,
     control: &Control,
 ) -> Result<Value, Error> {
+    build_with_budget(
+        output,
+        sources,
+        workers,
+        control,
+        &mut CorpusReadBudget::default(),
+    )
+}
+
+pub fn build_with_budget(
+    output: &Path,
+    sources: &[PathBuf],
+    workers: usize,
+    control: &Control,
+    budget: &mut CorpusReadBudget,
+) -> Result<Value, Error> {
     if !(1..=8).contains(&workers) {
         return Err(err("Phrase workers must be between 1 and 8"));
     }
@@ -81,14 +97,17 @@ pub fn build(
     let mut updates = 0_u64;
     {
         let mut insert = transaction.prepare("INSERT INTO ngrams(text,n,count) VALUES(?1,?2,?3) ON CONFLICT(text) DO UPDATE SET count=count+excluded.count").map_err(err)?;
-        for source in sources {
+        for (source_index, source) in sources.iter().enumerate() {
             let input = File::open(source).map_err(err)?;
             let reader: Box<dyn Read> = if source.extension().is_some_and(|e| e == "gz") {
                 Box::new(flate2::read::MultiGzDecoder::new(input))
             } else {
                 Box::new(input)
             };
-            let mut reader = control.reader(BufReader::with_capacity(256 * 1024, reader));
+            let role = format!("phrase_source/{source_index}");
+            // Charge decompressed bytes, so a gzip bomb cannot bypass intake limits.
+            let mut reader =
+                BufReader::with_capacity(256 * 1024, budget.reader(reader, &role, control));
             loop {
                 // Bound both line count and decompressed bytes; never retain a whole dump.
                 let mut lines = Vec::with_capacity(8192);
@@ -99,7 +118,13 @@ pub fn build(
                         .by_ref()
                         .take(65537)
                         .read_until(b'\n', &mut line)
-                        .map_err(err)?;
+                        .map_err(|error| {
+                            if error.kind() == std::io::ErrorKind::FileTooLarge {
+                                Error::corpus(error)
+                            } else {
+                                err(error)
+                            }
+                        })?;
                     if n == 0 {
                         break;
                     }
