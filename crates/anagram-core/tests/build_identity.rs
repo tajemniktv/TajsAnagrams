@@ -34,6 +34,21 @@ impl Scratch {
         self.0.join("crates/core")
     }
 }
+
+#[cfg(unix)]
+#[test]
+fn source_symlinks_fail_closed_without_recursing_or_ignoring_code() {
+    use std::os::unix::fs::symlink;
+    let scratch = Scratch::new("symlinks");
+    let link = scratch.package().join("src/loop");
+    symlink(scratch.package().join("src"), &link).unwrap();
+    assert!(std::panic::catch_unwind(|| build_script::fingerprint(&scratch.package())).is_err());
+    fs::remove_file(link).unwrap();
+    let outside = scratch.0.join("outside.rs");
+    fs::write(&outside, "fn external() {}").unwrap();
+    symlink(outside, scratch.package().join("src/external.rs")).unwrap();
+    assert!(std::panic::catch_unwind(|| build_script::fingerprint(&scratch.package())).is_err());
+}
 impl Drop for Scratch {
     fn drop(&mut self) {
         fs::remove_dir_all(&self.0).unwrap();

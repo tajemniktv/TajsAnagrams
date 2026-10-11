@@ -252,11 +252,11 @@ fn order_progress_counts_completed_scores_before_cancellation() {
 }
 
 #[test]
-fn sqlite_deadline_interrupts_query_vm_not_just_next_batch() {
+fn sqlite_deadline_interrupts_large_unindexed_intake() {
     let scratch = Scratch::new();
     let path = scratch.0.join("slow.sqlite");
     let connection = rusqlite::Connection::open(&path).unwrap();
-    connection.execute_batch("CREATE VIEW ngrams AS WITH RECURSIVE seq(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM seq WHERE x<100000000) SELECT 'a b' AS text, x AS n, 1 AS count FROM seq;").unwrap();
+    connection.execute_batch("CREATE TABLE ngrams(text TEXT,n INTEGER,count INTEGER); WITH RECURSIVE seq(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM seq WHERE x<200000) INSERT INTO ngrams SELECT 'a b ' || x, 2, 1 FROM seq;").unwrap();
     drop(connection);
     let start = Instant::now();
     let control = Control::with_deadline(start + Duration::from_millis(20));

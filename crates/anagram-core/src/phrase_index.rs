@@ -13,7 +13,7 @@ use std::{
 };
 
 struct DigestWriter<'a> {
-    digest: &'a mut Sha256,
+    digest: Option<&'a mut Sha256>,
     budget: &'a mut CorpusReadBudget,
     control: &'a crate::control::Control,
     bytes: usize,
@@ -28,7 +28,9 @@ impl Write for DigestWriter<'_> {
                 .checked_add(chunk.len())
                 .ok_or_else(|| io::Error::other("Phrase identity size overflow"))?;
             self.budget.charge("phrase_index", chunk.len())?;
-            self.digest.update(chunk);
+            if let Some(digest) = self.digest.as_deref_mut() {
+                digest.update(chunk);
+            }
             self.bytes = total;
         }
         Ok(bytes.len())
@@ -40,7 +42,7 @@ impl Write for DigestWriter<'_> {
 }
 
 fn hash_json_line<T: serde::Serialize>(
-    digest: &mut Sha256,
+    digest: Option<&mut Sha256>,
     value: &T,
     budget: &mut CorpusReadBudget,
     control: &crate::control::Control,
@@ -69,11 +71,33 @@ pub struct PhraseIndex {
 fn error(e: rusqlite::Error) -> io::Error {
     io::Error::other(e)
 }
+type Record = (Option<String>, Option<i64>, Option<i64>);
+fn read_record(row: &rusqlite::Row<'_>, budget: &CorpusReadBudget) -> io::Result<Record> {
+    let text_bytes = row.get::<_, Option<i64>>(3).map_err(error)?.unwrap_or(0);
+    let text_bytes = usize::try_from(text_bytes)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "negative phrase text length"))?;
+    budget.ensure_fits("phrase_index", text_bytes)?;
+    Ok((
+        row.get::<_, Option<String>>(0).map_err(error)?,
+        row.get::<_, Option<i64>>(1).map_err(error)?,
+        row.get::<_, Option<i64>>(2).map_err(error)?,
+    ))
+}
 impl PhraseIndex {
     pub fn open(path: &Path) -> io::Result<Self> {
         Self::open_controlled(path, &crate::control::Control::default())
     }
     pub fn open_controlled(path: &Path, control: &crate::control::Control) -> io::Result<Self> {
+        Self::open_controlled_with_budget(path, control, &mut CorpusReadBudget::default())
+    }
+
+    /// Admit the canonical logical input in table order before any aggregate or
+    /// sorted query. Ranker intake does not need to calculate a discarded hash.
+    pub fn open_controlled_with_budget(
+        path: &Path,
+        control: &crate::control::Control,
+        budget: &mut CorpusReadBudget,
+    ) -> io::Result<Self> {
         control.check_io()?;
         // Deliberately omit URI parsing: a user-supplied filename is a path.
         let connection = Connection::open_with_flags(
@@ -85,20 +109,15 @@ impl PhraseIndex {
         connection
             .progress_handler(1000, Some(move || callback_control.check().is_err()))
             .map_err(error)?;
-        // MAX(n), provenance and every later query must see one read snapshot.
+        // Admission, provenance and every later query see one read snapshot.
         connection.execute_batch("BEGIN").map_err(error)?;
-        let max_n: i64 = connection
-            .query_row("SELECT COALESCE(MAX(n), 0) FROM ngrams", [], |row| {
-                row.get(0)
-            })
-            .map_err(error)?;
-        let max_n = usize::try_from(max_n)
-            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "negative phrase order"))?;
-        Ok(Self {
+        let mut index = Self {
             connection,
-            max_n,
+            max_n: 0,
             control: control.clone(),
-        })
+        };
+        index.max_n = index.scan_with_budget(budget)?;
+        Ok(index)
     }
 
     /// Canonical logical identity, not a hash of SQLite pages or WAL files.
@@ -109,6 +128,30 @@ impl PhraseIndex {
     /// Hash logical rows incrementally while enforcing the execution's corpus
     /// byte budget. A row's source text length is checked before allocating it.
     pub fn identity_with_budget(&self, budget: &mut CorpusReadBudget) -> io::Result<DataIdentity> {
+        self.scan_with_budget(budget)?;
+        self.identity_of_intake()
+    }
+
+    /// Validate all keys without serializing or hashing a discarded identity.
+    /// Called after budgeted admission, so even unindexed grouping is only run
+    /// over an already admitted immutable snapshot.
+    pub fn validate_unique_keys(&self) -> io::Result<()> {
+        self.control.check_io()?;
+        let duplicate: bool = self.connection.query_row(
+            "SELECT EXISTS(SELECT 1 FROM ngrams GROUP BY text COLLATE BINARY HAVING COUNT(*) > 1)",
+            [], |row| row.get(0)
+        ).map_err(error)?;
+        self.control.check_io()?;
+        if duplicate {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Duplicate phrase keys have no deterministic lookup identity",
+            ));
+        }
+        Ok(())
+    }
+
+    fn schema(&self, budget: &CorpusReadBudget) -> io::Result<String> {
         self.control.check_io()?;
         let mut schema_statement = self.connection.prepare(
             "SELECT type, sql, length(CAST(sql AS BLOB)) FROM sqlite_schema WHERE name='ngrams' COLLATE NOCASE"
@@ -131,6 +174,38 @@ impl PhraseIndex {
                 "Phrase provenance requires a concrete ngrams table, not a dynamic view",
             ));
         }
+        Ok(schema)
+    }
+
+    fn scan_with_budget(&self, budget: &mut CorpusReadBudget) -> io::Result<usize> {
+        let schema = self.schema(budget)?;
+        hash_json_line(None, &("schema", schema), budget, &self.control)?;
+        // No ORDER BY or aggregate: rows are admitted incrementally, including
+        // JSON escaping/field overhead, before SQLite can materialize a sort.
+        let mut statement = self
+            .connection
+            .prepare("SELECT text, n, count, length(CAST(text AS BLOB)) FROM ngrams")
+            .map_err(error)?;
+        let mut rows = statement.query([]).map_err(error)?;
+        let mut maximum = None;
+        while let Some(row) = rows.next().map_err(error)? {
+            self.control.check_io()?;
+            let record = read_record(row, budget)?;
+            hash_json_line(None, &record, budget, &self.control)?;
+            if let Some(n) = record.1 {
+                maximum = Some(maximum.map_or(n, |old: i64| old.max(n)));
+            }
+        }
+        self.control.check_io()?;
+        usize::try_from(maximum.unwrap_or(0))
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "negative phrase order"))
+    }
+
+    /// Re-read the admitted immutable snapshot for identity, without charging
+    /// its logical input twice. SQLite physical I/O/temporary storage is separate.
+    pub(crate) fn identity_of_intake(&self) -> io::Result<DataIdentity> {
+        let mut budget = CorpusReadBudget::new(None, None);
+        let schema = self.schema(&budget)?;
         let mut statement = self
             .connection
             .prepare("SELECT text, n, count, length(CAST(text AS BLOB)) FROM ngrams ORDER BY text COLLATE BINARY, n, count")
@@ -138,28 +213,25 @@ impl PhraseIndex {
         let mut rows = statement.query([]).map_err(error)?;
         let mut digest = Sha256::new();
         // Collations can affect lookup semantics even for identical visible rows.
-        let header_bytes = hash_json_line(&mut digest, &("schema", schema), budget, &self.control)?;
+        let header_bytes = hash_json_line(
+            Some(&mut digest),
+            &("schema", schema),
+            &mut budget,
+            &self.control,
+        )?;
         let mut bytes = u64::try_from(header_bytes).map_err(io::Error::other)?;
         let mut previous = None;
         while let Some(row) = rows.next().map_err(error)? {
             self.control.check_io()?;
-            let text_bytes = row.get::<_, Option<i64>>(3).map_err(error)?.unwrap_or(0);
-            let text_bytes = usize::try_from(text_bytes).map_err(|_| {
-                io::Error::new(io::ErrorKind::InvalidData, "negative phrase text length")
-            })?;
-            budget.ensure_fits("phrase_index", text_bytes)?;
-            let record = (
-                row.get::<_, Option<String>>(0).map_err(error)?,
-                row.get::<_, Option<i64>>(1).map_err(error)?,
-                row.get::<_, Option<i64>>(2).map_err(error)?,
-            );
+            let record = read_record(row, &budget)?;
             if previous.as_ref().is_some_and(|text| text == &record.0) {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "Duplicate phrase keys have no deterministic lookup identity",
                 ));
             }
-            let record_bytes = hash_json_line(&mut digest, &record, budget, &self.control)?;
+            let record_bytes =
+                hash_json_line(Some(&mut digest), &record, &mut budget, &self.control)?;
             bytes = bytes
                 .checked_add(u64::try_from(record_bytes).map_err(io::Error::other)?)
                 .ok_or_else(|| io::Error::other("Phrase identity size overflow"))?;

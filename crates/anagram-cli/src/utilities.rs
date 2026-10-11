@@ -260,11 +260,17 @@ fn build_groups(
     .0;
     let phrase = args
         .get(2)
-        .map(|p| anagram_core::phrase_index::PhraseIndex::open_controlled(Path::new(p), control))
+        .map(|p| {
+            anagram_core::phrase_index::PhraseIndex::open_controlled_with_budget(
+                Path::new(p),
+                control,
+                budget,
+            )
+        })
         .transpose()
-        .map_err(err)?;
+        .map_err(corpus_err)?;
     if let Some(index) = &phrase {
-        index.identity_with_budget(budget).map_err(corpus_err)?;
+        index.validate_unique_keys().map_err(corpus_err)?;
     }
     let token = regex::Regex::new(r"[A-Za-z]+(?:['’][A-Za-z]+)?").unwrap();
     let normalize = |s: &str| {

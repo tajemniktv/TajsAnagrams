@@ -162,10 +162,7 @@ impl Model {
             budget,
             Some(65_536),
         ) {
-            Err(error)
-                if error.kind() == io::ErrorKind::FileTooLarge
-                    && error.to_string().contains("file byte limit of 65536") =>
-            {
+            Err(error) if crate::provenance::is_file_limit_error(&error) => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "ranker model exceeds 64 KiB",

@@ -17,9 +17,9 @@
   const names: [CorpusKey, string][] = [['dictionary','Dictionary'],['unigrams','Unigram counts'],['bigrams','Bigram counts'],['wordnet','WordNet dict folder'],['phrase','Phrase database (optional)']];
   $effect(() => { dialog?.showModal(); });
   async function choose(key: CorpusKey) { try { const path = await bridge.choose(key); if (path) draft.corpora[key] = path; } catch (e) { error = message(e); } }
-  async function save() { busy = true; try { await onsave($state.snapshot(draft)); onclose(); } catch (e) { error = message(e); } finally { busy = false; } }
+  async function save() { busy = true; try { const value = $state.snapshot(draft); for (const key of limitNames) value.runtime.limits[key] ??= null; await onsave(value); onclose(); } catch (e) { error = message(e); } finally { busy = false; } }
   let cacheMessage = $state('');
-  const limitNames = ['max_input_bytes','max_normalized_letters','max_candidates','max_deep_analyzed','max_beam_width','max_retained_orders','timeout_ms'] as const;
+  const limitNames = ['max_input_bytes','max_corpus_role_bytes','max_total_corpus_bytes','max_normalized_letters','max_candidates','max_deep_analyzed','max_beam_width','max_retained_orders','timeout_ms'] as const;
   async function cachePath() { try { draft.runtime.cache_path = await bridge.choose('cache') ?? draft.runtime.cache_path; } catch(e) {error = message(e);} }
   async function clearCache() { busy = true; try { await bridge.clearCache(); cacheMessage = 'Result cache cleared. Corpora and settings were kept.'; } catch(e) { error = message(e); } finally { busy = false; } }
 </script>
@@ -42,7 +42,7 @@
   <label>Cache path (blank: app user-data)<div class="path-field"><input bind:value={draft.runtime.cache_path}/><button onclick={cachePath}>Browse</button></div></label>
   <div class="pair"><label>Maximum cache entries<input type="number" min="1" max="4294967295" bind:value={draft.runtime.cache_entries}/></label><label>Maximum payload bytes<input type="number" min="1" max="4294967295" bind:value={draft.runtime.cache_bytes}/></label></div>
   <label class="check"><input type="checkbox" bind:checked={draft.runtime.custom_limits}/>Use custom execution limits in standard mode</label>
-  {#if draft.runtime.custom_limits}<p class="hint">Blank means unlimited. Values are integer limits; timeout is in milliseconds. Extended mode bypasses these limits.</p><div class="pair">{#each limitNames as key}<label>{key.replaceAll('_',' ')}<input type="number" min={key === 'timeout_ms' ? 0 : 1} step="1" bind:value={draft.runtime.limits[key]}/></label>{/each}</div>{/if}
+  {#if draft.runtime.custom_limits}<p class="hint">Blank means unlimited in standard mode. Values are integer limits; timeout is in milliseconds. Extended mode uses default corpus byte limits and bypasses other limits.</p><div class="pair">{#each limitNames as key}<label>{key.replaceAll('_',' ')}<input type="number" min={key === 'timeout_ms' ? 0 : 1} step="1" bind:value={draft.runtime.limits[key]}/></label>{/each}</div>{/if}
   {#if cacheMessage}<p role="status">{cacheMessage}</p>{/if}
   </div>
   {:else if tab === 'experimental'}

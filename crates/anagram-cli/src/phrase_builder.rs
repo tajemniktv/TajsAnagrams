@@ -16,6 +16,17 @@ pub fn default_workers() -> usize {
     std::thread::available_parallelism().map_or(1, |n| n.get().saturating_sub(1).clamp(1, 8))
 }
 type Counts = HashMap<String, i64>;
+fn source_reader<'a, R: Read>(
+    input: R,
+    role: &'a str,
+    control: &'a Control,
+    budget: &'a mut CorpusReadBudget,
+) -> anagram_core::control::Reader<'a, BufReader<anagram_core::provenance::BudgetReader<'a, R>>> {
+    control.reader(BufReader::with_capacity(
+        256 * 1024,
+        budget.reader(input, role, control),
+    ))
+}
 fn parse(
     lines: &[Vec<u8>],
     token: &regex::Regex,
@@ -106,8 +117,7 @@ pub fn build_with_budget(
             };
             let role = format!("phrase_source/{source_index}");
             // Charge decompressed bytes, so a gzip bomb cannot bypass intake limits.
-            let mut reader =
-                BufReader::with_capacity(256 * 1024, budget.reader(reader, &role, control));
+            let mut reader = source_reader(reader, &role, control, budget);
             loop {
                 // Bound both line count and decompressed bytes; never retain a whole dump.
                 let mut lines = Vec::with_capacity(8192);
@@ -183,4 +193,25 @@ pub fn build_with_budget(
     Ok(
         json!({"database":output,"accepted_titles":accepted,"rows":rows,"workers":workers,"database_updates":updates}),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn cancellation_stops_collection_of_already_buffered_lines() {
+        let control = Control::default();
+        let mut budget = CorpusReadBudget::default();
+        let mut reader = source_reader(&b"first\nsecond\n"[..], "titles", &control, &mut budget);
+        let mut line = Vec::new();
+        reader.read_until(b'\n', &mut line).unwrap();
+        assert_eq!(line, b"first\n");
+        control.cancel();
+        line.clear();
+        assert_eq!(
+            reader.read_until(b'\n', &mut line).unwrap_err().to_string(),
+            "cancelled"
+        );
+        assert!(line.is_empty());
+    }
 }

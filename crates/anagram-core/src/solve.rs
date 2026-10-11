@@ -278,15 +278,15 @@ fn run(
     progress.status.versions.data.extend(identities);
     let phrase = paths
         .phrase
-        .map(|path| PhraseIndex::open_controlled(path, control))
+        .map(|path| PhraseIndex::open_controlled_with_budget(path, control, &mut corpus_budget))
         .transpose()
         .map_err(corpus)?;
     if let Some(index) = &phrase {
-        progress.status.versions.data.push(
-            index
-                .identity_with_budget(&mut corpus_budget)
-                .map_err(corpus)?,
-        );
+        progress
+            .status
+            .versions
+            .data
+            .push(index.identity_of_intake().map_err(corpus)?);
     }
     progress.status.versions.data_complete = true;
     let mut cache_store = cache

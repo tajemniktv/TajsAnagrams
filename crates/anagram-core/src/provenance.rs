@@ -11,6 +11,41 @@ use std::{
     path::Path,
 };
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum LimitScope {
+    File,
+    Role,
+    Aggregate,
+}
+#[derive(Debug)]
+struct CorpusLimitError {
+    role: String,
+    scope: LimitScope,
+    maximum: usize,
+}
+impl std::fmt::Display for CorpusLimitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let scope = match self.scope {
+            LimitScope::File => "file",
+            LimitScope::Role => "per-role",
+            LimitScope::Aggregate => "aggregate",
+        };
+        write!(
+            f,
+            "corpus role '{}' exceeds its {scope} byte limit of {}",
+            self.role, self.maximum
+        )
+    }
+}
+impl std::error::Error for CorpusLimitError {}
+
+pub(crate) fn is_file_limit_error(error: &io::Error) -> bool {
+    error
+        .get_ref()
+        .and_then(|context| context.downcast_ref::<CorpusLimitError>())
+        .is_some_and(|context| context.scope == LimitScope::File)
+}
+
 /// Limits source bytes consumed by corpus roles during one intake phase.
 /// Limits are enforced against bytes returned by `Read`, never file metadata.
 /// Phrase indexes instead charge their canonical logical JSON stream. This is
@@ -41,16 +76,22 @@ impl CorpusReadBudget {
         role: &str,
         role_file_limit: Option<usize>,
         file_bytes: usize,
-    ) -> Option<(usize, &'static str, usize)> {
+    ) -> Option<(usize, LimitScope, usize)> {
         let used = self.role_bytes(role);
         [
-            role_file_limit.map(|maximum| (maximum.saturating_sub(file_bytes), "file", maximum)),
+            role_file_limit.map(|maximum| {
+                (
+                    maximum.saturating_sub(file_bytes),
+                    LimitScope::File,
+                    maximum,
+                )
+            }),
             self.max_role_bytes
-                .map(|maximum| (maximum.saturating_sub(used), "per-role", maximum)),
+                .map(|maximum| (maximum.saturating_sub(used), LimitScope::Role, maximum)),
             self.max_total_bytes.map(|maximum| {
                 (
                     maximum.saturating_sub(self.total_bytes),
-                    "aggregate",
+                    LimitScope::Aggregate,
                     maximum,
                 )
             }),
@@ -107,12 +148,12 @@ impl CorpusReadBudget {
         if let Some(maximum) = self.max_role_bytes
             && bytes > maximum.saturating_sub(self.role_bytes(role))
         {
-            return Err(Self::limit_error(role, "per-role", maximum));
+            return Err(Self::limit_error(role, LimitScope::Role, maximum));
         }
         if let Some(maximum) = self.max_total_bytes
             && bytes > maximum.saturating_sub(self.total_bytes)
         {
-            return Err(Self::limit_error(role, "aggregate", maximum));
+            return Err(Self::limit_error(role, LimitScope::Aggregate, maximum));
         }
         Ok(())
     }
@@ -122,10 +163,14 @@ impl CorpusReadBudget {
         self.record(role, bytes)
     }
 
-    fn limit_error(role: &str, scope: &str, maximum: usize) -> io::Error {
+    fn limit_error(role: &str, scope: LimitScope, maximum: usize) -> io::Error {
         io::Error::new(
             io::ErrorKind::FileTooLarge,
-            format!("corpus role '{role}' exceeds its {scope} byte limit of {maximum}"),
+            CorpusLimitError {
+                role: role.to_owned(),
+                scope,
+                maximum,
+            },
         )
     }
 }
@@ -137,7 +182,7 @@ pub struct BudgetReader<'a, R> {
     control: &'a Control,
     file_limit: Option<usize>,
     file_bytes: usize,
-    exceeded: Option<(&'static str, usize)>,
+    exceeded: Option<(LimitScope, usize)>,
 }
 
 impl<R: Read> Read for BudgetReader<'_, R> {

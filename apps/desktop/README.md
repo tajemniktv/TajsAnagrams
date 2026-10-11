@@ -44,8 +44,12 @@ unigrams if frequency filtering is enabled). Its output is unranked and bypasses
 the ranked-result cache. Text/JSON export and cancellation remain available.
 
 General settings expose the cache path, entry/byte limits and custom execution
-limits. Blank custom limits are unlimited; Extended mode bypasses deployment
-limits. Existing settings migrate with safe defaults. The TajsAnagrams installation
+limits, including corpus bytes per role and aggregate corpus bytes. Blank custom
+limits are unlimited in standard mode. Extended mode bypasses semantic-work and
+time limits but retains the default 2 GiB per-role / 3 GiB aggregate corpus limits.
+To change or disable corpus byte limits, use custom limits in standard mode.
+Existing settings that omit the new byte fields receive these finite defaults;
+explicit blank/null values disable them. The TajsAnagrams installation
 and saved-report reader relocate legacy app-owned corpus/model/cache paths only
 when the corresponding destination exists; external custom paths are preserved.
 

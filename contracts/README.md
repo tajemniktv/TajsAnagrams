@@ -190,8 +190,9 @@ Corpus I/O follows semantic validation; a missing corpus must not hide an invali
 request. An already-expired execution control takes precedence over work errors.
 Frequency-data availability is checked when the generation input is loaded.
 The version-1 default policy is shared: semantic scalar options are required,
-constraint lists default to empty, and absent deployment limits mean unbounded
-local execution. No hidden candidate/deep budget is supplied by an adapter.
+constraint lists default to empty, and absent deployment limits retain the finite
+corpus byte defaults while semantic-work limits stay unbounded. No hidden
+candidate/deep budget is supplied by an adapter.
 JSON Schema checks shape/ranges; `request::validate`, `solve::validate` and
 `JobStatus::validate` own cross-field semantic checks. TypeScript types are not
 runtime validators. Status validation checks lifecycle/error consistency,

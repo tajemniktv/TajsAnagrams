@@ -11,10 +11,16 @@ fn collect_source_files(root: &Path, directory: &Path, files: &mut Vec<PathBuf>)
         .collect();
     entries.sort();
     for path in entries {
-        if root.join(&path).is_dir() {
+        let metadata = fs::symlink_metadata(root.join(&path))
+            .unwrap_or_else(|error| panic!("cannot inspect {}: {error}", path.display()));
+        assert!(
+            !metadata.file_type().is_symlink(),
+            "symlinked source paths are unsupported: {}",
+            path.display()
+        );
+        if metadata.is_dir() {
             collect_source_files(root, &path, files);
-        } else if root.join(&path).is_file()
-            && path.extension().is_some_and(|extension| extension == "rs")
+        } else if metadata.is_file() && path.extension().is_some_and(|extension| extension == "rs")
         {
             files.push(path);
         }

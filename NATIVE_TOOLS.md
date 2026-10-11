@@ -92,11 +92,17 @@ file growth cannot bypass them. Phrase builds count decompressed title bytes
 with a distinct role per source. WordNet files share the other solve inputs'
 aggregate budget. Models retain their additional 64 KiB format cap.
 
-Phrase-index scans count the canonical schema/row JSON stream during hashing,
-including escaping overhead. SQLite pages, WAL, temporary sorting storage and
+Phrase-index admission counts the canonical schema/row JSON stream, including
+escaping overhead, in an unsorted pass before aggregation or sorting. Identity
+hashing re-reads that admitted SQLite snapshot without charging its input twice.
+Ranker dataset building checks duplicate keys without calculating a discarded
+identity hash. SQLite pages, WAL, temporary sorting storage and
 parser heap allocations are additional. These limits bound input, not process
 memory. Desktop validation performs separately bounded sanity and solve phases;
-preparation also bounds archive decompression. Repeated parser passes over a
+native desktop preparation also bounds archive decompression. The PowerShell
+`tools/prepare-native-data.ps1` archive extraction does not have this decompressed
+byte limit; use it only with trusted archives and sufficient disk space.
+Repeated parser passes over a
 captured snapshot do not charge its source bytes again. Default sizes preserve
 the preparation tools' existing 2 GiB source ceiling; select smaller values when
 the available memory requires them. Compatibility with private corpora was not

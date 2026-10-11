@@ -51,6 +51,65 @@ fn learned_model_identity_tracks_loaded_bytes_without_changing_model_format() {
     assert!(anagram_core::learned::rank_result(&items, Some(&loaded), &cancelled).is_err());
 }
 
+#[test]
+fn model_format_cap_and_corpus_caps_keep_distinct_error_classes() {
+    use anagram_core::learned::Model;
+    let scratch = Scratch::new("model-scopes");
+    let path = scratch.0.join("model.json");
+    fs::write(&path, vec![b' '; 65537]).unwrap();
+    let control = Control::default();
+    let mut unlimited = CorpusReadBudget::new(None, None);
+    let error = Model::load_controlled_with_budget(&path, &control, &mut unlimited).unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+    assert_eq!(error.to_string(), "ranker model exceeds 64 KiB");
+    for (role, total) in [(Some(1024), None), (None, Some(1024))] {
+        let mut budget = CorpusReadBudget::new(role, total);
+        let error = Model::load_controlled_with_budget(&path, &control, &mut budget).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::FileTooLarge);
+    }
+}
+
+#[test]
+fn unindexed_phrase_admission_stops_before_later_rows_and_preserves_exact_accounting() {
+    let scratch = Scratch::new("phrase-preflight");
+    let path = scratch.0.join("phrases.sqlite");
+    let writer = rusqlite::Connection::open(&path).unwrap();
+    writer
+        .execute_batch("CREATE TABLE ngrams(text TEXT,n INTEGER,count INTEGER);")
+        .unwrap();
+    writer
+        .execute("INSERT INTO ngrams VALUES(?1,2,1)", ["x".repeat(4096)])
+        .unwrap();
+    // MAX(n) before admission would reach this malformed later row first.
+    writer
+        .execute_batch("INSERT INTO ngrams VALUES('later','not an integer',1);")
+        .unwrap();
+    let mut small = CorpusReadBudget::new(Some(256), None);
+    let error = PhraseIndex::open_controlled_with_budget(&path, &Control::default(), &mut small)
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), io::ErrorKind::FileTooLarge);
+    writer
+        .execute_batch("DELETE FROM ngrams; INSERT INTO ngrams VALUES('a b',2,1),('a b c',3,2);")
+        .unwrap();
+    let identity = PhraseIndex::open(&path).unwrap().identity().unwrap();
+    let mut exact =
+        CorpusReadBudget::new(Some(identity.bytes as usize), Some(identity.bytes as usize));
+    let index =
+        PhraseIndex::open_controlled_with_budget(&path, &Control::default(), &mut exact).unwrap();
+    assert_eq!(index.max_n(), 3);
+    index.validate_unique_keys().unwrap();
+    assert_eq!(index.identity().unwrap(), identity);
+    let extra = scratch.0.join("extra");
+    fs::write(&extra, b"x").unwrap();
+    assert_eq!(
+        Snapshot::load_with_budget(&extra, "dictionary", &Control::default(), &mut exact)
+            .unwrap_err()
+            .kind(),
+        io::ErrorKind::FileTooLarge
+    );
+}
+
 struct Scratch(PathBuf);
 impl Scratch {
     fn new(name: &str) -> Self {
@@ -402,6 +461,7 @@ fn phrase_lookup_rejects_duplicates_and_accepts_identifier_case() {
         .execute_batch("INSERT INTO NGrams VALUES('a b',2,99)")
         .unwrap();
     let index = PhraseIndex::open(&path).unwrap();
+    assert!(index.validate_unique_keys().is_err());
     assert!(index.counts(&["a b".into()]).is_err());
 }
 
