@@ -32,6 +32,8 @@ jobs:
         working-directory: contracts
       - run: python -m pip install jsonschema==4.26.0
       - run: python tests/parity/contracts.py
+      - run: python tests/parity/scoring.py
+      - run: python -m unittest discover -s tests/quality -v
       - run: python tests/parity/generation.py
       - run: python tests/parity/refinement.py
       - name: Provision WordNet for grammar regression

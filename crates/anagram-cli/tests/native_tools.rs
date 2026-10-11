@@ -38,7 +38,32 @@ fn dictionary_preparation_uses_lossy_corpus_decoding() {
             .any(|line| line == "cat")
     );
 }
-fn run(args: &[&str], input: &serde_json::Value) -> std::process::Output {
+fn file_command(args: &[&str]) -> Command {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_anagram-cli"));
+    command
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    command
+}
+
+fn run_file_command(args: &[&str]) -> std::process::Output {
+    file_command(args).output().unwrap()
+}
+
+fn assert_output_exists_error(result: &std::process::Output) {
+    assert_eq!(result.status.code(), Some(2));
+    let response: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert_eq!(response["schema_version"], 1);
+    assert_eq!(response["error"]["code"], "tool_error");
+    assert_eq!(
+        response["error"]["message"],
+        "Output already exists; choose a new filename to preserve existing data"
+    );
+}
+
+fn run_with_input(args: &[&str], input: &serde_json::Value) -> std::process::Output {
     let mut child = Command::new(env!("CARGO_BIN_EXE_anagram-cli"))
         .args(args)
         .stdin(Stdio::piped())
@@ -138,7 +163,7 @@ fn phrase_and_dictionary_builds_are_readable_and_never_clobber() {
         output.to_str().unwrap(),
         titles.to_str().unwrap(),
     ];
-    let result = run(&args, &serde_json::Value::Null);
+    let result = run_file_command(&args);
     assert!(
         result.status.success(),
         "{}",
@@ -154,28 +179,69 @@ fn phrase_and_dictionary_builds_are_readable_and_never_clobber() {
     index.identity().unwrap();
     drop(index);
     let before = fs::read(&output).unwrap();
-    assert!(!run(&args, &serde_json::Value::Null).status.success());
+    assert_output_exists_error(&run_file_command(&args));
     assert_eq!(before, fs::read(&output).unwrap());
     let base = temp.path().join("base");
     let one = temp.path().join("one");
     let dictionary = temp.path().join("dictionary");
     fs::write(&base, "we\nhome\n").unwrap();
     fs::write(&one, "we\t1000\nhome\t100\n").unwrap();
-    let result = run(
-        &[
-            "prepare-dictionary",
-            base.to_str().unwrap(),
-            one.to_str().unwrap(),
-            dictionary.to_str().unwrap(),
-        ],
-        &serde_json::Value::Null,
-    );
+    let result = run_file_command(&[
+        "prepare-dictionary",
+        base.to_str().unwrap(),
+        one.to_str().unwrap(),
+        dictionary.to_str().unwrap(),
+    ]);
     assert!(result.status.success());
     let metadata: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
     assert_eq!(metadata["dictionary"].as_str(), dictionary.to_str());
     let words = fs::read_to_string(dictionary).unwrap();
     assert!(words.lines().any(|s| s == "dont"));
     assert!(words.lines().any(|s| s == "home"));
+}
+
+#[test]
+fn file_commands_can_exit_before_the_parent_collects_output() {
+    use std::time::{Duration, Instant};
+
+    let temp = scratch();
+    let source = temp.path().join("source.txt");
+    fs::write(&source, "we_are_home\n").unwrap();
+    let output = temp.path().join("existing-output");
+    let original = b"preserve these synthetic bytes";
+    fs::write(&output, original).unwrap();
+    for args in [
+        vec![
+            "build-phrases",
+            output.to_str().unwrap(),
+            source.to_str().unwrap(),
+        ],
+        vec![
+            "prepare-dictionary",
+            source.to_str().unwrap(),
+            source.to_str().unwrap(),
+            output.to_str().unwrap(),
+        ],
+    ] {
+        let mut child = file_command(&args).spawn().unwrap();
+        // These tools have no stdin protocol. Even an immediate child exit must
+        // leave no unused parent writer that can race with the child closing it.
+        assert!(child.stdin.is_none());
+        let deadline = Instant::now() + Duration::from_secs(10);
+        loop {
+            if child.try_wait().unwrap().is_some() {
+                break;
+            }
+            if Instant::now() >= deadline {
+                child.kill().unwrap();
+                child.wait().unwrap();
+                panic!("file command did not exit within 10 seconds: {args:?}");
+            }
+            std::thread::sleep(Duration::from_millis(1));
+        }
+        assert_output_exists_error(&child.wait_with_output().unwrap());
+        assert_eq!(fs::read(&output).unwrap(), original);
+    }
 }
 #[test]
 fn configurable_training_pool_applies_phrase_weight_and_validates_options() {
@@ -187,7 +253,7 @@ fn configurable_training_pool_applies_phrase_weight_and_validates_options() {
     rusqlite::Connection::open(&phrase).unwrap().execute_batch("CREATE TABLE ngrams(text TEXT PRIMARY KEY,n INTEGER,count INTEGER); INSERT INTO ngrams VALUES('we are home',3,100);").unwrap();
     let build = |bonus, retained| {
         let input = serde_json::json!({"cases":[{"answer":"we are home"}],"options":{"retained_orders":retained,"phrase_bonus_max":bonus}});
-        run(
+        run_with_input(
             &[
                 "ranker-build",
                 temp.path().to_str().unwrap(),
@@ -224,7 +290,7 @@ fn native_training_build_fit_and_rank_round_trip() {
         fs::write(temp.path().join(name), "").unwrap();
     }
     let cases = serde_json::json!([{"answer":"we are home"},{"answer":"you are here"},{"answer":"they can go"},{"answer":"i will stay"},{"answer":"he is happy"},{"answer":"she was ready"}]);
-    let result = run(&["ranker-build", temp.path().to_str().unwrap()], &cases);
+    let result = run_with_input(&["ranker-build", temp.path().to_str().unwrap()], &cases);
     assert!(
         result.status.success(),
         "{}",
@@ -233,7 +299,7 @@ fn native_training_build_fit_and_rank_round_trip() {
     let groups: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
     assert_eq!(groups["groups"].as_array().unwrap().len(), 6);
     let model = temp.path().join("model.json");
-    let fit = run(&["ranker-train", model.to_str().unwrap()], &groups);
+    let fit = run_with_input(&["ranker-train", model.to_str().unwrap()], &groups);
     assert!(
         fit.status.success(),
         "{}",
@@ -243,7 +309,7 @@ fn native_training_build_fit_and_rank_round_trip() {
     assert_eq!(report["held_out"]["groups"], 6);
     assert_eq!(report["model_path"].as_str(), model.to_str());
     let items = &groups["groups"][0]["items"];
-    let ranked = run(&["ranker-rank", model.to_str().unwrap()], items);
+    let ranked = run_with_input(&["ranker-rank", model.to_str().unwrap()], items);
     assert!(ranked.status.success());
     let ranked: serde_json::Value = serde_json::from_slice(&ranked.stdout).unwrap();
     assert_eq!(
@@ -252,7 +318,7 @@ fn native_training_build_fit_and_rank_round_trip() {
     );
     assert!(ranked["model_identity"]["sha256"].as_str().unwrap().len() == 64);
     assert!(
-        !run(&["ranker-train", model.to_str().unwrap()], &groups)
+        !run_with_input(&["ranker-train", model.to_str().unwrap()], &groups)
             .status
             .success()
     );
