@@ -8,6 +8,8 @@ permissions:
 jobs:
   native:
     runs-on: ${{ matrix.os }}
+    env:
+      RUSTUP_TOOLCHAIN: stable
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
