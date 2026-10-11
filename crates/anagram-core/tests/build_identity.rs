@@ -42,8 +42,14 @@ impl Drop for Scratch {
 
 #[test]
 fn source_fingerprint_matches_compiled_identity() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     assert_eq!(
-        build_script::fingerprint(Path::new(env!("CARGO_MANIFEST_DIR"))),
+        build_script::fingerprint(root),
+        env!("ANAGRAM_CORE_BUILD_ID")
+    );
+    // Windows canonical paths use a verbatim prefix and normalize parent joins.
+    assert_eq!(
+        build_script::fingerprint(&root.canonicalize().unwrap()),
         env!("ANAGRAM_CORE_BUILD_ID")
     );
 }
