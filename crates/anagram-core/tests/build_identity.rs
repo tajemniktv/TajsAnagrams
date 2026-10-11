@@ -60,7 +60,9 @@ fn fingerprint_is_reproducible_across_paths_mtimes_and_unrelated_files() {
     let second = Scratch::new("second");
     let expected = build_script::fingerprint(&first.package());
     fs::write(second.package().join("src/lib.rs"), "mod solver;").unwrap();
-    fs::File::open(second.package().join("src/lib.rs"))
+    fs::OpenOptions::new()
+        .write(true)
+        .open(second.package().join("src/lib.rs"))
         .unwrap()
         .set_times(
             std::fs::FileTimes::new().set_modified(
