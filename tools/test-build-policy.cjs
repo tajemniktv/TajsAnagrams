@@ -29,6 +29,8 @@ test('unchanged inputs reuse verified outputs without touching mtimes', async t 
   const { buildFrontend } = await import('./build-frontend.mjs');
   const f = fixture(t);
   assert.equal(buildFrontend(f.options).cached, false);
+  assert.equal(fs.existsSync(path.join(f.project, 'build/frontend-build.json')), true);
+  assert.equal(fs.existsSync(path.join(f.project, '.codex/temp/frontend-build.json')), false);
   const file = path.join(f.project, 'apps/desktop/dist/index.html');
   fs.utimesSync(file, 1000, 1000);
   const before = fs.statSync(file).mtimeMs;
@@ -78,7 +80,7 @@ test('custom Vite arguments bypass the default-output cache', async t => {
   assert.equal(buildFrontend(options).cached, false);
   assert.equal(buildFrontend(options).cached, false);
   assert.equal(f.count(), 2);
-  assert.equal(fs.existsSync(path.join(f.project, '.codex/temp/frontend-build.json')), false);
+  assert.equal(fs.existsSync(path.join(f.project, 'build/frontend-build.json')), false);
 });
 
 test('missing, altered and extra outputs or corrupt metadata cause a rebuild', async t => {
@@ -91,7 +93,7 @@ test('missing, altered and extra outputs or corrupt metadata cause a rebuild', a
   assert.equal(buildFrontend(f.options).cached, false);
   f.write('apps/desktop/dist/extra.txt', 'unexpected');
   assert.equal(buildFrontend(f.options).cached, false);
-  f.write('.codex/temp/frontend-build.json', 'broken JSON');
+  f.write('build/frontend-build.json', 'broken JSON');
   assert.equal(buildFrontend(f.options).cached, false);
 });
 
@@ -99,12 +101,12 @@ test('failed builds and edits during a build never publish a valid cache entry',
   const { buildFrontend } = await import('./build-frontend.mjs');
   const f = fixture(t);
   assert.throws(() => buildFrontend({ ...f.options, build: () => { throw Error('failed'); } }), /failed/);
-  assert.equal(fs.existsSync(path.join(f.project, '.codex/temp/frontend-build.json')), false);
+  assert.equal(fs.existsSync(path.join(f.project, 'build/frontend-build.json')), false);
   const build = f.options.build;
   assert.throws(() => buildFrontend({ ...f.options, build: () => {
     build();
     f.write('apps/desktop/src/App.svelte', 'edited during build');
   } }), /changed during/);
-  assert.equal(fs.existsSync(path.join(f.project, '.codex/temp/frontend-build.json')), false);
+  assert.equal(fs.existsSync(path.join(f.project, 'build/frontend-build.json')), false);
   assert.equal(buildFrontend(f.options).cached, false);
 });

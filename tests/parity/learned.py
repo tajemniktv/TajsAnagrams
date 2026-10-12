@@ -39,7 +39,7 @@ def main():
     model_path.write_text(json.dumps(cases[1]["model"]),encoding="utf-8")
     cases.append(dict(cases[1],model_path=str(model_path)));expected.append(expected[1])
     subprocess.run(["cargo","build","--locked","--example","learned_probe"],cwd=ROOT,check=True)
-    executable=ROOT/"target/debug/examples"/("learned_probe.exe" if sys.platform=="win32" else "learned_probe")
+    executable=ROOT/"build/debug/examples"/("learned_probe.exe" if sys.platform=="win32" else "learned_probe")
     output=subprocess.run([str(executable)],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=30)
     actual=[json.loads(line) for line in output.stdout.splitlines()]
     assert len(actual)==len(expected)

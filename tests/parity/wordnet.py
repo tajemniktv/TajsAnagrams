@@ -27,7 +27,7 @@ def main():
                lexicon.allows_predicative, lexicon.allows_object_predicative,
                lexicon.allows_infinitive_or_gerund, lexicon.allows_clausal]
     subprocess.run(["cargo", "build", "--locked", "--example", "wordnet_probe"], cwd=ROOT, check=True)
-    executable = ROOT / "target/debug/examples" / ("wordnet_probe.exe" if sys.platform == "win32" else "wordnet_probe")
+    executable = ROOT / "build/debug/examples" / ("wordnet_probe.exe" if sys.platform == "win32" else "wordnet_probe")
     result = subprocess.run([str(executable), str(directory)], input="\n".join(words) + "\n",
                             encoding="utf-8", capture_output=True, check=True, timeout=60)
     actual = [json.loads(line) for line in result.stdout.splitlines()]

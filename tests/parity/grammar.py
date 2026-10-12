@@ -55,7 +55,7 @@ def main():
                  "they have been being tested", "the birds are flying", "the bird are flying"])
     cases.extend(phrase.split() for phrase in ["old than words", "silver than words", "older than words", "the been dog", "the broken window"])
     subprocess.run(["cargo", "build", "--locked", "--example", "grammar_probe"], cwd=ROOT, check=True)
-    executable = ROOT / "target/debug/examples" / ("grammar_probe.exe" if sys.platform == "win32" else "grammar_probe")
+    executable = ROOT / "build/debug/examples" / ("grammar_probe.exe" if sys.platform == "win32" else "grammar_probe")
     result = subprocess.run([str(executable), str(directory)], input="\n".join(map(json.dumps, cases)),
                             text=True, capture_output=True, check=True, timeout=60)
     actual = [json.loads(line) for line in result.stdout.splitlines()]

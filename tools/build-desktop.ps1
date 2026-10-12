@@ -4,7 +4,7 @@ param([switch]$TestOnly, [switch]$KeepBuildCache)
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $desktop = Join-Path $project 'apps/desktop'
-$build = Join-Path $project '.codex/temp/desktop-build'
+$build = Join-Path $project 'build'
 $oldTarget = $env:CARGO_TARGET_DIR
 Push-Location $desktop
 try {

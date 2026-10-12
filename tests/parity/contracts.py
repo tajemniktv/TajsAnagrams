@@ -16,7 +16,7 @@ def main():
         schema=json.loads((ROOT/"contracts/generated"/f"{fixture['schema']}.schema.json").read_text(encoding="utf-8"))
         Draft202012Validator.check_schema(schema)
         assert Draft202012Validator(schema).is_valid(fixture["value"])==fixture["valid"],fixture
-    executable=ROOT/"target/debug"/("anagram-cli.exe" if sys.platform=="win32" else "anagram-cli")
+    executable=ROOT/"build/debug"/("anagram-cli.exe" if sys.platform=="win32" else "anagram-cli")
     request=next(f["value"] for f in fixtures if f["schema"]=="GenerateRequest" and f["valid"])
     output=subprocess.run([str(executable),"generate",str(ROOT/"tests/parity/dictionary.txt")],input=json.dumps(request),text=True,capture_output=True,check=True)
     schema=json.loads((ROOT/"contracts/generated/Generated.schema.json").read_text(encoding="utf-8"))

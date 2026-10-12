@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     env:
-      CARGO_TARGET_DIR: ${{ github.workspace }}/.codex/temp/desktop-build
+      CARGO_TARGET_DIR: ${{ github.workspace }}/build
       CARGO_BUILD_JOBS: '2'
       CARGO_INCREMENTAL: '0'
     steps:
@@ -41,7 +41,7 @@ jobs:
       - name: Cache Rust dependencies for the actual desktop target directory
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          workspaces: '. -> .codex/temp/desktop-build'
+          workspaces: '. -> build'
       - name: Frozen dependencies, Svelte checks, frontend and release host build (no installation)
         run: pwsh -NoProfile -File tools/build-desktop.ps1 -TestOnly
       - name: Build-cache policy regressions
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      CARGO_TARGET_DIR: ${{ github.workspace }}/.codex/temp/deny-build
+      CARGO_TARGET_DIR: ${{ github.workspace }}/build/deny
       CARGO_INCREMENTAL: '0'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -66,10 +66,10 @@ jobs:
       - name: Cache advisory-tool compilation and installed executable
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          workspaces: '. -> .codex/temp/deny-build'
-          cache-directories: .codex/temp/deny-runtime
+          workspaces: '. -> build/deny'
+          cache-directories: build/deny-runtime
           cache-all-crates: true
           key: cargo-deny-0.20.2
-      - run: cargo +stable install cargo-deny --version 0.20.2 --locked --root .codex/temp/deny-runtime
+      - run: cargo +stable install cargo-deny --version 0.20.2 --locked --root build/deny-runtime
       - name: Check the supported Windows graph against current RustSec advisories
-        run: .codex/temp/deny-runtime/bin/cargo-deny --locked check advisories --warn unmaintained
+        run: build/deny-runtime/bin/cargo-deny --locked check advisories --warn unmaintained

@@ -4,10 +4,10 @@
 param()
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$target = Join-Path $project 'target'
+$target = Join-Path $project 'build'
 $tempRoot = Join-Path $project '.codex/temp'
 $scratch = Join-Path $tempRoot ('release-' + [guid]::NewGuid().ToString('N'))
-$build = Join-Path $tempRoot 'cli-build'
+$build = Join-Path $target 'cli'
 $current = Join-Path $target 'release/anagram-cli.exe'
 $backup = Join-Path $target 'backup/anagram-cli.exe'
 

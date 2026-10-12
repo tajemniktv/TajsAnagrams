@@ -1,0 +1,3 @@
+[build]
+# Persistent project-local artifacts, shared by direct Cargo builds and tests.
+target-dir = "build"

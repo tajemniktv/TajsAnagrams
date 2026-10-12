@@ -36,7 +36,7 @@ def main():
                              augmented=asdict(augment_seed_pool(seeds,scorer,**options))))
         cases.append(dict(seeds=seeds,weights=weights,budget=budget,rounds=rounds,seed_limit=seed_limit))
     subprocess.run(["cargo","build","--locked","--example","refinement_probe"],cwd=ROOT,check=True)
-    executable=ROOT/"target/debug/examples"/("refinement_probe.exe" if sys.platform=="win32" else "refinement_probe")
+    executable=ROOT/"build/debug/examples"/("refinement_probe.exe" if sys.platform=="win32" else "refinement_probe")
     output=subprocess.run([str(executable)],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=120)
     actual=[json.loads(line) for line in output.stdout.splitlines()]
     assert len(actual)==len(expected)

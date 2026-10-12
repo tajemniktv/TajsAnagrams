@@ -87,7 +87,7 @@ def main():
             cases[-1]["corpus"].update(path=str(database),sha256=before)
             reference._clear_order_side_tables()
     subprocess.run(["cargo","build","--locked","--example","ranking_probe"],cwd=ROOT,check=True)
-    executable=ROOT/"target/debug/examples"/("ranking_probe.exe" if sys.platform=="win32" else "ranking_probe")
+    executable=ROOT/"build/debug/examples"/("ranking_probe.exe" if sys.platform=="win32" else "ranking_probe")
     output=subprocess.run([str(executable),str(ROOT/".anagram_data/wordnet31/dict")],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=120)
     actual=[json.loads(line) for line in output.stdout.splitlines()]
     assert len(actual)==len(expected)

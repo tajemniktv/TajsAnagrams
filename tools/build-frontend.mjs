@@ -36,7 +36,7 @@ function digest(value) {
 export function buildFrontend({ project = defaultProject, env = process.env, args = [], build } = {}) {
   const desktop = path.join(project, 'apps/desktop');
   const dist = path.join(desktop, 'dist');
-  const stamp = path.join(project, '.codex/temp/frontend-build.json');
+  const stamp = path.join(project, 'build/frontend-build.json');
   const runBuild = () => {
     if (build) build();
     else {

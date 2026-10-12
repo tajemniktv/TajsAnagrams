@@ -61,7 +61,7 @@ def main():
                              order=reference.best_word_order(words, bigram),
                              percentiles=reference.percentile_map(values), records=expected_records))
     subprocess.run(["cargo", "build", "--locked", "--example", "scoring_probe"], cwd=ROOT, check=True)
-    executable = ROOT / "target/debug/examples" / ("scoring_probe.exe" if sys.platform == "win32" else "scoring_probe")
+    executable = ROOT / "build/debug/examples" / ("scoring_probe.exe" if sys.platform == "win32" else "scoring_probe")
     result = subprocess.run([str(executable)], input="\n".join(map(json.dumps, cases)),
                             text=True, capture_output=True, check=True, timeout=60)
     actual = [json.loads(line) for line in result.stdout.splitlines()]

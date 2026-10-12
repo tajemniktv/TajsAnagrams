@@ -14,7 +14,7 @@ def main():
     dictionary = ROOT / ".anagram_data/dictionary/large.txt"
     frequency = ROOT / ".anagram_data/ngrams/count_1w.txt"
     unigrams = reference.load_unigram_model(frequency)
-    executable = ROOT / "target/debug" / ("anagram-cli.exe" if sys.platform == "win32" else "anagram-cli")
+    executable = ROOT / "build/debug" / ("anagram-cli.exe" if sys.platform == "win32" else "anagram-cli")
     for text in ("knowledgeispower", "thesehipsdontlie", "testing", "ateate"):
         for strategy, short_policy in product(("prefix", "diverse"), ("none", "common", "all")):
             request = dict(schema_version=1, text=text, required=[], hints=[], excluded=[],

@@ -41,7 +41,7 @@ def main():
         if case.get("diverse"): orders=select_diverse_orders(orders,k)
         expected.append(dict(orders=[asdict(order) for order in orders],evaluated=evaluated))
     subprocess.run(["cargo","build","--locked","--example","ordering_probe"],cwd=ROOT,check=True)
-    executable=ROOT/"target/debug/examples"/("ordering_probe.exe" if sys.platform=="win32" else "ordering_probe")
+    executable=ROOT/"build/debug/examples"/("ordering_probe.exe" if sys.platform=="win32" else "ordering_probe")
     output=subprocess.run([str(executable),str(ROOT/".anagram_data/wordnet31/dict")],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=120)
     actual=[json.loads(line) for line in output.stdout.splitlines()]
     assert len(actual)==len(expected)

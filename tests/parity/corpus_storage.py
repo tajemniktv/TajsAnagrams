@@ -45,7 +45,7 @@ def main():
         cases.append(dict(one=one,two=two,vocabulary=sorted(vocabulary),orders=orders))
         expected.append(dict(total=model.total_unigrams,unigrams=model.unigram_counts,scores=[model.score(order) for order in orders]))
         subprocess.run(["cargo","build","--locked","--example","corpus_probe"],cwd=ROOT,check=True)
-        executable=ROOT/"target/debug/examples"/("corpus_probe.exe" if sys.platform=="win32" else "corpus_probe")
+        executable=ROOT/"build/debug/examples"/("corpus_probe.exe" if sys.platform=="win32" else "corpus_probe")
         output=subprocess.run([str(executable)],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=30)
         actual=[json.loads(line) for line in output.stdout.splitlines()]
         close(actual,expected)

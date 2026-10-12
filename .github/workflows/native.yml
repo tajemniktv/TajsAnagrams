@@ -28,6 +28,8 @@ jobs:
       - run: rustup toolchain install stable --profile minimal
       - name: Cache Rust dependency artifacts
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: '. -> build'
       - run: cargo +stable test --locked -p anagram-core -p anagram-cli
       - run: cargo +stable build --locked -p anagram-cli
       - run: python tools/generate_contracts.py --check

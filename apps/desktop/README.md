@@ -13,23 +13,29 @@ Successful normal builds install into
 `%LOCALAPPDATA%\Programs\TajemnikTV\TajsAnagrams`, rotate one previous executable
 into `backup`, add a Start-menu shortcut and restart that installed app gracefully.
 `-TestOnly` and CI build without installation/restart. Cargo artifacts are retained
-in `.codex/temp/desktop-build` for every build, including successful installs.
+in persistent project-root `build` for every build, including successful installs.
 Local dev/test and release profiles enable incremental compilation; CI disables
 codegen incrementality and restores dependency artifacts instead.
 `-KeepBuildCache` remains accepted for compatibility but is no longer necessary.
 To reclaim disk space deliberately, run
-`cargo clean --target-dir .codex/temp/desktop-build` (the next build will be cold).
+`cargo clean --target-dir build` (the next build will be cold).
 
 `pnpm build` checks a content fingerprint of frontend sources, public assets,
 configuration, shared generated contracts, lockfile, Node version and
 `VITE_*`/`TAURI_*`/`NODE_*` environment variables. Unchanged builds verify every
 output's content and leave `dist` untouched, avoiding unnecessary Rust asset
 recompilation. Missing or modified outputs are rebuilt; failed builds are not
-cached. Metadata lives in `.codex/temp/frontend-build.json`; remove that file to
+cached. Metadata lives in `build/frontend-build.json`; remove that file to
 force a frontend rebuild. `pnpm check` still runs on every desktop build.
 Custom Vite arguments bypass the default-output cache.
 Keep `src-tauri/capabilities` present even while permissions are configured inline:
 Tauri watches that directory, and a missing path makes every Cargo build stale.
+
+Direct Cargo development/test builds use root `build/debug` and release builds
+use `build/release`, configured in `.cargo/config.toml`. The CLI publication script
+keeps its transactional candidate cache in `build/cli` and the previous executable
+in `build/backup`. Retained build caches never use `.codex/temp`; that directory is
+reserved for test fixtures, installation recovery files and diagnostic logs.
 
 On a clean checkout, ignored corpus downloads are not bundled. The app still
 installs and starts: use Settings → Data to download/prepare a set, select it,

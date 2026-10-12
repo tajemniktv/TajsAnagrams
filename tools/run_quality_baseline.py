@@ -24,7 +24,7 @@ def request(case, candidate_budget):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cli", default="target/release/anagram-cli.exe", type=Path)
+    parser.add_argument("--cli", default="build/release/anagram-cli.exe", type=Path)
     parser.add_argument("--dictionary", default=".anagram_data/dictionary/normal_user_v2.txt", type=Path)
     parser.add_argument("--unigrams", default=".anagram_data/ngrams/count_1w.txt", type=Path)
     parser.add_argument("--bigrams", default=".anagram_data/ngrams/count_2w.txt", type=Path)

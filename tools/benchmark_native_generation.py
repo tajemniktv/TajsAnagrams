@@ -96,7 +96,7 @@ def main():
                     initial=[], mode="any", strategy=strategy))
     payload = ("\n".join(map(json.dumps, cases)) + "\n").encode()
     subprocess.run(["cargo", "build", "--release", "--locked", "--example", "generation_probe"], cwd=ROOT, check=True)
-    executable = ROOT / "target/release/examples" / ("generation_probe.exe" if sys.platform == "win32" else "generation_probe")
+    executable = ROOT / "build/release/examples" / ("generation_probe.exe" if sys.platform == "win32" else "generation_probe")
     commands = {"python": [sys.executable, str(Path(__file__).resolve()), "--worker"], "rust": [str(executable)]}
     runs = []
     expected = None

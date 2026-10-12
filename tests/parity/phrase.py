@@ -33,7 +33,7 @@ def main():
         expected.append(dict(cohesion=asdict(cohesion),phrase=phrase,blended=(blend_phrase_cohesion(phrase[0],cohesion),details)))
         cases.append(dict(words=words,counts=counts,max_n=max_n))
     subprocess.run(["cargo","build","--locked","--example","phrase_probe"],cwd=ROOT,check=True)
-    executable=ROOT/"target/debug/examples"/("phrase_probe.exe" if sys.platform=="win32" else "phrase_probe")
+    executable=ROOT/"build/debug/examples"/("phrase_probe.exe" if sys.platform=="win32" else "phrase_probe")
     output=subprocess.run([str(executable)],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=120)
     actual=[json.loads(line) for line in output.stdout.splitlines()]
     assert len(actual)==len(expected)

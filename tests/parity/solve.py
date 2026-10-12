@@ -25,7 +25,7 @@ def main():
     unigrams=generator.load_unigram_model(one)
     lex=ranking.WordNetLexicon.load(wordnet)
     subprocess.run(["cargo","build","--locked","-p","anagram-cli"],cwd=ROOT,check=True)
-    executable=ROOT/"target/debug"/("anagram-cli.exe" if sys.platform=="win32" else "anagram-cli")
+    executable=ROOT/"build/debug"/("anagram-cli.exe" if sys.platform=="win32" else "anagram-cli")
     with tempfile.TemporaryDirectory(prefix="solve-parity-",dir=ROOT/".codex/temp") as temp:
         phrase_path=Path(temp)/"phrase.sqlite"
         with closing(sqlite3.connect(phrase_path)) as connection, connection:

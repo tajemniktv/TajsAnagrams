@@ -34,7 +34,7 @@ def main():
         if not set(args.case) <= {case["id"] for case in cases}: parser.error("unknown case")
         cases = [case for case in cases if case["id"] in args.case]
     subprocess.run(["cargo", "build", "--release", "--locked", "-p", "anagram-cli"], cwd=ROOT, check=True)
-    executable = ROOT / "target/release" / ("anagram-cli.exe" if sys.platform == "win32" else "anagram-cli")
+    executable = ROOT / "build/release" / ("anagram-cli.exe" if sys.platform == "win32" else "anagram-cli")
     policy = json.loads((ROOT / ".anagram_data/dictionary/normal_user_v2.json").read_text())
     native = [str(executable), "solve", str(ROOT / ".anagram_data/dictionary/normal_user_v2.txt"),
         str(ROOT / ".anagram_data/ngrams/count_1w.txt"), str(ROOT / ".anagram_data/ngrams/count_2w.txt"),

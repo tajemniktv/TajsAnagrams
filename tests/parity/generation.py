@@ -36,7 +36,7 @@ def main():
         cases.append(case)
         expected.append(dict(bags=[list(b) for b in bags], truncated=stats.truncated))
     subprocess.run(["cargo", "build", "--locked", "--example", "generation_probe"], cwd=ROOT, check=True)
-    executable = ROOT / "target/debug/examples" / ("generation_probe.exe" if sys.platform == "win32" else "generation_probe")
+    executable = ROOT / "build/debug/examples" / ("generation_probe.exe" if sys.platform == "win32" else "generation_probe")
     output = subprocess.run([str(executable)], input="\n".join(map(json.dumps, cases)),
                             text=True, capture_output=True, check=True, timeout=60)
     actual = [json.loads(line) for line in output.stdout.splitlines()]
