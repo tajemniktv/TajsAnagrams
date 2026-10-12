@@ -185,6 +185,26 @@ fn phrase_builder_limits_decompressed_bytes_and_aggregate_sources() {
 }
 
 #[test]
+fn maintenance_reports_cancellation_during_intake_instead_of_corpus_failure() {
+    struct CancelReader(Control);
+    impl std::io::Read for CancelReader {
+        fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+            self.0.cancel();
+            Err(std::io::Error::other("synthetic intake failure"))
+        }
+    }
+    let control = Control::default();
+    let error = anagram_cli::utilities::run_with_input_and_limits(
+        &["ranker-build".into(), "unused-wordnet".into()],
+        &control,
+        &mut CancelReader(control.clone()),
+        &DeploymentLimits::default(),
+    )
+    .unwrap_err();
+    assert_eq!(error.code, "cancelled");
+}
+
+#[test]
 fn ranker_build_budgets_wordnet_and_phrase_identity_together() {
     let temp = scratch();
     for name in ["index.noun", "index.verb", "index.adj", "index.adv"] {
@@ -195,11 +215,16 @@ fn ranker_build_budgets_wordnet_and_phrase_identity_together() {
     let args: Vec<OsString> = vec![
         "ranker-build".into(),
         temp.path().into(),
-        phrase.into_os_string(),
+        phrase.clone().into_os_string(),
     ];
+    let phrase_bytes = anagram_core::phrase_index::PhraseIndex::open(&phrase)
+        .unwrap()
+        .identity()
+        .unwrap()
+        .bytes as usize;
     let limits = DeploymentLimits {
         max_corpus_role_bytes: None,
-        max_total_corpus_bytes: Some(4),
+        max_total_corpus_bytes: Some(phrase_bytes + 3),
         ..Default::default()
     };
     let error = anagram_cli::utilities::run_with_input_and_limits(
@@ -210,4 +235,18 @@ fn ranker_build_budgets_wordnet_and_phrase_identity_together() {
     )
     .unwrap_err();
     assert_eq!(error.code, "corpus_too_large");
+    assert!(error.message.contains("aggregate byte limit"));
+    let exact = DeploymentLimits {
+        max_total_corpus_bytes: Some(phrase_bytes + 4),
+        ..limits
+    };
+    assert!(
+        anagram_cli::utilities::run_with_input_and_limits(
+            &args,
+            &Control::default(),
+            &mut b"[{\"answer\":\"we are home\"}]".as_slice(),
+            &exact,
+        )
+        .is_ok()
+    );
 }

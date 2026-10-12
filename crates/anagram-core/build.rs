@@ -30,12 +30,18 @@ fn collect_source_files(root: &Path, directory: &Path, files: &mut Vec<PathBuf>)
 /// Stable content identity: includes dirty source changes, excludes checkout
 /// location, timestamps, generated build products, and unrelated source files.
 pub fn fingerprint(root: &Path) -> String {
-    let mut files = vec![
-        PathBuf::from("build.rs"),
-        PathBuf::from("Cargo.toml"),
-        PathBuf::from("../../Cargo.toml"),
-        PathBuf::from("../../Cargo.lock"),
-    ];
+    let mut files = vec![PathBuf::from("build.rs"), PathBuf::from("Cargo.toml")];
+    // Cargo normalizes inherited workspace inputs into a packaged manifest.
+    // Include optional manifests/locks when present, with presence encoded by
+    // their logical filename; a package build must not require its old layout.
+    for name in ["Cargo.lock", "../../Cargo.toml", "../../Cargo.lock"] {
+        let path = PathBuf::from(name);
+        match fs::metadata(root.join(&path)) {
+            Ok(_) => files.push(path),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => panic!("cannot inspect {name}: {error}"),
+        }
+    }
     collect_source_files(root, Path::new("src"), &mut files);
     files.sort();
 
@@ -59,6 +65,7 @@ fn main() {
     let root = PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").unwrap());
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=Cargo.lock");
     println!("cargo:rerun-if-changed=../../Cargo.toml");
     println!("cargo:rerun-if-changed=../../Cargo.lock");
     println!("cargo:rerun-if-changed=src");

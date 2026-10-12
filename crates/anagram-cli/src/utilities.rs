@@ -120,7 +120,7 @@ pub fn run_with_input_and_limits(
 ) -> Result<Value, Error> {
     limits.validate()?;
     let mut budget = limits.corpus_read_budget();
-    match args.first().and_then(|a| a.to_str()).unwrap_or("") {
+    let result = (|| match args.first().and_then(|a| a.to_str()).unwrap_or("") {
         "ranker-build" if (2..=3).contains(&args.len()) => {
             build_groups(args, control, source, &mut budget)
         }
@@ -200,6 +200,10 @@ pub fn run_with_input_and_limits(
         _ => Err(err(
             "Usage: ranker-build WORDNET [PHRASE_DB] < cases.json | ranker-train NEW_MODEL < groups.json | ranker-rank MODEL < items.json | prepare-dictionary BASE UNIGRAMS NEW_DICTIONARY | build-phrases NEW_DB TITLE_FILE[.gz] ...",
         )),
+    })();
+    match control.check() {
+        Err(reason) => Err(Error::new(reason, reason)),
+        Ok(()) => result,
     }
 }
 

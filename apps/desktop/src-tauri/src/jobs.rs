@@ -89,11 +89,12 @@ fn generate_only(
         };
         progress.status.versions.data_complete = true;
         progress.stage(Stage::Generating);
-        let generated = anagram_core::request::generate_controlled(
+        let generated = anagram_core::request::generate_with_limits(
             &request.generation,
             control.reader(std::io::Cursor::new(dictionary.bytes())),
             unigrams.as_ref(),
             &control,
+            limits,
         )?;
         progress.status.counts.generated = generated.generated;
         progress.status.exhaustion = match generated.stop {

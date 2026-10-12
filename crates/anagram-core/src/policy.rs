@@ -52,6 +52,12 @@ impl Default for DeploymentLimits {
 }
 
 impl DeploymentLimits {
+    /// Start with finite corpus defaults, then assign only the desired overrides.
+    /// Prefer this or `Default` to exhaustive literals so added fields need no changes.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn validate(&self) -> Result<(), Error> {
         let values = [
             self.max_input_bytes,

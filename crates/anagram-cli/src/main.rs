@@ -2,7 +2,7 @@ use anagram_cli::utilities;
 use anagram_core::{
     control::Control,
     lexicon::Unigrams,
-    request::{Error, GenerateRequest, generate_controlled},
+    request::{Error, GenerateRequest, generate_with_limits},
 };
 use std::{
     fs::File,
@@ -201,12 +201,13 @@ fn run_inner(
             ))
         })
         .transpose()
-        .map_err(Error::corpus)?;
-    let result = generate_controlled(
+        .map_err(|e| Error::corpus_controlled(e, control))?;
+    let result = generate_with_limits(
         &request,
         BufReader::new(corpus_budget.reader(dictionary, "dictionary", control)),
         unigrams.as_ref(),
         control,
+        limits,
     )?;
     serde_json::to_value(result).map_err(|e| Error::new("serialization_error", e.to_string()))
 }

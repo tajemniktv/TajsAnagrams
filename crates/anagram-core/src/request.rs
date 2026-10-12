@@ -66,6 +66,13 @@ pub struct ErrorResponse {
 }
 
 impl Error {
+    pub fn corpus_controlled(error: io::Error, control: &crate::control::Control) -> Self {
+        match control.check() {
+            Err(reason) => Self::new(reason, reason),
+            Ok(()) => Self::corpus(error),
+        }
+    }
+
     pub fn new(code: &'static str, message: impl Into<String>) -> Self {
         Self {
             code,
@@ -241,13 +248,15 @@ pub fn generate(
     cancel: &AtomicBool,
     deadline: Option<Instant>,
 ) -> Result<Generated, Error> {
+    let control = crate::control::Control::default();
+    let mut budget = crate::provenance::CorpusReadBudget::default();
     generate_inner(
         request,
-        dictionary,
+        budget.buffered_reader(dictionary, "dictionary", &control),
         unigrams,
         cancel,
         deadline,
-        &crate::control::Control::default(),
+        &control,
     )
 }
 
@@ -257,16 +266,39 @@ pub fn generate_controlled(
     unigrams: Option<&Unigrams>,
     control: &crate::control::Control,
 ) -> Result<Generated, Error> {
-    control
-        .check()
-        .map_err(|reason| Error::new(reason, reason))?;
-    generate_inner(
+    generate_with_limits(
         request,
         dictionary,
         unigrams,
+        control,
+        &crate::policy::DeploymentLimits::default(),
+    )
+}
+
+/// Enforce dictionary intake and semantic limits for direct core callers.
+/// Already parsed unigram data cannot be byte-accounted here: adapters must
+/// budget its source together with the dictionary before calling this API.
+pub fn generate_with_limits(
+    request: &GenerateRequest,
+    dictionary: impl BufRead,
+    unigrams: Option<&Unigrams>,
+    control: &crate::control::Control,
+    limits: &crate::policy::DeploymentLimits,
+) -> Result<Generated, Error> {
+    control
+        .check()
+        .map_err(|reason| Error::new(reason, reason))?;
+    validate(request)?;
+    limits.admit_generation(request)?;
+    let control = limits.control(control)?;
+    let mut budget = limits.corpus_read_budget();
+    generate_inner(
+        request,
+        budget.buffered_reader(dictionary, "dictionary", &control),
+        unigrams,
         control.flag(),
         control.deadline(),
-        control,
+        &control,
     )
 }
 

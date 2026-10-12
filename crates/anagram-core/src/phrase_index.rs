@@ -71,6 +71,16 @@ pub struct PhraseIndex {
 fn error(e: rusqlite::Error) -> io::Error {
     io::Error::other(e)
 }
+
+fn install_progress_handler(
+    connection: &Connection,
+    control: &crate::control::Control,
+) -> io::Result<()> {
+    let callback_control = control.clone();
+    connection
+        .progress_handler(1000, Some(move || callback_control.check().is_err()))
+        .map_err(error)
+}
 type Record = (Option<String>, Option<i64>, Option<i64>);
 fn read_record(row: &rusqlite::Row<'_>, budget: &CorpusReadBudget) -> io::Result<Record> {
     let text_bytes = row.get::<_, Option<i64>>(3).map_err(error)?.unwrap_or(0);
@@ -105,10 +115,7 @@ impl PhraseIndex {
             OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
         )
         .map_err(error)?;
-        let callback_control = control.clone();
-        connection
-            .progress_handler(1000, Some(move || callback_control.check().is_err()))
-            .map_err(error)?;
+        install_progress_handler(&connection, control)?;
         // Admission, provenance and every later query see one read snapshot.
         connection.execute_batch("BEGIN").map_err(error)?;
         let mut index = Self {
@@ -137,10 +144,14 @@ impl PhraseIndex {
     /// over an already admitted immutable snapshot.
     pub fn validate_unique_keys(&self) -> io::Result<()> {
         self.control.check_io()?;
-        let duplicate: bool = self.connection.query_row(
-            "SELECT EXISTS(SELECT 1 FROM ngrams GROUP BY text COLLATE BINARY HAVING COUNT(*) > 1)",
-            [], |row| row.get(0)
-        ).map_err(error)?;
+        let duplicate: bool = self
+            .connection
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM ngrams GROUP BY text HAVING COUNT(*) > 1)",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(error)?;
         self.control.check_io()?;
         if duplicate {
             return Err(io::Error::new(
@@ -204,6 +215,7 @@ impl PhraseIndex {
     /// Re-read the admitted immutable snapshot for identity, without charging
     /// its logical input twice. SQLite physical I/O/temporary storage is separate.
     pub(crate) fn identity_of_intake(&self) -> io::Result<DataIdentity> {
+        self.validate_unique_keys()?;
         let mut budget = CorpusReadBudget::new(None, None);
         let schema = self.schema(&budget)?;
         let mut statement = self
@@ -284,5 +296,26 @@ impl PhraseCorpus for PhraseIndex {
             }
         }
         Ok(counts)
+    }
+}
+
+#[cfg(test)]
+mod progress_tests {
+    #[test]
+    fn sqlite_vm_handler_interrupts_expired_control_deterministically() {
+        let connection = rusqlite::Connection::open_in_memory().unwrap();
+        let control = crate::control::Control::with_deadline(std::time::Instant::now());
+        super::install_progress_handler(&connection, &control).unwrap();
+        // Run directly without Rust-side prechecks: only the production VM
+        // handler can interrupt this query, independent of machine speed.
+        let result = connection.query_row(
+            "WITH RECURSIVE seq(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM seq WHERE x<10000) SELECT sum(x) FROM seq",
+            [], |row| row.get::<_, i64>(0),
+        );
+        assert_eq!(
+            result.unwrap_err().sqlite_error_code(),
+            Some(rusqlite::ErrorCode::OperationInterrupted)
+        );
+        assert_eq!(control.check(), Err("timed_out"));
     }
 }

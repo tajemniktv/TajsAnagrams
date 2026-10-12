@@ -378,11 +378,12 @@ fn run(
     let unigrams =
         Unigrams::load(control.reader(Cursor::new(&unigram_source.bytes))).map_err(corpus)?;
     progress.stage(Stage::Generating);
-    let generated = request::generate_controlled(
+    let generated = request::generate_with_limits(
         &request.generation,
         control.reader(Cursor::new(&dictionary.bytes)),
         Some(&unigrams),
         control,
+        limits,
     )?;
     drop(dictionary);
     progress.status.counts.generated = generated.generated;

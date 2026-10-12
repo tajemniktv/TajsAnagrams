@@ -3,7 +3,7 @@ use crate::{
     jobs::Desktop,
     settings::{Corpora, Settings},
 };
-use anagram_core::{control::Control, solve};
+use anagram_core::{control::Control, policy::DeploymentLimits, solve};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -50,8 +50,10 @@ pub enum Action {
 impl Desktop {
     pub fn manage(&self, action: Action) -> Result<(), String> {
         let data = self.data.clone();
+        let runtime = self.inner.lock().map_err(error)?.settings.runtime.clone();
+        let limits = runtime.maintenance_limits();
         self.operation(3600, move |control| match action {
-            Action::Validate { corpora, model } => validate(&corpora, &model, control),
+            Action::Validate { corpora, model } => validate_with_limits(&corpora, &model, control, &limits),
             Action::BuildTraining { cases, corpora, options } => {
                 let mut args = vec![OsString::from("ranker-build"), corpora.wordnet.into()];
                 if !corpora.phrase.is_empty() { args.push(corpora.phrase.into()); }
@@ -61,7 +63,7 @@ impl Desktop {
                 let mut input: Value = serde_json::from_slice(&bytes).map_err(error)?;
                 if let Some(options) = options { if !input.is_array() { return Err("With desktop build controls, select a JSON array of cases".into()); } input = json!({"cases":input,"options":options}); }
                 let bytes = serde_json::to_vec(&input).map_err(error)?;
-                let result = anagram_cli::utilities::run_with_input(&args, control, &mut bytes.as_slice()).map_err(|e| e.message)?;
+                let result = anagram_cli::utilities::run_with_input_and_limits(&args, control, &mut bytes.as_slice(), &limits).map_err(|e| e.message)?;
                 if result["groups"].as_array().is_none_or(|g| g.is_empty()) { return Err(format!("No usable training groups: {}", result["skipped"])); }
                 let bytes = serde_json::to_vec_pretty(&result).map_err(error)?;
                 if bytes.len() > 4 * 1024 * 1024 || result["groups"].as_array().is_some_and(|g| g.len() > 1000) {
@@ -78,15 +80,15 @@ impl Desktop {
             }
             Action::RankModel {model, items} => {
                 let mut input = fs::File::open(items).map_err(error)?;
-                anagram_cli::utilities::run_with_input(&["ranker-rank".into(),model.into()],control,&mut input).map_err(|e| e.message)
+                anagram_cli::utilities::run_with_input_and_limits(&["ranker-rank".into(),model.into()],control,&mut input,&limits).map_err(|e| e.message)
             }
-            Action::Dictionary {base,unigrams} => tool_output(&data,"dictionary.txt",vec!["prepare-dictionary".into(),base.into(),unigrams.into()],false,control),
+            Action::Dictionary {base,unigrams} => tool_output(&data,"dictionary.txt",vec!["prepare-dictionary".into(),base.into(),unigrams.into()],false,control,&limits),
             Action::Phrases {sources} => {
                 if sources.is_empty() { return Err("Choose at least one title file".into()); }
                 let mut args = vec!["build-phrases".into()]; args.extend(sources.into_iter().map(OsString::from));
-                tool_output(&data,"phrases.db",args,true,control)
+                tool_output(&data,"phrases.db",args,true,control,&limits)
             }
-            Action::Prepare { source, wiktionary, wikipedia } => prepare(&data, &source, wiktionary, wikipedia, control),
+            Action::Prepare { source, wiktionary, wikipedia } => prepare_with_limits(&data, &source, wiktionary, wikipedia, control, &limits),
         })
     }
 }
@@ -97,6 +99,7 @@ fn tool_output(
     mut args: Vec<OsString>,
     output_first: bool,
     control: &Control,
+    limits: &DeploymentLimits,
 ) -> Result<Value, String> {
     let root = data.join("prepared");
     fs::create_dir_all(&root).map_err(error)?;
@@ -110,17 +113,33 @@ fn tool_output(
     } else {
         args.push(output);
     }
-    let result = anagram_cli::utilities::run_with_input(&args, control, &mut std::io::empty())
-        .map_err(|e| e.message)?;
+    let result = anagram_cli::utilities::run_with_input_and_limits(
+        &args,
+        control,
+        &mut std::io::empty(),
+        limits,
+    )
+    .map_err(|e| e.message)?;
     control.check().map_err(error)?;
     let _ = stage.keep();
     Ok(result)
 }
 
-pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, String> {
+#[cfg(test)]
+fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, String> {
+    validate_with_limits(c, model, control, &DeploymentLimits::default())
+}
+
+fn validate_with_limits(
+    c: &Corpora,
+    model: &str,
+    control: &Control,
+    limits: &DeploymentLimits,
+) -> Result<Value, String> {
+    limits.validate().map_err(|e| e.message)?;
     c.validate()?;
     let mut text_stats = serde_json::Map::new();
-    let mut budget = anagram_core::provenance::CorpusReadBudget::default();
+    let mut budget = limits.corpus_read_budget();
     for (role, path, tokens) in [
         ("dictionary", &c.dictionary, 0),
         ("unigrams", &c.unigrams, 1),
@@ -168,7 +187,7 @@ pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, St
     request.generation.text = "a".into();
     request.generation.candidate_budget = 1;
     request.deep_per_group = 1;
-    let result = solve::solve_controlled(
+    let result = solve::solve_with_limits(
         &request,
         solve::Paths {
             dictionary: Path::new(&c.dictionary),
@@ -179,6 +198,7 @@ pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, St
             model: (!model.is_empty()).then(|| Path::new(model)),
         },
         control,
+        limits,
     )
     .map_err(|e| e.message)?;
     if result
@@ -258,12 +278,31 @@ fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
     })
 }
 
+#[cfg(test)]
 fn prepare(
     data: &Path,
     source: &str,
     wiktionary: bool,
     wikipedia: bool,
     control: &Control,
+) -> Result<Value, String> {
+    prepare_with_limits(
+        data,
+        source,
+        wiktionary,
+        wikipedia,
+        control,
+        &DeploymentLimits::default(),
+    )
+}
+
+fn prepare_with_limits(
+    data: &Path,
+    source: &str,
+    wiktionary: bool,
+    wikipedia: bool,
+    control: &Control,
+    limits: &DeploymentLimits,
 ) -> Result<Value, String> {
     let sets = data.join("corpus-sets");
     fs::create_dir_all(&sets).map_err(error)?;
@@ -285,7 +324,7 @@ fn prepare(
         fetch(url, local, name, &root.join(name), control)?;
     }
     let dictionary = root.join("dictionary.txt");
-    let policy = anagram_cli::utilities::run_with_input(
+    let policy = anagram_cli::utilities::run_with_input_and_limits(
         &[
             "prepare-dictionary".into(),
             root.join("base.txt").into_os_string(),
@@ -294,12 +333,13 @@ fn prepare(
         ],
         control,
         &mut std::io::empty(),
+        limits,
     )
     .map_err(|e| e.message)?;
     let wordnet = root.join("wordnet");
     fs::create_dir(&wordnet).map_err(error)?;
     let archive = fs::File::open(root.join("wordnet.tar.gz")).map_err(error)?;
-    let mut archive_budget = anagram_core::provenance::CorpusReadBudget::default();
+    let mut archive_budget = limits.corpus_read_budget();
     let mut archive = tar::Archive::new(archive_budget.reader(
         flate2::read::GzDecoder::new(archive),
         "wordnet_archive",
@@ -361,8 +401,13 @@ fn prepare(
         let mut args = vec!["build-phrases".into(), path.clone().into_os_string()];
         args.extend(titles);
         phrase_build = Some(
-            anagram_cli::utilities::run_with_input(&args, control, &mut std::io::empty())
-                .map_err(|e| e.message)?,
+            anagram_cli::utilities::run_with_input_and_limits(
+                &args,
+                control,
+                &mut std::io::empty(),
+                limits,
+            )
+            .map_err(|e| e.message)?,
         );
         path.to_string_lossy().into_owned()
     };
@@ -373,7 +418,7 @@ fn prepare(
         wordnet: wordnet.to_string_lossy().into_owned(),
         phrase,
     };
-    let report = validate(&corpora, "", control)?;
+    let report = validate_with_limits(&corpora, "", control, limits)?;
     let result = json!({"corpora":corpora,"validation":report,"dictionary_policy":policy,"phrase_build":phrase_build,"note":"Prepared separately. Select this set and save settings to activate; previous corpora are preserved."});
     fs::write(
         root.join("manifest.json"),
@@ -433,6 +478,51 @@ mod tests {
         gzip.write_all(b"we_are_home\n").unwrap();
         gzip.finish().unwrap();
     }
+    #[test]
+    fn maintenance_uses_custom_corpus_limits_for_preparation_and_validation() {
+        let temp = scratch();
+        let input = temp.path().join("source");
+        sources(&input);
+        let control = Control::default();
+        let mut runtime = crate::settings::Runtime {
+            custom_limits: true,
+            ..Default::default()
+        };
+        runtime.limits.max_corpus_role_bytes = Some(1);
+        runtime.limits.max_total_corpus_bytes = Some(1);
+        assert!(
+            prepare_with_limits(
+                temp.path(),
+                input.to_str().unwrap(),
+                false,
+                false,
+                &control,
+                &runtime.maintenance_limits()
+            )
+            .is_err()
+        );
+        runtime.limits.max_corpus_role_bytes = None;
+        runtime.limits.max_total_corpus_bytes = None;
+        // Solve-specific limits must not narrow the maintenance smoke request.
+        runtime.limits.max_candidates = Some(1);
+        runtime.limits.timeout_ms = Some(0);
+        let prepared = prepare_with_limits(
+            temp.path(),
+            input.to_str().unwrap(),
+            false,
+            false,
+            &control,
+            &runtime.maintenance_limits(),
+        )
+        .unwrap();
+        let c: Corpora = serde_json::from_value(prepared["corpora"].clone()).unwrap();
+        assert!(validate_with_limits(&c, "", &control, &runtime.maintenance_limits()).is_ok());
+        runtime.limits.max_total_corpus_bytes = Some(1);
+        assert!(validate_with_limits(&c, "", &control, &runtime.maintenance_limits()).is_err());
+        runtime.custom_limits = false;
+        assert!(validate_with_limits(&c, "", &control, &runtime.maintenance_limits()).is_ok());
+    }
+
     #[test]
     fn staged_corpora_validate_preserve_previous_and_remove_failed_sets() {
         let temp = scratch();

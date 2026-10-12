@@ -56,6 +56,23 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn normalized_package_without_workspace_files_has_a_content_identity() {
+    let scratch = Scratch::new("packaged");
+    let workspace_id = build_script::fingerprint(&scratch.package());
+    fs::remove_file(scratch.0.join("Cargo.toml")).unwrap();
+    fs::remove_file(scratch.0.join("Cargo.lock")).unwrap();
+    let packaged_id = build_script::fingerprint(&scratch.package());
+    assert_ne!(workspace_id, packaged_id);
+    assert_eq!(packaged_id, build_script::fingerprint(&scratch.package()));
+    fs::write(
+        scratch.package().join("Cargo.lock"),
+        "normalized package lock",
+    )
+    .unwrap();
+    assert_ne!(packaged_id, build_script::fingerprint(&scratch.package()));
+}
+
+#[test]
 fn source_fingerprint_matches_compiled_identity() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     assert_eq!(

@@ -113,6 +113,22 @@ impl CorpusReadBudget {
         self.reader_with_file_limit(inner, role, control, None)
     }
 
+    /// Budget an existing buffered dictionary without bypassing its fill_buf
+    /// behavior or allocating another buffer. Charge only consumed bytes.
+    pub fn buffered_reader<'a, R: std::io::BufRead>(
+        &'a mut self,
+        inner: R,
+        role: &'a str,
+        control: &'a Control,
+    ) -> BudgetBufferedReader<'a, R> {
+        BudgetBufferedReader {
+            inner,
+            budget: self,
+            role,
+            control,
+        }
+    }
+
     fn reader_with_file_limit<'a, R: Read>(
         &'a mut self,
         inner: R,
@@ -139,7 +155,11 @@ impl CorpusReadBudget {
         let total_bytes = self.total_bytes.checked_add(bytes).ok_or_else(|| {
             io::Error::other("aggregate corpus byte count exceeds platform limits")
         })?;
-        self.role_bytes.insert(role.to_owned(), role_bytes);
+        if let Some(used) = self.role_bytes.get_mut(role) {
+            *used = role_bytes;
+        } else {
+            self.role_bytes.insert(role.to_owned(), role_bytes);
+        }
         self.total_bytes = total_bytes;
         Ok(())
     }
@@ -183,6 +203,52 @@ pub struct BudgetReader<'a, R> {
     file_limit: Option<usize>,
     file_bytes: usize,
     exceeded: Option<(LimitScope, usize)>,
+}
+
+pub struct BudgetBufferedReader<'a, R> {
+    inner: R,
+    budget: &'a mut CorpusReadBudget,
+    role: &'a str,
+    control: &'a Control,
+}
+
+impl<R: std::io::BufRead> Read for BudgetBufferedReader<'_, R> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        use std::io::BufRead;
+        if buffer.is_empty() {
+            return Ok(0);
+        }
+        let available = self.fill_buf()?;
+        let n = available.len().min(buffer.len());
+        buffer[..n].copy_from_slice(&available[..n]);
+        self.consume(n);
+        Ok(n)
+    }
+}
+
+impl<R: std::io::BufRead> std::io::BufRead for BudgetBufferedReader<'_, R> {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        self.control.check_io()?;
+        let limiting = self.budget.remaining(self.role, None, 0);
+        let available = self.inner.fill_buf()?;
+        if let Some((left, scope, maximum)) = limiting {
+            if left == 0 && !available.is_empty() {
+                return Err(CorpusReadBudget::limit_error(self.role, scope, maximum));
+            }
+            Ok(&available[..available.len().min(left)])
+        } else {
+            Ok(available)
+        }
+    }
+
+    fn consume(&mut self, amount: usize) {
+        // BufRead callers may consume only the bytes offered by fill_buf;
+        // that prefix was admitted against both counters before exposure.
+        self.budget
+            .record(self.role, amount)
+            .expect("admitted buffered byte count");
+        self.inner.consume(amount);
+    }
 }
 
 impl<R: Read> Read for BudgetReader<'_, R> {
@@ -236,6 +302,18 @@ impl Default for CorpusReadBudget {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn repeated_fragment_charges_reuse_the_role_key_allocation() {
+        let mut budget = super::CorpusReadBudget::new(None, None);
+        budget.charge("phrase_index", 1).unwrap();
+        let key = budget.role_bytes.keys().next().unwrap().as_ptr();
+        for _ in 0..1000 {
+            budget.charge("phrase_index", 1).unwrap();
+            assert_eq!(key, budget.role_bytes.keys().next().unwrap().as_ptr());
+        }
+        assert_eq!(budget.total_bytes, 1001);
+    }
+
     use super::*;
 
     #[test]

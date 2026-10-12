@@ -201,6 +201,13 @@ before success. Debug/test builds check every emitted status against these rules
 
 ## Adapter-owned deployment limits
 
+Rust API migration: adding the two corpus-byte fields is source-breaking for
+exhaustive `DeploymentLimits` literals. Use `DeploymentLimits::new()` (or
+`Default::default()`) and assign desired overrides, or use struct update syntax
+with `..Default::default()`. The constructor keeps finite corpus defaults as
+new policy fields are introduced. Wire JSON remains backward-compatible;
+omitted fields receive defaults and explicit `null` disables a byte cap.
+
 Generation requests also support `short_policy` (`none`, `common`, `all`, default
 `common`) and `extra_short_words` (default empty). Extra words are normalized into
 the short whitelist, not injected into the dictionary. Like Python, the common

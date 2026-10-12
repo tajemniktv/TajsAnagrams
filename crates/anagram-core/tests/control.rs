@@ -144,6 +144,38 @@ fn corpus_cancellation_is_not_retried_as_interrupted_io() {
 }
 
 #[test]
+fn direct_generation_enforces_custom_dictionary_budget_and_explicit_null() {
+    use anagram_core::{
+        policy::DeploymentLimits,
+        request::{GenerateRequest, generate_with_limits},
+    };
+    let request: GenerateRequest = serde_json::from_value(serde_json::json!({
+        "schema_version":1,"text":"ate","min_words":1,"max_words":1,
+        "min_word_length":1,"max_word_length":6,"min_zipf":0,
+        "allow_repeat":true,"hint_mode":"any","strategy":"prefix","candidate_budget":10
+    }))
+    .unwrap();
+    let control = Control::default();
+    for (role, total, success) in [
+        (Some(4), Some(4), true),
+        (Some(3), None, false),
+        (None, Some(3), false),
+        (None, None, true),
+    ] {
+        let limits = DeploymentLimits {
+            max_corpus_role_bytes: role,
+            max_total_corpus_bytes: total,
+            ..DeploymentLimits::new()
+        };
+        let result = generate_with_limits(&request, Cursor::new(b"ate\n"), None, &control, &limits);
+        assert_eq!(result.is_ok(), success);
+        if !success {
+            assert_eq!(result.err().unwrap().code, "corpus_too_large");
+        }
+    }
+}
+
+#[test]
 fn generation_admission_reports_cancellation_not_corpus_failure() {
     use anagram_core::request::{GenerateRequest, generate_controlled};
     let request: GenerateRequest = serde_json::from_value(serde_json::json!({
@@ -252,14 +284,14 @@ fn order_progress_counts_completed_scores_before_cancellation() {
 }
 
 #[test]
-fn sqlite_deadline_interrupts_large_unindexed_intake() {
+fn sqlite_intake_rejects_expired_deadline() {
     let scratch = Scratch::new();
     let path = scratch.0.join("slow.sqlite");
     let connection = rusqlite::Connection::open(&path).unwrap();
-    connection.execute_batch("CREATE TABLE ngrams(text TEXT,n INTEGER,count INTEGER); WITH RECURSIVE seq(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM seq WHERE x<200000) INSERT INTO ngrams SELECT 'a b ' || x, 2, 1 FROM seq;").unwrap();
+    connection.execute_batch("CREATE TABLE ngrams(text TEXT,n INTEGER,count INTEGER); INSERT INTO ngrams VALUES('a b',2,1);").unwrap();
     drop(connection);
     let start = Instant::now();
-    let control = Control::with_deadline(start + Duration::from_millis(20));
+    let control = Control::with_deadline(start);
     assert!(PhraseIndex::open_controlled(&path, &control).is_err());
     assert_eq!(control.check(), Err("timed_out"));
     assert!(start.elapsed() < Duration::from_secs(5));

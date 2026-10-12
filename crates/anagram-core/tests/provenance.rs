@@ -448,6 +448,19 @@ fn phrase_budget_counts_escaped_rows_and_accepts_exact_canonical_size() {
 }
 
 #[test]
+fn phrase_keys_colliding_under_declared_collation_are_rejected() {
+    let scratch = Scratch::new("collation");
+    for (collation, second) in [("NOCASE", "A B"), ("RTRIM", "a b ")] {
+        let path = scratch.0.join(format!("{collation}.sqlite"));
+        let writer = rusqlite::Connection::open(&path).unwrap();
+        writer.execute_batch(&format!("CREATE TABLE ngrams(text TEXT COLLATE {collation},n INTEGER,count INTEGER); INSERT INTO ngrams VALUES('a b',2,1),('{second}',2,9);")).unwrap();
+        let index = PhraseIndex::open(&path).unwrap();
+        assert!(index.validate_unique_keys().is_err());
+        assert!(index.identity().is_err());
+    }
+}
+
+#[test]
 fn phrase_lookup_rejects_duplicates_and_accepts_identifier_case() {
     let scratch = Scratch::new("case-duplicates");
     let path = scratch.0.join("phrases.sqlite");
