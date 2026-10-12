@@ -227,6 +227,9 @@ impl<R: std::io::BufRead> Read for BudgetBufferedReader<'_, R> {
         let n = available.len().min(buffer.len());
         buffer[..n].copy_from_slice(&available[..n]);
         self.consume(n);
+        if let Some(error) = &self.pending_error {
+            return Err(io::Error::new(error.kind(), error.to_string()));
+        }
         Ok(n)
     }
 }
@@ -310,6 +313,22 @@ impl Default for CorpusReadBudget {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn exact_length_read_rejects_uncharged_bytes_on_counter_overflow() {
+        for role_overflow in [true, false] {
+            let mut budget = CorpusReadBudget::new(None, None);
+            if role_overflow {
+                budget.role_bytes.insert("dictionary".into(), usize::MAX);
+            } else {
+                budget.total_bytes = usize::MAX;
+            }
+            let control = Control::default();
+            let mut reader =
+                budget.buffered_reader(std::io::Cursor::new(b"a"), "dictionary", &control);
+            assert!(reader.read_exact(&mut [0; 1]).is_err());
+        }
+    }
+
     #[test]
     fn unlimited_buffered_counter_overflow_is_reported_without_panicking() {
         use std::io::{BufRead, Cursor};
