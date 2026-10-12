@@ -1,6 +1,14 @@
 # Native tools and remaining compatibility boundaries
 
 Build `cargo build -p anagram-cli --release` to obtain `target/release/anagram-cli.exe`.
+
+On Windows, `pwsh -File tools/build-release.ps1` builds in the persistent
+`.codex/temp/cli-build` cache, smoke-checks the candidate, then publishes to
+`target/release/anagram-cli.exe` with one rotating backup in `target/backup`.
+It does not delete other `target` artifacts. Local dev/test and release builds
+use incremental codegen; unchanged builds reuse Cargo's fingerprints and artifacts.
+Use `cargo clean --target-dir .codex/temp/cli-build` only when deliberately
+reclaiming space or diagnosing a build-cache problem.
 These are optional maintenance/experiment tools; the desktop solver never launches
 the CLI and does not need Python. Tool output is JSON. `--timeout-ms N` also applies
 to these commands. Existing model/dictionary/database outputs are never overwritten:

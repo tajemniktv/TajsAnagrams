@@ -1,4 +1,5 @@
 [CmdletBinding()]
+# KeepBuildCache remains accepted for existing callers; retention is now default.
 param([switch]$TestOnly, [switch]$KeepBuildCache)
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -44,21 +45,7 @@ try {
         if ($process.HasExited) { throw 'New app exited during startup.' }
         Write-Output "Installed and started: $exe (PID $($process.Id), SHA256 $((Get-FileHash -LiteralPath $exe).Hash))"
     }
-    if ($KeepBuildCache) {
-        Write-Output 'Build cache retained explicitly; installed release rotation is unchanged.'
-        return
-    }
-    # Installed current/backup are the retained artifacts, not Cargo's build cache.
-    $resolvedBuild = [IO.Path]::GetFullPath($build)
-    if ($resolvedBuild -ne [IO.Path]::GetFullPath((Join-Path $project '.codex/temp/desktop-build'))) { throw 'Unexpected build cleanup path' }
-    $ancestor = $resolvedBuild
-    while ($ancestor -ne $project) {
-        if ((Get-Item -LiteralPath $ancestor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Refusing redirected cleanup path: $ancestor" }
-        $ancestor = Split-Path -Parent $ancestor
-    }
-    if (Get-ChildItem -LiteralPath $resolvedBuild -Recurse -Force | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint } | Select-Object -First 1) { throw 'Refusing redirected build tree' }
-    Remove-Item -LiteralPath $resolvedBuild -Recurse -Force
-    Write-Output 'Current installed release and one rotating backup retained; Cargo build scratch removed.'
+    Write-Output "Cargo build cache retained: $build; installed release rotation is unchanged."
 } finally {
     $env:CARGO_TARGET_DIR = $oldTarget
     Pop-Location

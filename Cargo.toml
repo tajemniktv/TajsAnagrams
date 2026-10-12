@@ -12,8 +12,11 @@ unicode-normalization = "0.1.25"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# Keep routine test builds small. Use an explicit profile override when symbols
-# or incremental compilation are needed for a debugging session.
+# Keep symbols small while reusing local codegen across source edits.
+# CI overrides CARGO_INCREMENTAL=0: only dependency artifacts are cached there.
 [profile.dev]
 debug = 0
-incremental = false
+incremental = true
+
+[profile.release]
+incremental = true

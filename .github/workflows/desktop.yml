@@ -5,6 +5,9 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   windows-desktop:
     runs-on: windows-latest
@@ -12,6 +15,7 @@ jobs:
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/.codex/temp/desktop-build
       CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -20,12 +24,28 @@ jobs:
         with:
           node-version: '24'
       - run: npm install --global pnpm@12.11.2
+      - name: Locate pnpm's content-addressed store
+        id: pnpm-store
+        shell: pwsh
+        run: '"path=$(pnpm store path --silent)" >> $env:GITHUB_OUTPUT'
+      - name: Cache frontend dependency downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-${{ runner.os }}-12-${{ hashFiles('apps/desktop/pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-12-
       - name: Install the declared minimum Rust toolchain
         run: |
           rustup toolchain install 1.90.0 --profile minimal --component clippy
           rustup default 1.90.0
+      - name: Cache Rust dependencies for the actual desktop target directory
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: '. -> .codex/temp/desktop-build'
       - name: Frozen dependencies, Svelte checks, frontend and release host build (no installation)
-        run: pwsh -NoProfile -File tools/build-desktop.ps1 -TestOnly -KeepBuildCache
+        run: pwsh -NoProfile -File tools/build-desktop.ps1 -TestOnly
+      - name: Build-cache policy regressions
+        run: node --test tools/test-build-policy.cjs
       - name: Frontend asynchronous state regressions
         run: node --test tools/test-desktop-ui.cjs
       - name: Installer preflight and rollback integration
@@ -37,11 +57,19 @@ jobs:
     timeout-minutes: 20
     env:
       CARGO_TARGET_DIR: ${{ github.workspace }}/.codex/temp/deny-build
+      CARGO_INCREMENTAL: '0'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - run: rustup toolchain install stable --profile minimal
+      - name: Cache advisory-tool compilation and installed executable
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: '. -> .codex/temp/deny-build'
+          cache-directories: .codex/temp/deny-runtime
+          cache-all-crates: true
+          key: cargo-deny-0.20.2
       - run: cargo +stable install cargo-deny --version 0.20.2 --locked --root .codex/temp/deny-runtime
       - name: Check the supported Windows graph against current RustSec advisories
         run: .codex/temp/deny-runtime/bin/cargo-deny --locked check advisories --warn unmaintained

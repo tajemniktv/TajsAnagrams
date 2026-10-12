@@ -5,11 +5,15 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   native:
     runs-on: ${{ matrix.os }}
     env:
       RUSTUP_TOOLCHAIN: stable
+      CARGO_INCREMENTAL: '0'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -22,12 +26,16 @@ jobs:
         with:
           python-version: '3.14'
       - run: rustup toolchain install stable --profile minimal
+      - name: Cache Rust dependency artifacts
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: cargo +stable test --locked -p anagram-core -p anagram-cli
       - run: cargo +stable build --locked -p anagram-cli
       - run: python tools/generate_contracts.py --check
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: contracts/package-lock.json
       - run: npm ci
         working-directory: contracts
       - run: npm run check

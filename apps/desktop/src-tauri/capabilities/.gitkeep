@@ -1,0 +1,1 @@
+# Tauri watches this directory even when capabilities are inline in tauri.conf.json.

@@ -12,11 +12,24 @@ From the repository root: `pwsh -File tools/build-desktop.ps1`.
 Successful normal builds install into
 `%LOCALAPPDATA%\Programs\TajemnikTV\TajsAnagrams`, rotate one previous executable
 into `backup`, add a Start-menu shortcut and restart that installed app gracefully.
-`-TestOnly` and CI build without installation/restart. Build scratch uses
-`.codex/temp/desktop-build`; normal successful installs remove it after startup
-verification. Test-only and failed builds retain scratch for inspection.
-`-KeepBuildCache` explicitly retains the build cache without changing installation
-or the one-backup retention policy.
+`-TestOnly` and CI build without installation/restart. Cargo artifacts are retained
+in `.codex/temp/desktop-build` for every build, including successful installs.
+Local dev/test and release profiles enable incremental compilation; CI disables
+codegen incrementality and restores dependency artifacts instead.
+`-KeepBuildCache` remains accepted for compatibility but is no longer necessary.
+To reclaim disk space deliberately, run
+`cargo clean --target-dir .codex/temp/desktop-build` (the next build will be cold).
+
+`pnpm build` checks a content fingerprint of frontend sources, public assets,
+configuration, shared generated contracts, lockfile, Node version and
+`VITE_*`/`TAURI_*`/`NODE_*` environment variables. Unchanged builds verify every
+output's content and leave `dist` untouched, avoiding unnecessary Rust asset
+recompilation. Missing or modified outputs are rebuilt; failed builds are not
+cached. Metadata lives in `.codex/temp/frontend-build.json`; remove that file to
+force a frontend rebuild. `pnpm check` still runs on every desktop build.
+Custom Vite arguments bypass the default-output cache.
+Keep `src-tauri/capabilities` present even while permissions are configured inline:
+Tauri watches that directory, and a missing path makes every Cargo build stale.
 
 On a clean checkout, ignored corpus downloads are not bundled. The app still
 installs and starts: use Settings → Data to download/prepare a set, select it,

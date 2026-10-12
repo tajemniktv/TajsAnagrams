@@ -1,4 +1,4 @@
-# Build and retain only the current native CLI release and one rotating backup.
+# Publish the current native CLI release and one rotating backup; retain Cargo's cache.
 # This is a development CLI build, not a desktop-app dogfood/CI entrypoint.
 [CmdletBinding()]
 param()
@@ -7,6 +7,7 @@ $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $target = Join-Path $project 'target'
 $tempRoot = Join-Path $project '.codex/temp'
 $scratch = Join-Path $tempRoot ('release-' + [guid]::NewGuid().ToString('N'))
+$build = Join-Path $tempRoot 'cli-build'
 $current = Join-Path $target 'release/anagram-cli.exe'
 $backup = Join-Path $target 'backup/anagram-cli.exe'
 
@@ -37,11 +38,10 @@ if (Get-Process -Name cargo,rustc,anagram-cli -ErrorAction SilentlyContinue) {
 }
 Assert-ProjectTree $target
 Assert-ProjectTree $scratch
-$before = (Get-ChildItem -LiteralPath $target -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
+Assert-ProjectTree $build
 New-Item -ItemType Directory -Path $scratch -Force | Out-Null
 Push-Location $project
 try {
-    $build = Join-Path $scratch 'build'
     & cargo build --release --locked -p anagram-cli --target-dir $build
     if ($LASTEXITCODE -ne 0) { throw 'Release build failed; existing releases are untouched.' }
     $candidate = Join-Path $build 'release/anagram-cli.exe'
@@ -63,10 +63,7 @@ try {
     }
     if ((Get-FileHash -LiteralPath $candidate).Hash -ne (Get-FileHash -LiteralPath $stagedCurrent).Hash) { throw 'Release verification failed.' }
     Assert-ProjectTree $target
-    # All recoverable executables are staged outside target before build-cache removal.
-    if (Test-Path -LiteralPath $target) {
-        Get-ChildItem -LiteralPath $target -Force | ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
-    }
+    # Replace only the two published executables, never unrelated Cargo artifacts.
     New-Item -ItemType Directory -Path (Join-Path $target 'release'),(Join-Path $target 'backup') -Force | Out-Null
     Copy-Item -LiteralPath $stagedCurrent -Destination $current
     if (Test-Path -LiteralPath $stagedBackup) { Copy-Item -LiteralPath $stagedBackup -Destination $backup }
@@ -78,8 +75,7 @@ try {
     }
     Assert-ProjectTree $scratch
     Remove-Item -LiteralPath $scratch -Recurse -Force
-    $after = (Get-ChildItem -LiteralPath $target -Recurse -File | Measure-Object Length -Sum).Sum
-    Write-Output ('Release verified; target reduced from {0:N2} GiB to {1:N2} MiB.' -f ($before / 1GB), ($after / 1MB))
+    Write-Output "Release verified; Cargo build cache retained: $build"
     Write-Output "Current: $current"
     if (Test-Path -LiteralPath $backup) { Write-Output "Backup:  $backup" }
 } catch {
