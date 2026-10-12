@@ -22,6 +22,17 @@
         "null"
       ]
     },
+    "max_corpus_role_bytes": {
+      "default": 2147483648,
+      "description": "Maximum source bytes per corpus role: file bytes, decompressed title\nbytes, or canonical phrase-index JSON bytes.",
+      "format": "uint",
+      "maximum": 9007199254740991,
+      "minimum": 1,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "max_deep_analyzed": {
       "default": null,
       "format": "uint",
@@ -54,6 +65,17 @@
     },
     "max_retained_orders": {
       "default": null,
+      "format": "uint",
+      "maximum": 9007199254740991,
+      "minimum": 1,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "max_total_corpus_bytes": {
+      "default": 3221225472,
+      "description": "Maximum aggregate corpus source bytes within one intake phase.",
       "format": "uint",
       "maximum": 9007199254740991,
       "minimum": 1,

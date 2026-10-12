@@ -93,6 +93,12 @@ impl<'a> Bigrams<'a> {
             let Ok(count) = count.trim().parse::<i64>() else {
                 continue;
             };
+            if count < 0 {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "negative bigram count",
+                ));
+            }
             let words: Vec<_> = phrase.split_whitespace().collect();
             if words.len() != 2 {
                 continue;

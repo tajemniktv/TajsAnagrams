@@ -170,6 +170,10 @@ fn ranked_identity_preserves_result_affecting_inputs() {
     request.generation.text = format!("{}!", request.generation.text.to_uppercase());
     versions.data.reverse();
     assert_eq!(initial, ranked_key(&request, &versions).unwrap());
+    let build_identity = versions.engine.clone();
+    versions.engine.push_str("-changed-source");
+    assert_ne!(initial, ranked_key(&request, &versions).unwrap());
+    versions.engine = build_identity;
     request.generation.candidate_budget += 1;
     assert_ne!(initial, ranked_key(&request, &versions).unwrap());
     request.generation.candidate_budget -= 1;

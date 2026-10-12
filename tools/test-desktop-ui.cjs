@@ -45,3 +45,17 @@ test('Disposed Experimental refresh cannot publish an error',async()=>{
   const h=harness('Experimental'); h.dispose(); h.first.reject(new Error('late failure')); await flush();
   assert.equal(h.api.error,'');
 });
+
+test('Blank corpus limits are saved as explicit null while numeric limits are preserved',async()=>{
+  let saved;
+  const source=fs.readFileSync(path.join(__dirname,'../apps/desktop/src/SettingsDialog.svelte'),'utf8').split('<script lang="ts">')[1].split('</script>')[0].replace(/^\s*import .*;$/gm,'');
+  const settings={runtime:{limits:{max_corpus_role_bytes:2147483648,max_total_corpus_bytes:3221225472,timeout_ms:120000}}};
+  const context=vm.createContext({structuredClone,$state:Object.assign(x=>x,{snapshot:structuredClone}),$props:()=>({settings,directory:'',onsave:async value=>{saved=JSON.parse(JSON.stringify(value));},onclose:()=>{}}),untrack:fn=>fn(),$effect:()=>{},bridge:{},message:String});
+  const compiled=ts.transpileModule(source+'\nglobalThis.api={save,get draft(){return draft}};',{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+  vm.runInContext(compiled,context);
+  context.api.draft.runtime.limits.max_corpus_role_bytes=undefined;
+  await context.api.save();
+  assert.equal(saved.runtime.limits.max_corpus_role_bytes,null);
+  assert.equal(saved.runtime.limits.max_total_corpus_bytes,3221225472);
+  assert.equal(saved.runtime.limits.timeout_ms,120000);
+});

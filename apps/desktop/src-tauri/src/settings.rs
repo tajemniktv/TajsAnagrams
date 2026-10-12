@@ -49,6 +49,21 @@ impl Default for Runtime {
     }
 }
 impl Runtime {
+    /// Maintenance has its own timeout and smoke workload. Carry only the
+    /// selected corpus caps, not solve-specific candidate or beam limits.
+    pub fn maintenance_limits(&self) -> DeploymentLimits {
+        let selected = if self.custom_limits {
+            self.limits.clone()
+        } else {
+            limits()
+        };
+        DeploymentLimits {
+            max_corpus_role_bytes: selected.max_corpus_role_bytes,
+            max_total_corpus_bytes: selected.max_total_corpus_bytes,
+            ..Default::default()
+        }
+    }
+
     pub fn cache_path(&self, data: &Path) -> PathBuf {
         if self.cache_path.is_empty() {
             data.join("results.sqlite")
@@ -73,6 +88,7 @@ pub fn limits() -> DeploymentLimits {
         max_beam_width: Some(512),
         max_retained_orders: Some(128),
         timeout_ms: Some(120_000),
+        ..DeploymentLimits::default()
     }
 }
 impl Default for Settings {

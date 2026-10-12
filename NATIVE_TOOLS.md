@@ -83,6 +83,31 @@ Use a new versioned folder beneath the app's `corpora` directory for an update,
 then choose its files in Settings. The previous corpus is preserved for rollback.
 Automatic background updates/downloads are deliberately not enabled.
 
+Corpus intake is bounded by default to 2 GiB per role and 3 GiB aggregate.
+`--limits POLICY.json` applies to generation, solving, and native maintenance
+commands. `max_corpus_role_bytes` and `max_total_corpus_bytes` accept positive
+integers; an omitted field uses its finite default and explicit `null` disables
+that limit for trusted local tooling. Limits are enforced on actual reads, so
+file growth cannot bypass them. Phrase builds count decompressed title bytes
+with a distinct role per source. WordNet files share the other solve inputs'
+aggregate budget. Models retain their additional 64 KiB format cap.
+
+Phrase-index admission counts the canonical schema/row JSON stream, including
+escaping overhead, in an unsorted pass before aggregation or sorting. Identity
+hashing re-reads that admitted SQLite snapshot without charging its input twice.
+Ranker dataset building checks duplicate keys without calculating a discarded
+identity hash. SQLite pages, WAL, temporary sorting storage and
+parser heap allocations are additional. These limits bound input, not process
+memory. Desktop validation performs separately bounded sanity and solve phases;
+native desktop preparation also bounds archive decompression. The PowerShell
+`tools/prepare-native-data.ps1` archive extraction does not have this decompressed
+byte limit; use it only with trusted archives and sufficient disk space.
+Repeated parser passes over a
+captured snapshot do not charge its source bytes again. Default sizes preserve
+the preparation tools' existing 2 GiB source ceiling; select smaller values when
+the available memory requires them. Compatibility with private corpora was not
+measured.
+
 ## Deliberately retained differences
 
 - Rust regex excludes backreferences and look-around; invalid patterns are errors.

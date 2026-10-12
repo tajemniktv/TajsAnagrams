@@ -53,9 +53,15 @@ fn generate_only(
     let mut progress = Progress::new(request, limits, &control, id, observer);
     progress.start();
     let result = (|| {
-        let fail = |e: std::io::Error| Error::new("corpus_error", e.to_string());
-        let dictionary =
-            Snapshot::load(Path::new(&corpora.dictionary), "dictionary", &control).map_err(fail)?;
+        let fail = Error::corpus;
+        let mut corpus_budget = limits.corpus_read_budget();
+        let dictionary = Snapshot::load_with_budget(
+            Path::new(&corpora.dictionary),
+            "dictionary",
+            &control,
+            &mut corpus_budget,
+        )
+        .map_err(fail)?;
         progress
             .status
             .versions
@@ -64,8 +70,13 @@ fn generate_only(
         let unigrams = if request.generation.min_zipf <= 0.0 || corpora.unigrams.is_empty() {
             None
         } else {
-            let source =
-                Snapshot::load(Path::new(&corpora.unigrams), "unigrams", &control).map_err(fail)?;
+            let source = Snapshot::load_with_budget(
+                Path::new(&corpora.unigrams),
+                "unigrams",
+                &control,
+                &mut corpus_budget,
+            )
+            .map_err(fail)?;
             progress
                 .status
                 .versions
@@ -78,11 +89,12 @@ fn generate_only(
         };
         progress.status.versions.data_complete = true;
         progress.stage(Stage::Generating);
-        let generated = anagram_core::request::generate_controlled(
+        let generated = anagram_core::request::generate_with_limits(
             &request.generation,
             control.reader(std::io::Cursor::new(dictionary.bytes())),
             unigrams.as_ref(),
             &control,
+            limits,
         )?;
         progress.status.counts.generated = generated.generated;
         progress.status.exhaustion = match generated.stop {

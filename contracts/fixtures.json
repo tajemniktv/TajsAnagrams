@@ -3,7 +3,9 @@
   { "schema": "ErrorResponse", "valid": false, "value": { "schema_version": 2, "error": { "code": "empty_input", "message": "No letters" } } },
   { "schema": "DeploymentLimits", "valid": true, "value": {} },
   { "schema": "DeploymentLimits", "valid": true, "value": { "max_candidates": 1, "timeout_ms": 0 } },
+  { "schema": "DeploymentLimits", "valid": true, "value": { "max_corpus_role_bytes": 1, "max_total_corpus_bytes": 2 } },
   { "schema": "DeploymentLimits", "valid": false, "value": { "max_candidates": 0 } },
+  { "schema": "DeploymentLimits", "valid": false, "value": { "max_total_corpus_bytes": 0 } },
   { "schema": "DeploymentLimits", "valid": false, "value": { "max_candidates": 9007199254740992 } },
   {
     "schema": "GenerateRequest",

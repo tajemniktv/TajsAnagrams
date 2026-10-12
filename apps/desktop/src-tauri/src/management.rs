@@ -3,7 +3,9 @@ use crate::{
     jobs::Desktop,
     settings::{Corpora, Settings},
 };
-use anagram_core::{control::Control, solve};
+use anagram_core::{
+    control::Control, policy::DeploymentLimits, provenance::CorpusReadBudget, solve,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -50,8 +52,10 @@ pub enum Action {
 impl Desktop {
     pub fn manage(&self, action: Action) -> Result<(), String> {
         let data = self.data.clone();
+        let runtime = self.inner.lock().map_err(error)?.settings.runtime.clone();
+        let limits = runtime.maintenance_limits();
         self.operation(3600, move |control| match action {
-            Action::Validate { corpora, model } => validate(&corpora, &model, control),
+            Action::Validate { corpora, model } => validate_with_limits(&corpora, &model, control, &limits),
             Action::BuildTraining { cases, corpora, options } => {
                 let mut args = vec![OsString::from("ranker-build"), corpora.wordnet.into()];
                 if !corpora.phrase.is_empty() { args.push(corpora.phrase.into()); }
@@ -61,7 +65,7 @@ impl Desktop {
                 let mut input: Value = serde_json::from_slice(&bytes).map_err(error)?;
                 if let Some(options) = options { if !input.is_array() { return Err("With desktop build controls, select a JSON array of cases".into()); } input = json!({"cases":input,"options":options}); }
                 let bytes = serde_json::to_vec(&input).map_err(error)?;
-                let result = anagram_cli::utilities::run_with_input(&args, control, &mut bytes.as_slice()).map_err(|e| e.message)?;
+                let result = anagram_cli::utilities::run_with_input_and_limits(&args, control, &mut bytes.as_slice(), &limits).map_err(|e| e.message)?;
                 if result["groups"].as_array().is_none_or(|g| g.is_empty()) { return Err(format!("No usable training groups: {}", result["skipped"])); }
                 let bytes = serde_json::to_vec_pretty(&result).map_err(error)?;
                 if bytes.len() > 4 * 1024 * 1024 || result["groups"].as_array().is_some_and(|g| g.len() > 1000) {
@@ -78,15 +82,15 @@ impl Desktop {
             }
             Action::RankModel {model, items} => {
                 let mut input = fs::File::open(items).map_err(error)?;
-                anagram_cli::utilities::run_with_input(&["ranker-rank".into(),model.into()],control,&mut input).map_err(|e| e.message)
+                anagram_cli::utilities::run_with_input_and_limits(&["ranker-rank".into(),model.into()],control,&mut input,&limits).map_err(|e| e.message)
             }
-            Action::Dictionary {base,unigrams} => tool_output(&data,"dictionary.txt",vec!["prepare-dictionary".into(),base.into(),unigrams.into()],false,control),
+            Action::Dictionary {base,unigrams} => tool_output(&data,"dictionary.txt",vec!["prepare-dictionary".into(),base.into(),unigrams.into()],false,control,&limits),
             Action::Phrases {sources} => {
                 if sources.is_empty() { return Err("Choose at least one title file".into()); }
                 let mut args = vec!["build-phrases".into()]; args.extend(sources.into_iter().map(OsString::from));
-                tool_output(&data,"phrases.db",args,true,control)
+                tool_output(&data,"phrases.db",args,true,control,&limits)
             }
-            Action::Prepare { source, wiktionary, wikipedia } => prepare(&data, &source, wiktionary, wikipedia, control),
+            Action::Prepare { source, wiktionary, wikipedia } => prepare_with_limits(&data, &source, wiktionary, wikipedia, control, &limits),
         })
     }
 }
@@ -97,6 +101,7 @@ fn tool_output(
     mut args: Vec<OsString>,
     output_first: bool,
     control: &Control,
+    limits: &DeploymentLimits,
 ) -> Result<Value, String> {
     let root = data.join("prepared");
     fs::create_dir_all(&root).map_err(error)?;
@@ -110,16 +115,33 @@ fn tool_output(
     } else {
         args.push(output);
     }
-    let result = anagram_cli::utilities::run_with_input(&args, control, &mut std::io::empty())
-        .map_err(|e| e.message)?;
+    let result = anagram_cli::utilities::run_with_input_and_limits(
+        &args,
+        control,
+        &mut std::io::empty(),
+        limits,
+    )
+    .map_err(|e| e.message)?;
     control.check().map_err(error)?;
     let _ = stage.keep();
     Ok(result)
 }
 
-pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, String> {
+#[cfg(test)]
+fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, String> {
+    validate_with_limits(c, model, control, &DeploymentLimits::default())
+}
+
+fn validate_with_limits(
+    c: &Corpora,
+    model: &str,
+    control: &Control,
+    limits: &DeploymentLimits,
+) -> Result<Value, String> {
+    limits.validate().map_err(|e| e.message)?;
     c.validate()?;
     let mut text_stats = serde_json::Map::new();
+    let mut budget = limits.corpus_read_budget();
     for (role, path, tokens) in [
         ("dictionary", &c.dictionary, 0),
         ("unigrams", &c.unigrams, 1),
@@ -127,9 +149,11 @@ pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, St
     ] {
         let mut valid = 0_u64;
         let mut ignored = 0_u64;
-        for line in anagram_core::lexicon::decoded_lines(
-            control.reader(BufReader::new(fs::File::open(path).map_err(error)?)),
-        ) {
+        for line in anagram_core::lexicon::decoded_lines(BufReader::new(budget.reader(
+            fs::File::open(path).map_err(error)?,
+            role,
+            control,
+        ))) {
             let line = line.map_err(error)?;
             let fields: Vec<_> = line.split_whitespace().collect();
             let accepted = if tokens == 0 {
@@ -165,7 +189,7 @@ pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, St
     request.generation.text = "a".into();
     request.generation.candidate_budget = 1;
     request.deep_per_group = 1;
-    let result = solve::solve_controlled(
+    let result = solve::solve_with_limits(
         &request,
         solve::Paths {
             dictionary: Path::new(&c.dictionary),
@@ -176,6 +200,7 @@ pub fn validate(c: &Corpora, model: &str, control: &Control) -> Result<Value, St
             model: (!model.is_empty()).then(|| Path::new(model)),
         },
         control,
+        limits,
     )
     .map_err(|e| e.message)?;
     if result
@@ -198,12 +223,24 @@ fn fetch(
     name: &str,
     output: &Path,
     control: &Control,
+    budget: &mut CorpusReadBudget,
 ) -> Result<(), String> {
     control.check().map_err(error)?;
+    let role = match name {
+        "base.txt" => "dictionary",
+        "count_1w.txt" => "unigrams",
+        "count_2w.txt" => "bigrams",
+        "wordnet.tar.gz" => "wordnet_archive",
+        "enwiki.gz" | "enwiktionary.gz" => "phrase_index",
+        _ => name,
+    };
     if local.as_os_str().is_empty() {
-        return download(url, output, control);
+        return download(url, output, control, role, budget);
     }
-    let mut input = fs::File::open(local.join(name)).map_err(error)?;
+    let input = fs::File::open(local.join(name)).map_err(error)?;
+    let length = usize::try_from(input.metadata().map_err(error)?.len()).map_err(error)?;
+    budget.ensure_fits(role, length).map_err(error)?;
+    let mut input = budget.reader(input, role, control);
     let mut file = fs::File::create_new(output).map_err(error)?;
     let mut total = 0_u64;
     let mut buffer = [0; 64 * 1024];
@@ -225,7 +262,13 @@ fn fetch(
     file.sync_all().map_err(error)
 }
 
-fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
+fn download(
+    url: &str,
+    output: &Path,
+    control: &Control,
+    role: &str,
+    budget: &mut CorpusReadBudget,
+) -> Result<(), String> {
     // The network future lives on the existing joined maintenance worker. Dropping
     // it cancels a stalled request; no detached download survives cancellation.
     tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(error)?.block_on(async {
@@ -234,10 +277,14 @@ fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
                 .user_agent(concat!("TajsAnagrams/", env!("CARGO_PKG_VERSION"), " (https://github.com/tajemniktv/TajsAnagrams)"))
                 .read_timeout(Duration::from_secs(30)).timeout(Duration::from_secs(3600)).build().map_err(error)?;
             let mut response = client.get(url).send().await.map_err(error)?.error_for_status().map_err(error)?;
+            if let Some(length) = response.content_length() {
+                budget.ensure_fits(role, usize::try_from(length).map_err(error)?).map_err(error)?;
+            }
             let mut file = fs::File::create_new(output).map_err(error)?;
             let mut total = 0_u64;
             while let Some(bytes) = response.chunk().await.map_err(error)? {
                 control.check().map_err(error)?;
+                budget.charge(role, bytes.len()).map_err(error)?;
                 total += bytes.len() as u64;
                 if total > 2 * 1024 * 1024 * 1024 { return Err("Source exceeds 2 GiB; use offline preparation for larger sources".into()); }
                 file.write_all(&bytes).map_err(error)?;
@@ -255,12 +302,31 @@ fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
     })
 }
 
+#[cfg(test)]
 fn prepare(
     data: &Path,
     source: &str,
     wiktionary: bool,
     wikipedia: bool,
     control: &Control,
+) -> Result<Value, String> {
+    prepare_with_limits(
+        data,
+        source,
+        wiktionary,
+        wikipedia,
+        control,
+        &DeploymentLimits::default(),
+    )
+}
+
+fn prepare_with_limits(
+    data: &Path,
+    source: &str,
+    wiktionary: bool,
+    wikipedia: bool,
+    control: &Control,
+    limits: &DeploymentLimits,
 ) -> Result<Value, String> {
     let sets = data.join("corpus-sets");
     fs::create_dir_all(&sets).map_err(error)?;
@@ -270,6 +336,7 @@ fn prepare(
         .map_err(error)?;
     let root = stage.path();
     let local = Path::new(source);
+    let mut acquisition_budget = limits.corpus_read_budget();
     for (url, name) in [
         ("https://phillipmfeldman.org/English/large.txt", "base.txt"),
         ("https://norvig.com/ngrams/count_1w.txt", "count_1w.txt"),
@@ -279,10 +346,17 @@ fn prepare(
             "wordnet.tar.gz",
         ),
     ] {
-        fetch(url, local, name, &root.join(name), control)?;
+        fetch(
+            url,
+            local,
+            name,
+            &root.join(name),
+            control,
+            &mut acquisition_budget,
+        )?;
     }
     let dictionary = root.join("dictionary.txt");
-    let policy = anagram_cli::utilities::run_with_input(
+    let policy = anagram_cli::utilities::run_with_input_and_limits(
         &[
             "prepare-dictionary".into(),
             root.join("base.txt").into_os_string(),
@@ -291,12 +365,18 @@ fn prepare(
         ],
         control,
         &mut std::io::empty(),
+        limits,
     )
     .map_err(|e| e.message)?;
     let wordnet = root.join("wordnet");
     fs::create_dir(&wordnet).map_err(error)?;
     let archive = fs::File::open(root.join("wordnet.tar.gz")).map_err(error)?;
-    let mut archive = tar::Archive::new(control.reader(flate2::read::GzDecoder::new(archive)));
+    let mut archive_budget = limits.corpus_read_budget();
+    let mut archive = tar::Archive::new(archive_budget.reader(
+        flate2::read::GzDecoder::new(archive),
+        "wordnet_archive",
+        control,
+    ));
     let required = [
         "index.noun",
         "index.verb",
@@ -341,6 +421,7 @@ fn prepare(
                 &format!("{name}.gz"),
                 &file,
                 control,
+                &mut acquisition_budget,
             )?;
             titles.push(file.into_os_string());
         }
@@ -353,8 +434,13 @@ fn prepare(
         let mut args = vec!["build-phrases".into(), path.clone().into_os_string()];
         args.extend(titles);
         phrase_build = Some(
-            anagram_cli::utilities::run_with_input(&args, control, &mut std::io::empty())
-                .map_err(|e| e.message)?,
+            anagram_cli::utilities::run_with_input_and_limits(
+                &args,
+                control,
+                &mut std::io::empty(),
+                limits,
+            )
+            .map_err(|e| e.message)?,
         );
         path.to_string_lossy().into_owned()
     };
@@ -365,7 +451,7 @@ fn prepare(
         wordnet: wordnet.to_string_lossy().into_owned(),
         phrase,
     };
-    let report = validate(&corpora, "", control)?;
+    let report = validate_with_limits(&corpora, "", control, limits)?;
     let result = json!({"corpora":corpora,"validation":report,"dictionary_policy":policy,"phrase_build":phrase_build,"note":"Prepared separately. Select this set and save settings to activate; previous corpora are preserved."});
     fs::write(
         root.join("manifest.json"),
@@ -426,6 +512,51 @@ mod tests {
         gzip.finish().unwrap();
     }
     #[test]
+    fn maintenance_uses_custom_corpus_limits_for_preparation_and_validation() {
+        let temp = scratch();
+        let input = temp.path().join("source");
+        sources(&input);
+        let control = Control::default();
+        let mut runtime = crate::settings::Runtime {
+            custom_limits: true,
+            ..Default::default()
+        };
+        runtime.limits.max_corpus_role_bytes = Some(1);
+        runtime.limits.max_total_corpus_bytes = Some(1);
+        assert!(
+            prepare_with_limits(
+                temp.path(),
+                input.to_str().unwrap(),
+                false,
+                false,
+                &control,
+                &runtime.maintenance_limits()
+            )
+            .is_err()
+        );
+        runtime.limits.max_corpus_role_bytes = None;
+        runtime.limits.max_total_corpus_bytes = None;
+        // Solve-specific limits must not narrow the maintenance smoke request.
+        runtime.limits.max_candidates = Some(1);
+        runtime.limits.timeout_ms = Some(0);
+        let prepared = prepare_with_limits(
+            temp.path(),
+            input.to_str().unwrap(),
+            false,
+            false,
+            &control,
+            &runtime.maintenance_limits(),
+        )
+        .unwrap();
+        let c: Corpora = serde_json::from_value(prepared["corpora"].clone()).unwrap();
+        assert!(validate_with_limits(&c, "", &control, &runtime.maintenance_limits()).is_ok());
+        runtime.limits.max_total_corpus_bytes = Some(1);
+        assert!(validate_with_limits(&c, "", &control, &runtime.maintenance_limits()).is_err());
+        runtime.custom_limits = false;
+        assert!(validate_with_limits(&c, "", &control, &runtime.maintenance_limits()).is_ok());
+    }
+
+    #[test]
     fn staged_corpora_validate_preserve_previous_and_remove_failed_sets() {
         let temp = scratch();
         let input = temp.path().join("source");
@@ -472,6 +603,83 @@ mod tests {
         assert!(validate(&c, "", &control).is_err());
     }
     #[test]
+    fn acquisition_applies_role_and_shared_limits_before_staging_sources() {
+        let temp = scratch();
+        let source = temp.path().join("source");
+        fs::create_dir(&source).unwrap();
+        fs::write(source.join("enwiki.gz"), b"hello").unwrap();
+        fs::write(source.join("enwiktionary.gz"), b"hello").unwrap();
+        let control = Control::default();
+        for (role, total) in [(Some(9), None), (None, Some(9))] {
+            let stage = tempfile::tempdir_in(temp.path()).unwrap();
+            let mut budget = CorpusReadBudget::new(role, total);
+            fetch(
+                "unused",
+                &source,
+                "enwiki.gz",
+                &stage.path().join("first"),
+                &control,
+                &mut budget,
+            )
+            .unwrap();
+            let second = stage.path().join("second");
+            assert!(
+                fetch(
+                    "unused",
+                    &source,
+                    "enwiktionary.gz",
+                    &second,
+                    &control,
+                    &mut budget
+                )
+                .is_err()
+            );
+            assert!(!second.exists());
+        }
+    }
+
+    #[test]
+    fn http_acquisition_checks_length_and_charges_unknown_length_chunks() {
+        let temp = scratch();
+        let control = Control::default();
+        for chunked in [false, true] {
+            let server = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let address = server.local_addr().unwrap();
+            let worker = std::thread::spawn(move || {
+                let (mut stream, _) = server.accept().unwrap();
+                let mut request = [0; 4096];
+                assert!(stream.read(&mut request).unwrap() > 0);
+                let response = if chunked {
+                    "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n3\r\nabc\r\n3\r\ndef\r\n0\r\n\r\n"
+                } else {
+                    "HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nabcdef"
+                };
+                stream.write_all(response.as_bytes()).unwrap();
+            });
+            let output = temp.path().join(if chunked { "chunked" } else { "known" });
+            let mut budget = CorpusReadBudget::new(Some(5), Some(5));
+            assert!(
+                fetch(
+                    &format!("http://{address}"),
+                    Path::new(""),
+                    "fixture",
+                    &output,
+                    &control,
+                    &mut budget
+                )
+                .unwrap_err()
+                .contains("byte limit")
+            );
+            worker.join().unwrap();
+            if chunked {
+                assert!(fs::metadata(output).unwrap().len() <= 5);
+            } else {
+                assert!(!output.exists());
+            }
+        }
+    }
+
+    #[test]
     fn http_fetch_checks_status_and_cancel_before_network() {
         let temp = scratch();
         for (status, ok) in [("200 OK", true), ("404 Not Found", false)] {
@@ -506,7 +714,8 @@ mod tests {
                     Path::new(""),
                     "fixture",
                     &path,
-                    &Control::default()
+                    &Control::default(),
+                    &mut CorpusReadBudget::default()
                 )
                 .is_ok(),
                 ok
@@ -524,7 +733,8 @@ mod tests {
                 Path::new(""),
                 "cancelled",
                 &temp.path().join("cancelled"),
-                &cancelled
+                &cancelled,
+                &mut CorpusReadBudget::default()
             )
             .is_err()
         );
@@ -557,6 +767,7 @@ mod tests {
             "stalled",
             &temp.path().join("stalled"),
             &control,
+            &mut CorpusReadBudget::default(),
         );
         release_tx.send(()).unwrap();
         server.join().unwrap();

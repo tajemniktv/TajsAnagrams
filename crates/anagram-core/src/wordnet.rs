@@ -1,6 +1,11 @@
 //! WordNet tables and morphological features. Owners can prepare a bounded word
 //! set before sharing the corpus; scoring never mutates it or uses global caches.
-use crate::{contracts::DataIdentity, control::Control, normalize_letters, provenance::Snapshot};
+use crate::{
+    contracts::DataIdentity,
+    control::Control,
+    normalize_letters,
+    provenance::{CorpusReadBudget, Snapshot},
+};
 use serde::Serialize;
 use std::{
     collections::{BTreeSet, HashMap},
@@ -8,9 +13,14 @@ use std::{
     path::Path,
 };
 
-fn ascii(path: &Path, control: &Control, identities: &mut Vec<DataIdentity>) -> io::Result<String> {
+fn ascii(
+    path: &Path,
+    control: &Control,
+    identities: &mut Vec<DataIdentity>,
+    budget: &mut CorpusReadBudget,
+) -> io::Result<String> {
     let role = format!("wordnet/{}", path.file_name().unwrap().to_string_lossy());
-    let snapshot = match Snapshot::load(path, &role, control) {
+    let snapshot = match Snapshot::load_with_budget(path, &role, control, budget) {
         Ok(snapshot) => snapshot,
         Err(error) => {
             if error.kind() == io::ErrorKind::NotFound {
@@ -32,9 +42,10 @@ fn index(
     path: &Path,
     control: &Control,
     identities: &mut Vec<DataIdentity>,
+    budget: &mut CorpusReadBudget,
 ) -> io::Result<BTreeSet<String>> {
     let mut words = BTreeSet::new();
-    for line in ascii(path, control, identities)?.lines() {
+    for line in ascii(path, control, identities, budget)?.lines() {
         control.check_io()?;
         if line.is_empty() || line.starts_with(char::is_whitespace) {
             continue;
@@ -57,8 +68,9 @@ fn exceptions(
     path: &Path,
     control: &Control,
     identities: &mut Vec<DataIdentity>,
+    budget: &mut CorpusReadBudget,
 ) -> io::Result<HashMap<String, BTreeSet<String>>> {
-    let text = match ascii(path, control, identities) {
+    let text = match ascii(path, control, identities, budget) {
         Ok(text) => text,
         Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(HashMap::new()),
         Err(e) => return Err(e),
@@ -156,9 +168,22 @@ impl WordNet {
         directory: &Path,
         control: &Control,
     ) -> io::Result<(Self, Vec<DataIdentity>)> {
+        Self::load_identified_with_budget(directory, control, &mut CorpusReadBudget::default())
+    }
+
+    pub fn load_identified_with_budget(
+        directory: &Path,
+        control: &Control,
+        budget: &mut CorpusReadBudget,
+    ) -> io::Result<(Self, Vec<DataIdentity>)> {
         let mut identities = Vec::new();
         let mut frames: HashMap<String, BTreeSet<u32>> = HashMap::new();
-        let data = match ascii(&directory.join("data.verb"), control, &mut identities) {
+        let data = match ascii(
+            &directory.join("data.verb"),
+            control,
+            &mut identities,
+            budget,
+        ) {
             Ok(data) => data,
             Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
             Err(e) => return Err(e),
@@ -172,12 +197,42 @@ impl WordNet {
             }
         }
         let lex = Self {
-            nouns: index(&directory.join("index.noun"), control, &mut identities)?,
-            verbs: index(&directory.join("index.verb"), control, &mut identities)?,
-            adjs: index(&directory.join("index.adj"), control, &mut identities)?,
-            advs: index(&directory.join("index.adv"), control, &mut identities)?,
-            noun_exc: exceptions(&directory.join("noun.exc"), control, &mut identities)?,
-            verb_exc: exceptions(&directory.join("verb.exc"), control, &mut identities)?,
+            nouns: index(
+                &directory.join("index.noun"),
+                control,
+                &mut identities,
+                budget,
+            )?,
+            verbs: index(
+                &directory.join("index.verb"),
+                control,
+                &mut identities,
+                budget,
+            )?,
+            adjs: index(
+                &directory.join("index.adj"),
+                control,
+                &mut identities,
+                budget,
+            )?,
+            advs: index(
+                &directory.join("index.adv"),
+                control,
+                &mut identities,
+                budget,
+            )?,
+            noun_exc: exceptions(
+                &directory.join("noun.exc"),
+                control,
+                &mut identities,
+                budget,
+            )?,
+            verb_exc: exceptions(
+                &directory.join("verb.exc"),
+                control,
+                &mut identities,
+                budget,
+            )?,
             frames,
             prepared: HashMap::new(),
         };
