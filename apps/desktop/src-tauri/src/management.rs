@@ -3,7 +3,9 @@ use crate::{
     jobs::Desktop,
     settings::{Corpora, Settings},
 };
-use anagram_core::{control::Control, policy::DeploymentLimits, solve};
+use anagram_core::{
+    control::Control, policy::DeploymentLimits, provenance::CorpusReadBudget, solve,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -221,12 +223,24 @@ fn fetch(
     name: &str,
     output: &Path,
     control: &Control,
+    budget: &mut CorpusReadBudget,
 ) -> Result<(), String> {
     control.check().map_err(error)?;
+    let role = match name {
+        "base.txt" => "dictionary",
+        "count_1w.txt" => "unigrams",
+        "count_2w.txt" => "bigrams",
+        "wordnet.tar.gz" => "wordnet_archive",
+        "enwiki.gz" | "enwiktionary.gz" => "phrase_index",
+        _ => name,
+    };
     if local.as_os_str().is_empty() {
-        return download(url, output, control);
+        return download(url, output, control, role, budget);
     }
-    let mut input = fs::File::open(local.join(name)).map_err(error)?;
+    let input = fs::File::open(local.join(name)).map_err(error)?;
+    let length = usize::try_from(input.metadata().map_err(error)?.len()).map_err(error)?;
+    budget.ensure_fits(role, length).map_err(error)?;
+    let mut input = budget.reader(input, role, control);
     let mut file = fs::File::create_new(output).map_err(error)?;
     let mut total = 0_u64;
     let mut buffer = [0; 64 * 1024];
@@ -248,7 +262,13 @@ fn fetch(
     file.sync_all().map_err(error)
 }
 
-fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
+fn download(
+    url: &str,
+    output: &Path,
+    control: &Control,
+    role: &str,
+    budget: &mut CorpusReadBudget,
+) -> Result<(), String> {
     // The network future lives on the existing joined maintenance worker. Dropping
     // it cancels a stalled request; no detached download survives cancellation.
     tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(error)?.block_on(async {
@@ -257,10 +277,14 @@ fn download(url: &str, output: &Path, control: &Control) -> Result<(), String> {
                 .user_agent(concat!("TajsAnagrams/", env!("CARGO_PKG_VERSION"), " (https://github.com/tajemniktv/TajsAnagrams)"))
                 .read_timeout(Duration::from_secs(30)).timeout(Duration::from_secs(3600)).build().map_err(error)?;
             let mut response = client.get(url).send().await.map_err(error)?.error_for_status().map_err(error)?;
+            if let Some(length) = response.content_length() {
+                budget.ensure_fits(role, usize::try_from(length).map_err(error)?).map_err(error)?;
+            }
             let mut file = fs::File::create_new(output).map_err(error)?;
             let mut total = 0_u64;
             while let Some(bytes) = response.chunk().await.map_err(error)? {
                 control.check().map_err(error)?;
+                budget.charge(role, bytes.len()).map_err(error)?;
                 total += bytes.len() as u64;
                 if total > 2 * 1024 * 1024 * 1024 { return Err("Source exceeds 2 GiB; use offline preparation for larger sources".into()); }
                 file.write_all(&bytes).map_err(error)?;
@@ -312,6 +336,7 @@ fn prepare_with_limits(
         .map_err(error)?;
     let root = stage.path();
     let local = Path::new(source);
+    let mut acquisition_budget = limits.corpus_read_budget();
     for (url, name) in [
         ("https://phillipmfeldman.org/English/large.txt", "base.txt"),
         ("https://norvig.com/ngrams/count_1w.txt", "count_1w.txt"),
@@ -321,7 +346,14 @@ fn prepare_with_limits(
             "wordnet.tar.gz",
         ),
     ] {
-        fetch(url, local, name, &root.join(name), control)?;
+        fetch(
+            url,
+            local,
+            name,
+            &root.join(name),
+            control,
+            &mut acquisition_budget,
+        )?;
     }
     let dictionary = root.join("dictionary.txt");
     let policy = anagram_cli::utilities::run_with_input_and_limits(
@@ -389,6 +421,7 @@ fn prepare_with_limits(
                 &format!("{name}.gz"),
                 &file,
                 control,
+                &mut acquisition_budget,
             )?;
             titles.push(file.into_os_string());
         }
@@ -570,6 +603,83 @@ mod tests {
         assert!(validate(&c, "", &control).is_err());
     }
     #[test]
+    fn acquisition_applies_role_and_shared_limits_before_staging_sources() {
+        let temp = scratch();
+        let source = temp.path().join("source");
+        fs::create_dir(&source).unwrap();
+        fs::write(source.join("enwiki.gz"), b"hello").unwrap();
+        fs::write(source.join("enwiktionary.gz"), b"hello").unwrap();
+        let control = Control::default();
+        for (role, total) in [(Some(9), None), (None, Some(9))] {
+            let stage = tempfile::tempdir_in(temp.path()).unwrap();
+            let mut budget = CorpusReadBudget::new(role, total);
+            fetch(
+                "unused",
+                &source,
+                "enwiki.gz",
+                &stage.path().join("first"),
+                &control,
+                &mut budget,
+            )
+            .unwrap();
+            let second = stage.path().join("second");
+            assert!(
+                fetch(
+                    "unused",
+                    &source,
+                    "enwiktionary.gz",
+                    &second,
+                    &control,
+                    &mut budget
+                )
+                .is_err()
+            );
+            assert!(!second.exists());
+        }
+    }
+
+    #[test]
+    fn http_acquisition_checks_length_and_charges_unknown_length_chunks() {
+        let temp = scratch();
+        let control = Control::default();
+        for chunked in [false, true] {
+            let server = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+            let address = server.local_addr().unwrap();
+            let worker = std::thread::spawn(move || {
+                let (mut stream, _) = server.accept().unwrap();
+                let mut request = [0; 4096];
+                assert!(stream.read(&mut request).unwrap() > 0);
+                let response = if chunked {
+                    "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n3\r\nabc\r\n3\r\ndef\r\n0\r\n\r\n"
+                } else {
+                    "HTTP/1.1 200 OK\r\nContent-Length: 6\r\nConnection: close\r\n\r\nabcdef"
+                };
+                stream.write_all(response.as_bytes()).unwrap();
+            });
+            let output = temp.path().join(if chunked { "chunked" } else { "known" });
+            let mut budget = CorpusReadBudget::new(Some(5), Some(5));
+            assert!(
+                fetch(
+                    &format!("http://{address}"),
+                    Path::new(""),
+                    "fixture",
+                    &output,
+                    &control,
+                    &mut budget
+                )
+                .unwrap_err()
+                .contains("byte limit")
+            );
+            worker.join().unwrap();
+            if chunked {
+                assert!(fs::metadata(output).unwrap().len() <= 5);
+            } else {
+                assert!(!output.exists());
+            }
+        }
+    }
+
+    #[test]
     fn http_fetch_checks_status_and_cancel_before_network() {
         let temp = scratch();
         for (status, ok) in [("200 OK", true), ("404 Not Found", false)] {
@@ -604,7 +714,8 @@ mod tests {
                     Path::new(""),
                     "fixture",
                     &path,
-                    &Control::default()
+                    &Control::default(),
+                    &mut CorpusReadBudget::default()
                 )
                 .is_ok(),
                 ok
@@ -622,7 +733,8 @@ mod tests {
                 Path::new(""),
                 "cancelled",
                 &temp.path().join("cancelled"),
-                &cancelled
+                &cancelled,
+                &mut CorpusReadBudget::default()
             )
             .is_err()
         );
@@ -655,6 +767,7 @@ mod tests {
             "stalled",
             &temp.path().join("stalled"),
             &control,
+            &mut CorpusReadBudget::default(),
         );
         release_tx.send(()).unwrap();
         server.join().unwrap();

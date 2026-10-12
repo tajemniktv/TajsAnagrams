@@ -191,6 +191,7 @@ pub fn run_with_input_and_limits(
                 writeln!(file, "{word}").map_err(err)?;
             }
             file.as_file().sync_all().map_err(err)?;
+            control.check().map_err(err)?;
             file.persist_noclobber(&args[3]).map_err(err)?;
             Ok(
                 json!({"dictionary":args[3].to_string_lossy(),"words":words.len(),"extra_short_words":extra}),
@@ -201,10 +202,16 @@ pub fn run_with_input_and_limits(
             "Usage: ranker-build WORDNET [PHRASE_DB] < cases.json | ranker-train NEW_MODEL < groups.json | ranker-rank MODEL < items.json | prepare-dictionary BASE UNIGRAMS NEW_DICTIONARY | build-phrases NEW_DB TITLE_FILE[.gz] ...",
         )),
     })();
-    match control.check() {
-        Err(reason) => Err(Error::new(reason, reason)),
-        Ok(()) => result,
-    }
+    finish_command(result, control)
+}
+
+fn finish_command(result: Result<Value, Error>, control: &Control) -> Result<Value, Error> {
+    // A successful command may have already committed an output. Cancellation
+    // cannot turn that committed success into a failure that cannot be retried.
+    result.map_err(|error| match control.check() {
+        Err(reason) => Error::new(reason, reason),
+        Ok(()) => error,
+    })
 }
 
 fn build_groups(
@@ -364,4 +371,33 @@ fn build_phrases(
         control,
         budget,
     )
+}
+
+#[cfg(test)]
+mod completion_tests {
+    use super::*;
+    #[test]
+    fn cancellation_after_commit_preserves_success_but_classifies_intake_errors() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.codex/temp");
+        std::fs::create_dir_all(&root).unwrap();
+        let directory = tempfile::tempdir_in(root).unwrap();
+        let output = directory.path().join("committed.json");
+        let mut file = stage(&output).unwrap();
+        file.write_all(b"synthetic committed output").unwrap();
+        let control = Control::default();
+        control.check().unwrap();
+        file.persist_noclobber(&output).unwrap();
+        control.cancel();
+        assert!(finish_command(Ok(json!({"model_path": output})), &control).is_ok());
+        assert_eq!(
+            std::fs::read(output).unwrap(),
+            b"synthetic committed output"
+        );
+        assert_eq!(
+            finish_command(Err(err("intake failure")), &control)
+                .unwrap_err()
+                .code,
+            "cancelled"
+        );
+    }
 }

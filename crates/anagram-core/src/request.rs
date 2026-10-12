@@ -288,8 +288,8 @@ pub fn generate_with_limits(
     control
         .check()
         .map_err(|reason| Error::new(reason, reason))?;
-    validate(request)?;
     limits.admit_generation(request)?;
+    validate(request)?;
     let control = limits.control(control)?;
     let mut budget = limits.corpus_read_budget();
     generate_inner(

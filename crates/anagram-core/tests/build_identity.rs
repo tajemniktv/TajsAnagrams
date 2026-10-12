@@ -61,6 +61,10 @@ fn normalized_package_without_workspace_files_has_a_content_identity() {
     let workspace_id = build_script::fingerprint(&scratch.package());
     fs::remove_file(scratch.0.join("Cargo.toml")).unwrap();
     fs::remove_file(scratch.0.join("Cargo.lock")).unwrap();
+    assert_eq!(
+        build_script::cargo_inputs(&scratch.package()),
+        [PathBuf::from("build.rs"), PathBuf::from("Cargo.toml")]
+    );
     let packaged_id = build_script::fingerprint(&scratch.package());
     assert_ne!(workspace_id, packaged_id);
     assert_eq!(packaged_id, build_script::fingerprint(&scratch.package()));
@@ -69,6 +73,7 @@ fn normalized_package_without_workspace_files_has_a_content_identity() {
         "normalized package lock",
     )
     .unwrap();
+    assert!(build_script::cargo_inputs(&scratch.package()).contains(&PathBuf::from("Cargo.lock")));
     assert_ne!(packaged_id, build_script::fingerprint(&scratch.package()));
 }
 

@@ -173,6 +173,17 @@ fn direct_generation_enforces_custom_dictionary_budget_and_explicit_null() {
             assert_eq!(result.err().unwrap().code, "corpus_too_large");
         }
     }
+    let mut oversized = request;
+    oversized.text = "ate".repeat(1000);
+    oversized.exclude_regex = vec!["[".into()]; // Would fail semantic validation.
+    let limits = DeploymentLimits {
+        max_input_bytes: Some(3),
+        ..Default::default()
+    };
+    let error = generate_with_limits(&oversized, Cursor::new(b""), None, &control, &limits)
+        .err()
+        .unwrap();
+    assert_eq!(error.code, "deployment_limit_exceeded");
 }
 
 #[test]
