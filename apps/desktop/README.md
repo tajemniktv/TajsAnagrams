@@ -132,7 +132,7 @@ utilities remain offline; they are not silently added to the default pipeline.
 
 Windows desktop CI runs the non-installing `tools/build-desktop.ps1 -TestOnly`
 pipeline (frozen dependencies, Svelte checks, frontend production build and release
-host), desktop Rust tests and Clippy on Rust 1.88, plus
+host), desktop Rust tests and Clippy on Rust 1.90, plus
 `node --test tools/test-desktop-ui.cjs` and
 `pwsh -NoProfile -File tools/test-desktop-installation.ps1`.
 The latter uses isolated fake installations and injects migration, copy and startup

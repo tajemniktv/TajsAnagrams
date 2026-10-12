@@ -24,7 +24,7 @@ fn learned_model_identity_tracks_loaded_bytes_without_changing_model_format() {
     let loaded = Model::load(&path).unwrap();
     fs::write(&path, b"invalid replacement").unwrap();
     let identity = loaded.identity().unwrap();
-    assert_eq!(identity.sha256, format!("{:x}", Sha256::digest(&bytes)));
+    assert_eq!(identity.sha256, hex::encode(Sha256::digest(&bytes)));
     assert_eq!(identity.bytes, bytes.len() as u64);
     assert_eq!(identity.role, "learned_model");
     assert_eq!(serde_json::to_vec(&loaded).unwrap(), bytes);
@@ -514,7 +514,7 @@ fn sqlite_identity_and_queries_share_a_snapshot_during_wal_writes() {
     ))
     .unwrap();
     canonical.extend_from_slice(b"\n[\"a b\",2,10]\n");
-    assert_eq!(identity.sha256, format!("{:x}", Sha256::digest(&canonical)));
+    assert_eq!(identity.sha256, hex::encode(Sha256::digest(&canonical)));
     assert_eq!(identity.bytes, canonical.len() as u64);
     writer.execute("UPDATE ngrams SET count=99", []).unwrap();
     assert_eq!(index.counts(&["a b".to_owned()]).unwrap()["a b"], 10);

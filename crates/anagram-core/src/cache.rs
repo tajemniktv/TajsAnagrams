@@ -213,7 +213,7 @@ fn payload_digest(bytes: &[u8], control: &Control) -> Result<String, Error> {
         check(control)?;
         digest.update(chunk);
     }
-    Ok(format!("{:x}", digest.finalize()))
+    Ok(hex::encode(digest.finalize()))
 }
 
 fn storage_error(error: rusqlite::Error) -> Error {
@@ -283,7 +283,7 @@ fn ranked_key_with_build_id(
         semantic,
     ))
     .map_err(encode)?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    Ok(hex::encode(Sha256::digest(bytes)))
 }
 
 #[cfg(test)]

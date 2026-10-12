@@ -254,7 +254,7 @@ impl PhraseIndex {
             role: "phrase_index".to_owned(),
             representation: DataRepresentation::PhraseRowsV1,
             present: true,
-            sha256: format!("{:x}", digest.finalize()),
+            sha256: hex::encode(digest.finalize()),
             bytes,
         })
     }

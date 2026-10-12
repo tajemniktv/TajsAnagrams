@@ -64,7 +64,7 @@ pub fn fingerprint(root: &Path) -> String {
         digest.update((bytes.len() as u64).to_be_bytes());
         digest.update(bytes);
     }
-    format!("core-sha256.{:x}", digest.finalize())
+    format!("core-sha256.{}", hex::encode(digest.finalize()))
 }
 
 fn main() {

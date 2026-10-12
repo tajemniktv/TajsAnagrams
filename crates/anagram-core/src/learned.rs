@@ -133,7 +133,7 @@ impl Model {
             representation: DataRepresentation::FileBytes,
             present: true,
             bytes: bytes.len() as u64,
-            sha256: format!("{:x}", Sha256::digest(bytes)),
+            sha256: hex::encode(Sha256::digest(bytes)),
         });
         Ok(model)
     }

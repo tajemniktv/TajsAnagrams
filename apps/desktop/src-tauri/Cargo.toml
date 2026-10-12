@@ -14,7 +14,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 anagram-core = { path = "../../../crates/anagram-core" }
 anagram-cli = { path = "../../../crates/anagram-cli" }
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls"] }
 tokio = { version = "1", features = ["rt", "time", "macros"] }
 flate2 = "1"
 tar = "0.4"
@@ -22,5 +22,5 @@ tauri = { version = "2", features = [] }
 serde.workspace = true
 serde_json.workspace = true
 tempfile = "3"
-rfd = "0.15"
+rfd = "0.17.2"
 arboard = { version = "3", default-features = false }

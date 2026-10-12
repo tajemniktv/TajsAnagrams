@@ -462,7 +462,7 @@ impl Snapshot {
             role: role.to_owned(),
             representation: DataRepresentation::FileBytes,
             present: true,
-            sha256: format!("{:x}", digest.finalize()),
+            sha256: hex::encode(digest.finalize()),
             bytes: bytes.len() as u64,
         };
         Ok(Self { bytes, identity })
@@ -472,7 +472,7 @@ impl Snapshot {
             role: role.to_owned(),
             representation: DataRepresentation::FileBytes,
             present: false,
-            sha256: format!("{:x}", Sha256::digest([])),
+            sha256: hex::encode(Sha256::digest([])),
             bytes: 0,
         }
     }

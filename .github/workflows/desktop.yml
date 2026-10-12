@@ -16,14 +16,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
-      - run: npm install --global pnpm@11.25.0
+      - run: npm install --global pnpm@12.11.2
       - name: Install the declared minimum Rust toolchain
         run: |
-          rustup toolchain install 1.88.0 --profile minimal --component clippy
-          rustup default 1.88.0
+          rustup toolchain install 1.90.0 --profile minimal --component clippy
+          rustup default 1.90.0
       - name: Frozen dependencies, Svelte checks, frontend and release host build (no installation)
         run: pwsh -NoProfile -File tools/build-desktop.ps1 -TestOnly -KeepBuildCache
       - name: Frontend asynchronous state regressions
