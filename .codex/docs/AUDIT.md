@@ -275,12 +275,24 @@ All document-body paragraphs and its architecture table were extracted in order;
 there are no embedded images, tracked insertions/deletions or comments. Footer
 text is just the title/page field. This is content consolidation, not Word layout QA.
 
+Source reread checkpoint (2026-10-13, `7902d5a`): the original DOCX is retained
+byte-for-byte at `.codex/temp/tajsanagrams-architecture-product-audit.docx`, with
+the same SHA-256 above. Its full body, architecture table and phased backlog
+were reread against this consolidated audit; no substantive finding was missing.
+The source explicitly preserves useful Python validation/parity tooling while
+keeping the installed native product independent of Python. This is not a
+requirement to retain every superseded legacy runner or port it again to Rust.
+The finding dispositions below are the earlier `91aafc7` checkpoint; Phase C
+supersedes its F-05 coverage assessment with additional continuous
+ordering/ranking/storage/model/training comparisons. This reread performed no
+new tests, build, runtime acceptance or external license adjudication.
+
 Current validation pin: `91aafc7` with an initially clean worktree. The attached
 audit's suggested actions and phased backlog are proposals, not instructions
 executed by this review. The requested change is consolidation and validation;
 no production code, corpus, deployment or CI policy is changed here.
 
-### Finding disposition at the current pin
+### Finding disposition at the architecture-validation pin
 
 | Source ID | Current disposition | Evidence-supported conclusion |
 | --- | --- | --- |
