@@ -7,13 +7,17 @@ desktop acceptance and historical milestones have moved to
 
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
-- Port follow-up: active Python compatibility/reference pipelines are organized
-  under `tests/oracle/`, independent of archive contents. Native subtraction,
-  exclusion-file import, streaming and scoped JSON/report exports close concrete
-  missing surfaces; reviewed semantic differences are named in parity policy,
-  not hidden by broad field/tolerance exclusions. Stable findings F-08–F-14 and
-  the current validation/install evidence are in `.codex/docs/AUDIT.md` Phase C.
-  This is feature/validation work, not a newly passed human-quality promotion gate.
+- Native authority: Python oracle/parity/legacy workflows are retired historical
+  source. Rust `xtask` owns contract generation, quality evaluation, isolated
+  native measurement/stage experiments and active lexical/n-gram/diversity
+  research. Independent invariants and exhaustive small-input generation replace
+  migration equivalence as ordinary gates. Original stress requests survive as
+  explicit native workloads. Stable F-15–F-18 and validation are recorded in
+  `.codex/docs/AUDIT.md` Phase D, superseding Phase C's active-oracle policy.
+- `cases.v2.json` adds twelve bag-disjoint, project-authored title/clause targets
+  with sorted input letters to the seven familiar fixtures. They are curator
+  labels, not invented human judgments or untouched holdout evidence; nineteen
+  cases still do not justify a comprehensive quality or corpus/model promotion gate.
 
 - A correctness-preserving final-slot feasibility check now avoids allocating
   impossible search children. Three paired trials observed generation median
@@ -33,10 +37,10 @@ desktop acceptance and historical milestones have moved to
   reported separately. Latency-budget reports separate cache states and count
   unique cases independently from repeated trials and snapshots.
 - The baseline recorder now defaults to the native desktop request profile;
-  a regression test checks for drift against `Settings::default`. The old
-  diverse/500 profile remains available explicitly. Both are CLI measurements,
+  a regression test checks for drift against `Settings::default`. Explicit
+  native strategy/candidate/deadline overrides remain available. These are CLI measurements,
   not installed-desktop or human acceptance evidence.
-- `tools/run_quality_stages.py` measures word admission, candidate inclusion,
+- `cargo xtask benchmark --stages` measures word admission, candidate inclusion,
   deep selection, chosen order and final display separately. Optional frozen
   native retained-order feature ablations test scoring hypotheses without
   changing production behavior. Required-word oracle interventions deliberately

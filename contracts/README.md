@@ -133,8 +133,8 @@ plus these explicit fields:
 
 `order_mode` also accepts `exact` and `beam`. Word counts above 10 are rejected
 rather than silently approximated. The deep shortlist expands selected morphology
-families, so `deep_per_group` is not a hard work cap. Like the Python ranked
-frontend, this operation rejects required words that consume the entire target.
+families, so `deep_per_group` is not a hard work cap. Fully required exact bags
+are ranked normally, including repeated required words.
 
 Results use `kind: ranked`, separate `generated`, `deep_analyzed`, `shown`,
 `orders_evaluated` and `corpus_rescored` counts, `generation_stop`, and ranked
@@ -142,27 +142,26 @@ Results use `kind: ranked`, separate `generated`, `deep_analyzed`, `shown`,
 components. The generator's historical decimal export quantization is preserved
 before preparation because it affects ranking and ties.
 
-This is still a development interface: no persistent cache or complete
-interruption coverage yet. Python remains the default application. Full native
-parity/performance acceptance and the application adapters remain required before
-replacement/frontend adoption.
+Rust is the authoritative TajsAnagrams implementation. Persistent ranked caches,
+cancellation/deadlines and the direct native desktop adapter are implemented and
+tested. Historical migration comparisons are retained as evidence, not current
+acceptance gates. Score/order differences are assessed against intended behavior
+and quality targets, not automatic equivalence to the retired Python application.
 
 ## Generated types and checks
 
-Rust structs are the structural source of truth. `tools/generate_contracts.py`
+Rust structs are the structural source of truth. `cargo xtask contracts`
 uses Schemars' Serde-compatible derivation to produce checked-in JSON Schema
 2020-12 and TypeScript files in `contracts/generated/`. Do not edit generated
 files. Schema validation covers wire shape; cross-field constraints and version
 acceptance remain engine validation, not TypeScript refinements.
 
 ```text
-python tools/generate_contracts.py
-python tools/generate_contracts.py --check
+cargo xtask contracts
+cargo xtask contracts --check
 npm --prefix contracts ci --ignore-scripts
 npm --prefix contracts run check
-python -m pip install --target .codex/temp/schema-python jsonschema==4.26.0
-python tests/parity/contracts.py
-cargo test --workspace --locked
+cargo xtask check
 ```
 
 `JobStatus` defines queued/running/succeeded/cancelled/timed_out/failed states,
@@ -175,7 +174,7 @@ still synchronous, not a background job scheduler or HTTP service.
 
 Scalars in generation/ranking requests remain explicit (no hidden defaults);
 constraint arrays default to empty. The fixtures check Rust deserialization and
-independent Python/JavaScript schema consumers; TypeScript includes negative type
+an independent JavaScript schema consumer; TypeScript includes negative type
 checks. Request integers must be at most 9,007,199,254,740,991 so JavaScript does
 not silently round them; schemas and native semantic validation enforce that
 bound. TypeScript `number` alone is not a runtime validator.

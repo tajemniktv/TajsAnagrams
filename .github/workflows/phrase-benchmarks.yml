@@ -47,11 +47,6 @@ jobs:
             }
             & ./tools/prepare-native-data.ps1 @parameters
           }
-      # Python is only a measurement/report harness; all solve/data/model work is Rust.
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        if: github.event_name != 'schedule'
-        with:
-          python-version: '3.14'
       - name: Native full-solve phrase A/B, fixed profile and explicit input hashes
         if: github.event_name != 'schedule'
         run: |
@@ -59,8 +54,8 @@ jobs:
           for mode in baseline phrases; do
             extra=()
             if [ "$mode" = phrases ]; then extra+=(--phrase-db build/phrase-data/phrases.db); fi
-            python tools/run_quality_baseline.py --cli build/release/anagram-cli --dictionary build/phrase-data/dictionary/normal_user_v2.txt --unigrams build/phrase-data/ngrams/count_1w.txt --bigrams build/phrase-data/ngrams/count_2w.txt --wordnet build/phrase-data/wordnet31/dict --timeout-ms 10000 --seed 13 --output ".codex/temp/phrase-report/$mode.jsonl" "${extra[@]}"
-            python tools/tajsbench.py --runs ".codex/temp/phrase-report/$mode.jsonl" --usefulness tests/quality/usefulness.v1.json --output ".codex/temp/phrase-report/$mode.report.json"
+            cargo xtask benchmark --cli build/release/anagram-cli --dictionary build/phrase-data/dictionary/normal_user_v2.txt --unigrams build/phrase-data/ngrams/count_1w.txt --bigrams build/phrase-data/ngrams/count_2w.txt --wordnet build/phrase-data/wordnet31/dict --timeout-ms 10000 --seed 13 --output ".codex/temp/phrase-report/$mode.jsonl" "${extra[@]}"
+            cargo xtask quality --runs ".codex/temp/phrase-report/$mode.jsonl" --usefulness tests/quality/usefulness.v1.json --output ".codex/temp/phrase-report/$mode.report.json"
           done
       - name: Native grouped trainer (informational, never a promotion gate)
         if: github.event_name != 'schedule'

@@ -1,4 +1,4 @@
-# TajsBench cases v1 / evaluation report v2
+# Native TajsBench datasets and evaluation report v2
 
 `cases.v1.json` is the curated/gold set, grouped by exact normalized letter bag.
 Splits are bag-disjoint. The first cases deliberately start with the product
@@ -8,11 +8,18 @@ source/version/license note in each case's `provenance`.
 Its negative contrasts concern intended-target recovery; they are not actual
 human judgments that those alternatives are useless.
 
-Run `python -m unittest discover -s tests/quality` to validate the fixtures and
-metric semantics. Evaluate recorded solver snapshots with:
+`cases.v2.json` preserves those seven cases and adds twelve bag-disjoint authored
+title/clause targets. New sources have sorted letters, so they cannot leak the
+target word order. Their grades are curator relevance, **not actual user labels**
+or an untouched held-out sample. Nineteen cases are still not a comprehensive
+quality gate. Specify `--cases tests/quality/cases.v2.json` for the expanded set;
+the default v1 keeps historical reports directly re-evaluable.
+
+Run `cargo xtask check` to validate native correctness, datasets and metric
+semantics. Evaluate recorded solver snapshots with:
 
 ```text
-python tools/tajsbench.py --runs .codex/temp/quality-runs.jsonl --output .codex/temp/quality-report.json
+cargo xtask quality --runs .codex/temp/quality-runs.jsonl --output .codex/temp/quality-report.json
 ```
 
 One JSONL record is `{case_id, variant, cache_state, trial, wall_ms, peak_rss_bytes,
@@ -52,23 +59,31 @@ snapshot can coexist with a later failure of that attempt. Repeated snapshots
 with the same `(variant, cache_state, case_id, trial)` are not independent trials.
 Repeated timing trials do not add independent puzzles or human judgments.
 
-`python tools/run_quality_baseline.py` now defaults to the **desktop request
+`cargo xtask benchmark` defaults to the **desktop request
 profile**, including prefix/10,000/no-repeats/min-Zipf-1.8/ten results per group,
 and the desktop's 120-second default deadline. A regression test checks this
 request against `Settings::default`. It still uses the CLI adapter and selected
-CLI corpora/limits, not an installed desktop session. `--profile legacy` retains
-the old diverse/500 configuration and five-second deadline; `--strategy`,
+CLI corpora/limits, not an installed desktop session. There is no legacy Python
+profile or fallback; `--strategy`,
 `--candidate-budget` and `--timeout-ms` are explicit overrides recorded in the
-variant name and manifest. No phrase database or learned model is used.
+variant name and manifest. Optional `--phrase-db`/`--model` paths are explicitly
+hashed and recorded; without them neither artifact is used.
 
-Build the native CLI release binary first (`cargo build -p anagram-cli --release`).
-The runner creates a fresh disk cache per case/trial under the output directory,
+The runner builds the native CLI if `--cli` is omitted; supply that flag for an
+independently built revision. It creates a fresh disk cache per case/trial under
+project-local `.codex/temp/xtask/benchmark` and removes only its own scratch cache,
 then attempts disk-cache reuse. Reuse does not imply a successful cache hit;
 the native `result.status.cache.hit` is the evidence for that. OS filesystem
 caching is uncontrolled. `--repeats 3 --seed 13` randomizes case/trial order while
 always running an empty cache before its reuse. Hash manifests freeze binary,
 corpus, case and request identities. Process failures, invalid JSON and timeouts
-are retained rather than aborting the remaining cases.
+are retained rather than aborting the remaining cases. Successful cold/warm
+roundtrips must preserve result buckets and report a hit. Independent validation
+checks exact residual letters, required multiplicity, hints, exclusions, repeats,
+word counts, unique bags and chosen-order word identity without core validators.
+RSS is sampled for the process tree; null means unobserved, not zero. The sampler
+sleeps 20 ms between refreshes. Wall time includes capture/sampling overhead and
+must not be directly compared with an older differently instrumented harness.
 
 All seven initial source strings preserve the gold phrase's letter order.
 `--shuffle-input --seed 13` scrambles only the input order, preserving exact
@@ -94,7 +109,8 @@ These are not interchangeable with cold/warm OS pages or desktop-process reuse.
 
 ```text
 cargo build -p anagram-core --example ordering_probe --release
-python tools/run_quality_stages.py --deep-all --ordering-probe build/release/examples/ordering_probe.exe --output .codex/temp/quality-stages.jsonl
+cargo xtask benchmark --stages --candidate-budgets 500,5000 --timeout-ms 10000 --deep-all --ordering-probe build/release/examples/ordering_probe.exe --output .codex/temp/quality-stages.jsonl
+cargo xtask quality --stages .codex/temp/quality-stages.jsonl --output .codex/temp/regraded-stages.json
 ```
 
 This research-only runner checks gold-word admission; randomizes prefix/diverse
@@ -116,19 +132,35 @@ responses, summaries and input hashes remain under `.codex/temp` by default.
 Preserve a known baseline CLI in a fresh project-local temporary path, then run:
 
 ```text
-python tools/benchmark_generation.py --before .codex/temp/baseline-cli.exe --repeats 3 --output .codex/temp/generation-paired.jsonl
+cargo xtask benchmark --mode generate --before .codex/temp/baseline-cli.exe --candidate-budget 500 --repeats 3 --output .codex/temp/generation-paired.jsonl
 ```
 
 This pairs generation requests under the same desktop admission settings,
 randomizes both case/trial order and before/after order within each pair, and
 records full outputs and input hashes. Output comparisons include candidate
 order, inventory/admission counters and exhaustion/truncation, not just bag sets.
-Version labels are excluded from semantic equality. A pair that does not finish
+Engine version labels are excluded from semantic equality. Equality is a
+diagnostic, not a gate preventing intentional native improvements. A pair that does not finish
 has unknown output equality and no completion-speedup estimate, rather than
 vacuous success or a latency gain inferred from equal timeout ceilings.
 
 `preferences.v1.json` holds human pairwise judgments separately from curated
-relevance. Present pairs with `make_pair(case, a, b, seed)`, record the returned
-left/right and `presentation_seed`, then save the chosen side. The file is empty
+relevance. Randomize the presented alternatives and record their actual left/right
+positions and nonzero `presentation_seed`, then save the chosen side. The file is empty
 until actual judgments are collected; fabricated human-preference accuracy is
 not a benchmark result. Weakly supervised pairs belong in a separate dataset.
+
+## Native regression and historical evidence
+
+`workloads.v1.json` carries forward all five original CLI stress requests with
+100,000 candidate caps. `cargo xtask benchmark --workloads
+tests/quality/workloads.v1.json` verifies native result invariants and cache
+roundtrips without historical scores/orders or fabricated quality labels.
+It emits operational summaries rather than a gold-recovery report.
+
+`native-baseline.v1.json` records an explicitly identified native revision and its
+observed results; it is descriptive evidence, not a byte-for-byte score gate.
+Changes should be judged using intended behavior, useful answers, actual judgments
+and equal-workload performance evidence. Historical migration JSON remains under
+`tests/reference`; the old Python implementation/tests/runners are local-only
+archived source, not executed by current checks.

@@ -5,8 +5,7 @@ on:
   pull_request:
     paths:
       - 'crates/**'
-      - 'tools/run_quality_baseline.py'
-      - 'tools/tajsbench.py'
+      - 'xtask/**'
       - 'tests/quality/**'
       - '.github/workflows/performance-probe.yml'
 permissions:
@@ -36,14 +35,11 @@ jobs:
           if (-not (Test-Path build/performance-data/manifest.json)) {
             & ./tools/prepare-native-data.ps1 -NativeCli build/release/anagram-cli -OutputDirectory "$env:GITHUB_WORKSPACE/build/performance-data"
           }
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14'
       - name: Repeated native default-profile empty/reuse measurements
         run: |
           mkdir -p .codex/temp/performance-report
-          python tools/run_quality_baseline.py --cli build/release/anagram-cli --dictionary build/performance-data/dictionary/normal_user_v2.txt --unigrams build/performance-data/ngrams/count_1w.txt --bigrams build/performance-data/ngrams/count_2w.txt --wordnet build/performance-data/wordnet31/dict --repeats 3 --seed 13 --timeout-ms 10000 --output .codex/temp/performance-report/runs.jsonl
-          python tools/tajsbench.py --runs .codex/temp/performance-report/runs.jsonl --output .codex/temp/performance-report/summary.report.json
+          cargo xtask benchmark --cli build/release/anagram-cli --dictionary build/performance-data/dictionary/normal_user_v2.txt --unigrams build/performance-data/ngrams/count_1w.txt --bigrams build/performance-data/ngrams/count_2w.txt --wordnet build/performance-data/wordnet31/dict --repeats 3 --seed 13 --timeout-ms 10000 --output .codex/temp/performance-report/runs.jsonl
+          cargo xtask quality --runs .codex/temp/performance-report/runs.jsonl --output .codex/temp/performance-report/summary.report.json
       # Recorded failures and cache strata remain in reports. This is not a speedup gate.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()

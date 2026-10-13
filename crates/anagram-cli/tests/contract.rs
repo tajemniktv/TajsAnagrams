@@ -35,8 +35,8 @@ fn invoke(request: Value) -> (bool, Value) {
     invoke_with_args(request, &[])
 }
 fn invoke_with_args(request: Value, args: &[&str]) -> (bool, Value) {
-    let dictionary =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/parity/dictionary.txt");
+    let dictionary = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/dictionary.txt");
     let mut child = Command::new(env!("CARGO_BIN_EXE_anagram-cli"))
         .args(["generate", dictionary.to_str().unwrap()])
         .args(args)

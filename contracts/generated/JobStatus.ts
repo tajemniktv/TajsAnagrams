@@ -1,4 +1,4 @@
-// Generated from Rust by tools/generate_contracts.py. Do not edit.
+// Generated from Rust by cargo xtask contracts. Do not edit.
 
 export type CacheFlags = {
   "corrupt_entry_ignored": boolean;

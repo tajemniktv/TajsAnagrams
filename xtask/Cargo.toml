@@ -1,0 +1,31 @@
+[package]
+name = "xtask"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+default-run = "xtask"
+
+[dependencies]
+anagram-core = { path = "../crates/anagram-core" }
+serde.workspace = true
+serde_json.workspace = true
+unicode-normalization.workspace = true
+sha2 = "0.11.0"
+hex = "0.4.3"
+schemars = "1.2.2"
+rusqlite = { version = "0.40.2", default-features = false, features = ["bundled"] }
+tempfile = "3"
+sysinfo = { version = "=0.37.2", default-features = false, features = ["system"] }
+csv = "1.4.0"
+lzma-rs = "0.3.0"
+regex = "1.13.1"
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+# Development-only process fixture, never included in the installed application.
+[[bin]]
+name = "capture-fixture"
+path = "tests/support/capture_fixture.rs"

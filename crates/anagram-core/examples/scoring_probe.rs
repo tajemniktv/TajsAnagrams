@@ -1,4 +1,4 @@
-//! Test-only adapter for Python/native component parity.
+//! Development-only structured probe for native scoring experiments.
 use anagram_core::{
     lexicon::Unigrams,
     scoring::{self, Bigrams},

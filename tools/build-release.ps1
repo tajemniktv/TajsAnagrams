@@ -47,7 +47,7 @@ try {
     $candidate = Join-Path $build 'release/anagram-cli.exe'
     $fixtures = Get-Content -LiteralPath (Join-Path $project 'contracts/fixtures.json') -Raw | ConvertFrom-Json
     $request = ($fixtures | Where-Object { $_.schema -eq 'GenerateRequest' -and $_.valid } | Select-Object -First 1).value
-    $output = ($request | ConvertTo-Json -Depth 20 -Compress) | & $candidate generate (Join-Path $project 'tests/parity/dictionary.txt')
+    $output = ($request | ConvertTo-Json -Depth 20 -Compress) | & $candidate generate (Join-Path $project 'tests/fixtures/dictionary.txt')
     if ($LASTEXITCODE -ne 0 -or ($output | ConvertFrom-Json).kind -ne 'generation_only') {
         throw 'Release smoke check failed; existing releases are untouched.'
     }

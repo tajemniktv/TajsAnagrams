@@ -13,16 +13,18 @@
 
 ## Post-snapshot completed updates
 
-Current organization follow-up: executable Python reference modules, benchmark
-runners and unit tests now live in `tests/oracle/`, with active CI/parity callers
-updated. `archive/` is historical only. The chronological migration notes below
-retain their original paths and acceptance policy; current validation and port
-boundaries are tracked in `.codex/docs/AUDIT.md` and `NATIVE_TOOLS.md`.
-Native subtraction and scoped import/stream/report/export surfaces are now
-implemented. Current data/model/performance jobs execute the Rust tools, while
-independent reference tests and thin measurement/report tooling can remain Python.
-This follows the acceptance policy below rather than reproducing obsolete
-Python pipelines solely for literal language equivalence.
+Current native-authority follow-up: Rust is the authoritative TajsAnagrams
+implementation, not an ongoing reproduction of the earlier AnagramSolver.
+Contract generation, evaluation, measurement, stage diagnostics and active
+ESDB/ARPA/TUBELEX research now live in the development-only Rust `xtask` crate.
+Python parity/oracle/legacy workflows are retired; source remains in local-only
+`.codex/archive/python-retired-2026-10-13/` and Git history. Historical JSON
+evidence is retained, not used as a mandatory score/order gate. Meaningful native
+correctness/constraint/cache/resource checks replace migration equivalence.
+The chronological notes below retain their original paths and dated acceptance
+policy; current evidence is in `.codex/docs/AUDIT.md` Phase D and `NATIVE_TOOLS.md`.
+Native subtraction and scoped import/stream/report/export surfaces remain
+implemented. Active data/model/performance jobs use the native tools throughout.
 
 The archived plan below ends with the 2026-09-17 desktop/native follow-up.
 Subsequent repository work already landed before this roadmap split, including:

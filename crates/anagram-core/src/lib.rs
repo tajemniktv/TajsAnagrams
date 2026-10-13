@@ -1,5 +1,5 @@
-//! Native solver primitives. The Python solver remains the reference until the
-//! full generation and ranking parity gates pass.
+//! Authoritative TajsAnagrams solver. Correctness is defined by explicit native
+//! contracts and independent invariants, not equivalence to a historical solver.
 
 use unicode_normalization::UnicodeNormalization;
 

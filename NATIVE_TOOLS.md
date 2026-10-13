@@ -153,29 +153,57 @@ returned rows only, after scoring. Neither report changes search or ranking.
 An absent answer is not proof that it was absent from unreturned candidates.
 On generation these flags report hint counts and exact **word-bag** matches,
 explicitly scoped to `returned_bags`, not a chosen sentence order.
-The full legacy text/report workflows remain available in `tests/oracle`, rather
-than requiring archive contents. They are validation/compatibility tools, not
-installed app dependencies.
+The obsolete Python text/report workflows are retired historical source, not
+maintained compatibility requirements. Native exports deliberately retain their
+documented returned-result scope rather than reproducing those formats.
 
 ### Current benchmark/data workflows
 
 The current phrase/performance CI jobs build and execute the native CLI. Data
 preparation reuses `tools/prepare-native-data.ps1`; phrase indexing, grouped
-dataset construction, training and solve are Rust operations. Python is a thin
-measurement/report harness, not the engine or installed runtime.
-`tools/run_quality_baseline.py` accepts optional `--phrase-db` and `--model`,
-hashes both and distinguishes their variants. `tools/tajsbench.py` preserves
+dataset construction, training and solve are Rust operations. `cargo xtask
+benchmark` is the native child-process measurement harness; `cargo xtask quality`
+is its independent evaluator. Optional `--phrase-db` and `--model` are hashed
+and distinguish variants. The evaluator preserves
 failures and cache strata rather than equating exact-target recovery with usefulness.
 Model training is informational: a completed fit is not a quality promotion.
 Current phrase snapshots default to Wiktionary, with expensive combined Wikipedia
 preparation opt-in on manual workflow runs; monthly cache refreshes are not
 benchmark evidence. Corpora/models are not published in the report artifacts.
 
-Legacy baseline/experimental commands remain available through
-`python tools/run_oracle.py COMMAND [-- ARGUMENTS]`. Do not recreate their
-obsolete intermediate files, Python worker backends or pickle caches in Rust
-when native operations already supersede them. Native/reference validation
-still uses an independent Python oracle where it adds useful comparison evidence.
+### Rust development interface
+
+`cargo xtask check` runs formatting, core/CLI/tool tests, strict Clippy, generated
+contract drift checks and independent AJV/TypeScript fixtures. Install contract
+dependencies first with `npm --prefix contracts ci --ignore-scripts`.
+`cargo xtask contracts [--check]` derives JSON schemas and TypeScript directly
+from Rust, without a Python intermediary.
+
+`cargo xtask benchmark --before BASELINE --mode generate` compares independently
+built native revisions in randomized pairs. Equality is diagnostic, not a
+historical score/order gate. `--stages` replaces the active stage-isolation
+experiment; `--deep-all` and `--ordering-probe PATH` expose deeper interventions.
+`--workloads tests/quality/workloads.v1.json` retains five explicit native
+stress requests at their original 100,000 candidate caps, independently verifies
+letters/constraints and successful cache roundtrips, and reports no quality labels.
+Benchmark files/manifests record failures, trial/cache strata and exact hashes.
+RSS is sampled process-tree resident memory, not a guaranteed peak. The sampler
+sleeps 20 ms between refreshes; wall time includes capture/sampling overhead.
+The subprocess guard defaults to the engine timeout plus 30 seconds.
+
+`cargo xtask research lexicon --db ESDB.sqlite` reads a supplied ESDB database
+read-only; database creation is upstream input preparation, not a required Python
+step. `research ngram --arpa FILE --groups FILE` scores retained order pools with
+ARPA backoff. `research tubelex --tubelex FILE.tsv.xz` reports frequency/diversity
+features; plain TSV is also accepted. These are offline reports, not corpus/model
+promotion. Use each command's `--help` for paths and budgets.
+Experimental dependencies live only in `xtask`, not the installed application.
+
+The Python solver, parity tests, obsolete runners and workflow are retired into
+local-only `.codex/archive/python-retired-2026-10-13/`, with a content-hash manifest.
+Tracked JSON/reference records remain historical evidence. Rust is authoritative;
+no active check imports or executes the retired source. Future disposable Python
+research is possible if justified, but is not a required project runtime.
 
 - Rust regex excludes backreferences and look-around; invalid patterns are errors.
 - Phrase databases must have a real `ngrams` table with unique text keys.
@@ -184,5 +212,5 @@ still uses an independent Python oracle where it adds useful comparison evidence
   but no longer caps result counts. Pagination is not truncation. Standard bounded
   mode remains the safe default; cache and execution limits can be customized.
 - The website, multi-platform packaging and full combined-corpus benchmark matrix
-  remain deferred. Existing Python scripts remain available; native features need
-  not reproduce every experimental script's command-line interface.
+  remain deferred. Native features need not reproduce every historical
+  experimental script's command-line interface.

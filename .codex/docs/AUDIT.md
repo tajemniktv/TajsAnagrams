@@ -4,7 +4,128 @@ Date: 2026-10-13. This is the single consolidated audit. Architecture findings
 are revalidated below; the earlier quality experiments and initial investigation
 retain their own dated evidence boundaries rather than becoming fresh claims.
 
-## Phase C: port gaps and active-pipeline organization (2026-10-13)
+## Phase D: Rust authority and Python-free development (2026-10-13)
+
+This phase supersedes Phase C's active-oracle policy. The user explicitly chose
+TajsAnagrams as a successor with Rust authoritative, not perpetual reproduction
+of AnagramSolver. Historical scores, orders, caches and experimental CLI formats
+are evidence, not ordinary acceptance requirements. The source DOCX's suggestion
+to retain useful Python validation was a proposal for its older snapshot, not an
+instruction overriding this new product decision.
+
+| Stable finding | Current disposition | Replacement and evidence |
+| --- | --- | --- |
+| F-15: historical Python behavior remained authoritative in ordinary gates | Retired | Python oracle/parity/legacy workflows no longer execute. Independent native letter/constraint verification, exhaustive small-input generation and intended lifecycle/cache/intake tests define correctness. Native score/order changes require interpretation, not automatic Python equality. |
+| F-16: active development tools required a Python runtime | Replaced | Development-only `xtask` owns contract generation, TajsBench reporting, isolated native measurement, paired revision comparisons, stage diagnostics and ESDB/ARPA/TUBELEX research. Node/AJV remains an independently implemented schema consumer; PowerShell/Node still serve desktop/frontend tooling. |
+| F-17: retirement could remove meaningful verification or stress coverage | Replaced before retirement | One-time evaluator/research comparisons matched existing tooling outputs; native tests cover metric and failure semantics. Five explicit stress requests survive at original 100,000 caps without Python result targets. Removed migration-only reference tests are not represented as equivalent native coverage of every old helper. |
+| F-18: seven familiar targets were too narrow for quality research | Expanded, not a promotion gate | `cases.v2.json` adds twelve bag-disjoint authored title/clause targets with sorted input letters. These are curator relevance, not invented user judgments or untouched holdout samples. Actual usefulness labels and pairwise judgments remain separate. |
+| F-07: stale App response publication | Still open | This tooling/authority change does not fix the previously reproduced main-component race. |
+
+`cargo xtask check` runs formatting, core/CLI/tool tests, strict Clippy, contract
+drift and independent AJV/TypeScript fixtures. It also rejects active Python
+sources under tools/tests and Python runtime commands/setup in workflows.
+The generator's independent test enumerates combinations using its own small
+alphabet counts and hint logic, not production Inventory/subtraction/pruning.
+It checks 1,000 seeded configurations across prefix/diverse strategies and
+unbounded/1/3 caps, plus repeat runs for deterministic output. The separate
+development evaluator verifies exact residual letters, subtraction, required
+multiplicity, hints, exclusions/regex/characters, search repeats, word counts,
+unique bags and chosen-order word identity without calling core validators.
+These are independent implementations in Rust, not wrappers around the code
+being checked, and do not claim exhaustive correctness for every possible input.
+
+Contract output retains identical schemas/types; only the eight TypeScript
+generator attribution headers change. TajsBench retains report schema v2,
+desktop versus diagnostic ranking, failure denominators, cache/trial/snapshot
+strata, partial delivery, unknown budget observations and separate actual
+usefulness/preference labels. A result absent by a time budget is not assigned an
+invented intermediate ranking. Stage interventions keep shortlist/order/display
+losses distinct; required-bag controls are not ordinary search successes.
+Paired native revisions report equality and speed ratios informationally rather
+than imposing historical score/order parity. Empty or failed pairs remain unknown.
+
+Benchmark capture owns project-local temporary caches, bounds stdout to 64 MiB
+and stderr to 2 MiB, retains malformed output/nonzero exits/launch failures and
+engine/subprocess deadlines, and samples native process-tree resident memory.
+The sampler sleeps 20 ms between refreshes; wall time includes capture/sampling
+overhead. Sampled RSS is not a guaranteed peak, and these timings must not be
+directly equated with differently instrumented old reports. It is a native
+CLI/probe harness, not a general daemon/process supervisor. Successful cold/warm
+cache roundtrips must preserve exact buckets and report a cache hit.
+ESDB opens read-only, ARPA retains queried contexts/backoff evidence, and TUBELEX
+accepts plain/XZ TSV with actual expanded/read-byte limits. Nonfinite queried
+ARPA entries, duplicate queried entries and negative TUBELEX integers now reject
+instead of becoming misleading research values. No corpus/model is promoted.
+
+### Phase D validation and evidence
+
+- **141 core/CLI/xtask tests**, strict all-target Clippy, generated **16**
+  contract artifacts and independent **19** AJV/TypeScript fixtures passed through
+  `cargo xtask check` after retirement. **19** desktop host tests and **21**
+  frontend/build-policy regressions also passed: **160 Rust tests** in total.
+  Rust **1.90** checks the tooling successfully; the Windows advisory check passed.
+- Before retirement, one-time comparisons reproduced **every report field** for
+  the recorded 42-invocation desktop and 14-invocation optional-artifact captures,
+  all **129** native stage summaries, and synthetic ESDB, ARPA and compressed
+  TUBELEX research outputs (numeric tolerance 1e-12). This validates tool
+  replacement, not continued solver equivalence. Those checks are not active CI.
+- New real-child tests cover invalid JSON/shape, nonzero exit, native error,
+  external timeout, oversized output and successful RSS/result capture. Native
+  research tests cover ESDB filters/tiers/collisions/read-only behavior and XZ
+  parsing/expansion limits. Existing native lifecycle/cache/intake/training and
+  malformed corpus tests remain ordinary gates; no old solver is needed.
+- All five explicit native stress workloads completed cold/warm, including both
+  100,000-generated-candidate cases. Exact letters/constraints and successful cache
+  roundtrips passed; historical Python scores/orders are deliberately not asserted.
+- Two native generation cases over three randomized paired trials completed all
+  six pairs and reported equal outputs. Speed ratios were about **1.00** and
+  **0.99**: plumbing evidence, **not a performance improvement**. Binary hashes,
+  identical requests and input hashes are recorded.
+- The expanded 19-case run recorded **38 attempts**, **36 completions** and
+  **two `actions_words` ten-second deadlines**, both retained in denominators.
+  Desktop exact-target Recall@1/MRR was **1/19** per cache state. This is an
+  expanded different dataset, not a regression/improvement relative to the old
+  seven-case percentage and not a measure of all independently useful answers.
+  `native-baseline.v1.json` preserves this explicitly hashed **dirty working-tree
+  native snapshot** with top-three-per-bucket projections and failure evidence;
+  it does not claim a clean release pin or freeze future scores as a gate.
+- The new native stage runner completed admission, zero-frequency controls,
+  generation, shortlist, full analysis, required-bag and ordering-pool captures
+  on the sanity case. A separate native optional phrase/model smoke completed
+  four cold/warm attempts with explicit artifact hashes. The earlier losing
+  research model stays unpromoted; these are pipeline checks, not quality gains.
+- Actionlint **1.7.12** validated all retained workflows (checksum-verified local
+  tool, shellcheck/pyflakes integrations disabled). No hosted Actions execution
+  or branch-protection change is claimed. Native CI no longer provisions Python
+  or downloads WordNet solely for migration parity; ordinary tests use synthetic
+  native fixtures. Real-data measurement jobs remain separate and informational.
+- Release desktop build/type checks, transactional installation and restart
+  passed. Installed/build executable SHA-256 is
+  `6EEEDFEDAB91515F671508DA892D5F9C9DDF14F33CC8F599146C901BB45B51AE`,
+  installed at `%LOCALAPPDATA%/Programs/TajemnikTV/TajsAnagrams/TajsAnagrams.exe`.
+  PID 21864 was launched. Existing settings/data were preserved; no experimental
+  tooling dependency is part of the installed application's dependency graph.
+  This is build/install/launch evidence, not fresh rendered/user interaction.
+
+Retired Python sources, unit/parity scripts, legacy runners and their workflow
+are retained under ignored local-only `.codex/archive/python-retired-2026-10-13/`.
+The initial archive manifest records **218 files** including ignored historical
+caches; every recorded content hash was verified after moving. Later loose
+tools/quality bytecode caches were also moved there. **93 tracked Python files**
+are removed from active source; Git history at `4b2a827` remains another recovery
+source. The ordinary fixture dictionary moved to `tests/fixtures/dictionary.txt`,
+and its real CLI tests/build smoke caller were updated. Historical JSON/provenance
+records and the original DOCX copy are preserved, not rewritten as new evidence.
+No system Python installation was uninstalled. Future disposable research can
+use another language if justified without restoring a required Python pipeline.
+
+Raw replacement comparisons, captures and final checks are retained under
+`.codex/temp/native-authority-validation/`. Corpus rights, parser/SQLite process
+memory boundaries, F-07, public packaging/platform evidence and broader real
+human-quality judgments remain unresolved; retiring migration parity does not
+resolve them or require rewriting superseded algorithms again.
+
+## Phase C: port gaps and active-pipeline organization (2026-10-13, superseded by Phase D)
 
 This phase supersedes the compatibility/harness dispositions in the earlier
 port review below. `IMPLEMENTED.md` confirms the accepted migration policy:

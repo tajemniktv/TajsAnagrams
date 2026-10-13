@@ -20,7 +20,7 @@ fn shared_request_and_progress_fixtures_match_rust_deserialization() {
             "JobStatus" => serde_json::from_value::<JobStatus>(value)
                 .is_ok_and(|status| status.validate().is_ok()),
             // Output-only types are validated from actual CLI serialization by
-            // the Python contract consumer, not deserialized by the engine.
+            // the independent AJV contract consumer, not deserialized by the engine.
             _ => continue,
         };
         assert_eq!(accepted, fixture["valid"].as_bool().unwrap(), "{fixture}");

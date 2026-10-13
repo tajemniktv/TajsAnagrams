@@ -1,4 +1,4 @@
-//! Test-only adapter for real WordNet feature/frame parity.
+//! Development-only structured probe for native WordNet features and frames.
 use anagram_core::wordnet::*;
 use serde_json::json;
 use std::{
