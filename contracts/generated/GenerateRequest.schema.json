@@ -121,6 +121,14 @@
     "strategy": {
       "$ref": "#/$defs/Strategy"
     },
+    "subtract": {
+      "default": [],
+      "description": "Letter chunks removed from the target, not inserted as output words.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "text": {
       "type": "string"
     }

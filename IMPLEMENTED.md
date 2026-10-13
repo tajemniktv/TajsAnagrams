@@ -13,6 +13,17 @@
 
 ## Post-snapshot completed updates
 
+Current organization follow-up: executable Python reference modules, benchmark
+runners and unit tests now live in `tests/oracle/`, with active CI/parity callers
+updated. `archive/` is historical only. The chronological migration notes below
+retain their original paths and acceptance policy; current validation and port
+boundaries are tracked in `.codex/docs/AUDIT.md` and `NATIVE_TOOLS.md`.
+Native subtraction and scoped import/stream/report/export surfaces are now
+implemented. Current data/model/performance jobs execute the Rust tools, while
+independent reference tests and thin measurement/report tooling can remain Python.
+This follows the acceptance policy below rather than reproducing obsolete
+Python pipelines solely for literal language equivalence.
+
 The archived plan below ends with the 2026-09-17 desktop/native follow-up.
 Subsequent repository work already landed before this roadmap split, including:
 

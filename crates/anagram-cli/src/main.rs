@@ -2,16 +2,20 @@ use anagram_cli::utilities;
 use anagram_core::{
     control::Control,
     lexicon::Unigrams,
-    request::{Error, GenerateRequest, generate_with_limits},
+    request::{Error, GenerateRequest, generate_observed_with_limits},
 };
 use std::{
     fs::File,
-    io::{BufReader, Read},
+    io::{BufReader, Read, Write},
     time::{Duration, Instant},
 };
+mod compat;
 
 fn run() -> Result<serde_json::Value, Error> {
     let mut args: Vec<_> = std::env::args_os().skip(1).collect();
+    let options = compat::Options::take(&mut args)?;
+    // Global execution/cache flags may precede the command, so validate the
+    // compatibility mode only after those flags have been consumed below.
     let cache_path = take_option(&mut args, "--cache")?.map(std::path::PathBuf::from);
     let rebuild = if let Some(index) = args.iter().position(|a| a == "--rebuild-cache") {
         args.remove(index);
@@ -97,13 +101,16 @@ fn run() -> Result<serde_json::Value, Error> {
         anagram_core::policy::DeploymentLimits::default()
     };
     let control = limits.control(&control)?;
-    let result = run_inner(&args, &control, &limits, progress, cache.as_ref());
+    options.validate_mode(args.first().and_then(|value| value.to_str()))?;
+    let result = run_inner(&args, &control, &limits, progress, cache.as_ref(), &options);
     if result.is_err()
         && let Err(reason) = control.check()
     {
         return Err(Error::new(reason, reason));
     }
-    result
+    let mut result = result?;
+    options.finish(&mut result)?;
+    Ok(result)
 }
 fn take_option(
     args: &mut Vec<std::ffi::OsString>,
@@ -129,11 +136,18 @@ fn run_inner(
     limits: &anagram_core::policy::DeploymentLimits,
     progress: bool,
     cache: Option<&anagram_core::cache::Config<'_>>,
+    options: &compat::Options,
 ) -> Result<serde_json::Value, Error> {
     control
         .check()
         .map_err(|reason| Error::new(reason, reason))?;
     let ranked = args.first().is_some_and(|a| a == "solve");
+    if options.stream.is_some() && ranked {
+        return Err(Error::new(
+            "usage",
+            "--stream-export applies to generate; solve exports completed ranked results",
+        ));
+    }
     if cache.is_some() && !ranked {
         return Err(Error::new("usage", "--cache currently applies to solve"));
     }
@@ -161,9 +175,10 @@ fn run_inner(
             "JSON request exceeds 1 MiB",
         ));
     }
+    let input = options.apply(&input, ranked, control)?;
     if ranked {
         let request =
-            serde_json::from_str(&input).map_err(|e| Error::new("invalid_json", e.to_string()))?;
+            serde_json::from_value(input).map_err(|e| Error::new("invalid_json", e.to_string()))?;
         let result = anagram_core::solve::solve_cached_observed(
             &request,
             anagram_core::solve::Paths {
@@ -187,7 +202,7 @@ fn run_inner(
             .map_err(|e| Error::new("serialization_error", e.to_string()));
     }
     let request: GenerateRequest =
-        serde_json::from_str(&input).map_err(|e| Error::new("invalid_json", e.to_string()))?;
+        serde_json::from_value(input).map_err(|e| Error::new("invalid_json", e.to_string()))?;
     anagram_core::request::validate(&request)?;
     limits.admit_generation(&request)?;
     let dictionary = File::open(&args[1]).map_err(Error::corpus)?;
@@ -202,14 +217,49 @@ fn run_inner(
         })
         .transpose()
         .map_err(|e| Error::corpus_controlled(e, control))?;
-    let result = generate_with_limits(
+    let mut stream = options.stream.as_ref().map(compat::open_new).transpose()?;
+    if let Some(file) = &mut stream {
+        writeln!(
+            file,
+            "{{\"kind\":\"generation_stream\",\"schema_version\":1,\"complete\":false}}"
+        )
+        .map_err(|e| Error::new("export_error", e.to_string()))?;
+    }
+    let result = generate_observed_with_limits(
         &request,
         BufReader::new(corpus_budget.reader(dictionary, "dictionary", control)),
         unigrams.as_ref(),
         control,
         limits,
+        &mut |bag| {
+            if let Some(file) = &mut stream {
+                serde_json::to_writer(&mut *file, &serde_json::json!({"bag":bag}))
+                    .map_err(|_| "export_error")?;
+                file.write_all(b"\n")
+                    .and_then(|_| file.flush())
+                    .map_err(|_| "export_error")?;
+            }
+            Ok(())
+        },
     )?;
-    serde_json::to_value(result).map_err(|e| Error::new("serialization_error", e.to_string()))
+    if let Some(file) = &mut stream {
+        let complete = matches!(
+            result.stop,
+            anagram_core::generation::Stop::Exhausted
+                | anagram_core::generation::Stop::CandidateCap
+        );
+        writeln!(
+            file,
+            "{}",
+            serde_json::json!({"complete":complete,"generated":result.generated,"stop":result.stop})
+        )
+        .and_then(|_| file.sync_all())
+        .map_err(|e| Error::new("export_error", e.to_string()))?;
+    }
+    let mut output = serde_json::to_value(&result)
+        .map_err(|e| Error::new("serialization_error", e.to_string()))?;
+    options.generated_reports(&result, &request, &mut output);
+    Ok(output)
 }
 
 fn main() {

@@ -6,18 +6,20 @@ import subprocess
 import sys
 
 ROOT=Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT / "archive"))
+sys.path.insert(0,str(ROOT / "tests/oracle"))
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import anagram_rerank_core as core
 import anagram_rerank_topk_impl as reference
 import anagram_auxiliary_grammar as auxiliary
 from anagram_order_diversity import raw_pool_size, select_diverse_orders
 from scoring import close
+from compatibility import reviewed_grammar
 from anagram_suite import cases_for
 from anagram_benchmark import tokens
 
 
 def main():
+    reviewed_grammar()
     lex=core.WordNetLexicon.load(ROOT/".anagram_data/wordnet31/dict")
     reference.phrase_structure=lambda words,lex: auxiliary.phrase_structure_with_auxiliaries(words,lex,core.phrase_structure)
     reference.local_grammar_raw=lambda words,lex: auxiliary.local_grammar_raw_with_auxiliaries(words,lex,core._order_local_tables)

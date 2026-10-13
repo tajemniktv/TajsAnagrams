@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "archive"))
+sys.path.insert(0, str(ROOT / "tests/oracle"))
 import anagram_generate as reference
 
 

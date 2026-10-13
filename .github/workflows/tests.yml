@@ -1,9 +1,15 @@
-name: tests
+name: optional Python reference validation
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
   pull_request:
+    paths:
+      - 'tests/oracle/**'
+      - 'tests/reference/**'
+      - 'tools/reference_*.py'
+      - 'tools/capture_reference.py'
+      - 'anagram_benchmarks.json'
+      - '.github/workflows/tests.yml'
 
 permissions:
   contents: read
@@ -14,7 +20,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: archive
+    working-directory: tests/oracle
 
 jobs:
   static-analysis:
@@ -73,7 +79,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: archive
+        working-directory: tests/oracle
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -88,7 +94,7 @@ jobs:
             .anagram_data/wordnet31
             .anagram_data/dictionary
             .anagram_data/ngrams
-          key: normal-user-corpora-${{ runner.os }}-v2-${{ hashFiles('archive/anagram_user_lexicon.py', 'archive/anagram_generate.py') }}
+          key: normal-user-corpora-${{ runner.os }}-v2-${{ hashFiles('tests/oracle/anagram_user_lexicon.py', 'tests/oracle/anagram_generate.py') }}
       - name: Provision runtime corpora outside smoke timeouts
         run: |
           python - <<'PY'
@@ -105,7 +111,7 @@ jobs:
           print(u.ensure_user_lexicon())
           PY
       - name: Clear puzzle-specific caches
-        run: rm -rf ../.anagram_data/prepared_cache ../.anagram_data/solver_runs
+        run: rm -rf ../../.anagram_data/prepared_cache ../../.anagram_data/solver_runs
       - name: Run registry-selected user invocations
         run: python ci_user_runs.py
       - name: Exercise concurrent cold runs and cache recovery

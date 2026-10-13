@@ -11,7 +11,7 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "archive"))
+sys.path.insert(0, str(ROOT / "tests/oracle"))
 sys.path.insert(0, str(ROOT / ".codex/temp/reference-runtime"))
 from reference_fixtures import verify_sources
 from capture_reference import REFERENCE
@@ -65,7 +65,7 @@ def gates():
                 ["../tests/parity/phrase.py"], ["../tests/parity/learned.py"]]
     for command in commands:
         start = time.perf_counter()
-        result = subprocess.run([sys.executable, *command], cwd=ROOT / "archive", text=True, encoding="utf-8",
+        result = subprocess.run([sys.executable, *command], cwd=ROOT / "tests/oracle", text=True, encoding="utf-8",
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=900,
                                 env={**os.environ, "ANAGRAM_INTEGRATION": "1", "PYTHONIOENCODING": "utf-8"})
         records.append(dict(command=command, integration_enabled=True, exit_code=result.returncode,

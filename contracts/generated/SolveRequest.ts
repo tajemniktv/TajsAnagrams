@@ -18,6 +18,7 @@ export type GenerateRequest = {
   "schema_version": number;
   "short_policy"?: ShortPolicy;
   "strategy": Strategy;
+  "subtract"?: Array<string>;
   "text": string;
 };
 

@@ -13,6 +13,18 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class QualityRunTests(unittest.TestCase):
+    def test_optional_phrase_model_paths_are_native_inputs_not_python_fallbacks(self):
+        from types import SimpleNamespace
+        args = SimpleNamespace(cli=ROOT/'build/release/anagram-cli.exe', dictionary=ROOT/'dictionary',
+            unigrams=ROOT/'one',bigrams=ROOT/'two',wordnet=ROOT/'wordnet',timeout_ms=10,
+            phrase_db=ROOT/'phrases.db', model=ROOT/'model.json')
+        command = baseline.cli_command(args)
+        self.assertEqual(command[6:8], [str(args.phrase_db.resolve()),str(args.model.resolve())])
+        args.phrase_db = None
+        self.assertEqual(baseline.cli_command(args)[6], '-')
+        generated = baseline.cli_command(args, 'generate')
+        self.assertNotIn(str(args.model.resolve()), generated)
+
     def test_desktop_profile_matches_native_defaults(self):
         source = (ROOT / "apps/desktop/src-tauri/src/settings.rs").read_text(encoding="utf-8")
         match = re.search(r"request: json!\((.*?)\),\s*\n", source, re.DOTALL)

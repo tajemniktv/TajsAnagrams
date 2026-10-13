@@ -37,6 +37,7 @@
     <label>Extra short words<input value={(request.generation.extra_short_words ?? []).join(', ')} oninput={e => request.generation.extra_short_words = e.currentTarget.value.split(/[\s,]+/).filter(Boolean)}/></label>
     <label>Exclude patterns (one per line)<textarea rows="2" value={(request.generation.exclude_regex ?? []).join('\n')} oninput={e => request.generation.exclude_regex = e.currentTarget.value.split('\n').filter(Boolean)}></textarea></label>
     <p class="hint">Case-insensitive Rust regex. Look-around and backreferences are not supported.</p>
+    <label>Subtract letters (one chunk per line)<textarea disabled={disabled} value={(request.generation.subtract ?? []).join('\n')} oninput={e => request.generation.subtract = e.currentTarget.value.split('\n').filter(Boolean)} placeholder="Letters to remove, not required output words"></textarea></label>
     <label class="check"><input type="checkbox" bind:checked={request.generation.allow_repeat}/>Allow repeated words</label>
     <label class="check"><input type="checkbox" bind:checked={request.positive_bigrams}/>Use positive bigram evidence</label>
     <label class="check"><input type="checkbox" bind:checked={request.deep_all}/>Deep-analyze every candidate{relaxed ? '' : ' (limit 10,000)'}</label>

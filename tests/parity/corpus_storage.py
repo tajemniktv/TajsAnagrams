@@ -8,7 +8,7 @@ import sys
 import tempfile
 
 ROOT=Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT / "archive"))
+sys.path.insert(0,str(ROOT / "tests/oracle"))
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from anagram_rerank_core import PhraseIndex,load_positive_bigram_model
 from scoring import close
@@ -36,7 +36,7 @@ def main():
         for path in (missing,corrupt,no_table):
             cases.append(dict(path=str(path),queries=queries));expected.append(dict(error=True))
         one="a\t100\nb\t200\nc\t300\nA\t20\n!!!\t90\nunknown\t1000\nbroken\n"
-        two="a b\t10\nb c\t20\nA b\t5\nc a\t-1\na b c\t500\n"
+        two="a b\t10\nb c\t20\nA b\t5\na b c\t500\n"
         (directory/"one.txt").write_text(one,encoding="utf-8")
         (directory/"two.txt").write_text(two,encoding="utf-8")
         vocabulary={"a","b","c"}
@@ -44,6 +44,11 @@ def main():
         model=load_positive_bigram_model(directory/"one.txt",directory/"two.txt",vocabulary)
         cases.append(dict(one=one,two=two,vocabulary=sorted(vocabulary),orders=orders))
         expected.append(dict(total=model.total_unigrams,unigrams=model.unigram_counts,scores=[model.score(order) for order in orders]))
+        # Native intentionally rejects negatives; do not emulate Python's skip
+        # behavior or silently remove this regression from the test suite.
+        for malformed in ("c a\t-1\n", "a b\t10\na b\t-1\n", "outside pair\t-1\n"):
+            cases.append(dict(one=one,two=malformed,vocabulary=sorted(vocabulary),orders=orders))
+            expected.append(dict(error=True))
         subprocess.run(["cargo","build","--locked","--example","corpus_probe"],cwd=ROOT,check=True)
         executable=ROOT/"build/debug/examples"/("corpus_probe.exe" if sys.platform=="win32" else "corpus_probe")
         output=subprocess.run([str(executable)],input="\n".join(map(json.dumps,cases)),text=True,capture_output=True,check=True,timeout=30)

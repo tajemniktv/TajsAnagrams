@@ -16,21 +16,22 @@ REFERENCE = "c12e3d5519d653fd65c7ffbbb2a1597941fedd2a"
 
 
 def reference_source_path(name):
+    name = name.removeprefix("archive/").removeprefix("tests/oracle/")
     path = ROOT / name
-    return path if path.is_file() else ROOT / "archive" / name
+    return path if path.is_file() else ROOT / "tests/oracle" / name
 
 
 def verify_reference_source(reference, name):
     """Check pinned source, allowing only the documented archive path migration."""
-    name = name.removeprefix("archive/")
+    name = name.removeprefix("archive/").removeprefix("tests/oracle/")
     expected = subprocess.check_output(
         ["git", "show", f"{reference}:{name}"], cwd=ROOT, text=True, encoding="utf-8")
     if name == "anagram_paths.py":
         expected = expected.replace('DATA_DIR = PROJECT_DIR / ".anagram_data"',
-                                    'DATA_DIR = PROJECT_DIR.parent / ".anagram_data"')
+                                    'DATA_DIR = PROJECT_DIR.parents[1] / ".anagram_data"')
     elif name in ("anagram_suite.py", "anagram_benchmark.py"):
         expected = expected.replace('DEFAULT_CASES = HERE / "anagram_benchmarks.json"',
-                                    'DEFAULT_CASES = HERE.parent / "anagram_benchmarks.json"')
+                                    'DEFAULT_CASES = HERE.parents[1] / "anagram_benchmarks.json"')
     path = reference_source_path(name)
     if path.read_text(encoding="utf-8") != expected:
         raise RuntimeError(f"Reference source differs: {path}")

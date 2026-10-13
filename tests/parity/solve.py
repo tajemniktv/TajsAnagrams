@@ -10,12 +10,14 @@ import sys
 import tempfile
 import sqlite3
 ROOT=Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT / "archive"));sys.path.insert(0,str(Path(__file__).resolve().parent))
+sys.path.insert(0,str(ROOT / "tests/oracle"));sys.path.insert(0,str(Path(__file__).resolve().parent))
 import anagram_generate as generator
 import anagram_rerank as ranking
 from scoring import close
+from compatibility import reviewed_grammar, native_rows
 
 def main():
+    reviewed_grammar()
     dictionary=ROOT/".anagram_data/dictionary/large.txt"
     one=ROOT/".anagram_data/ngrams/count_1w.txt";two=one.with_name("count_2w.txt")
     wordnet=ROOT/".anagram_data/wordnet31/dict"
@@ -80,6 +82,7 @@ def main():
                 assert status["budgets"]["candidate_limit"]==20
                 assert status["exhaustion"]==("truncated" if stats.truncated else "exhausted")
                 expected=dict(schema_version=1,kind="ranked",engine_version="0.1.0",normalized_input=text,generated=len(records),deep_analyzed=sum(r.deep for r in rows),shown=sum(map(len,buckets.values())),orders_evaluated=int(deep["orders"]),corpus_rescored=rescored,generation_stop="candidate_cap" if stats.truncated else "exhausted",buckets=buckets)
+                expected = native_rows(expected, display=True)
                 try:close(actual,expected)
                 except AssertionError:
                     (ROOT/".codex/temp/solve-mismatch.json").write_text(json.dumps(dict(request=request,actual=actual,expected=expected),indent=2),encoding="utf-8")

@@ -1,6 +1,5 @@
 """Local grammar parity against Python's actual WordNet-backed scorer."""
 import json
-import inspect
 from dataclasses import asdict
 from pathlib import Path
 import random
@@ -8,29 +7,21 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "archive"))
+sys.path.insert(0, str(ROOT / "tests/oracle"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import anagram_rerank_core as reference
 import anagram_auxiliary_grammar as auxiliary
 import anagram_comparative_grammar as comparative
 import anagram_clause_validity as validity
 from scoring import close
+from compatibility import reviewed_grammar
 
 
 def main():
     # Preserve the historical oracle on disk. These three reviewed bug fixes
     # deliberately improve native behavior; adapt only those reference helpers
     # for this differential gate, and include explicit regression phrases below.
-    reference._comparative_like = lambda word, lex: comparative.comparative_evidence(word, lex).confidence >= 0.9
-    edits = {
-        "_comparative_span_starting_at": ("or any(lex.features(w).adj or lex.features(w).adv for w in left)", ""),
-        "_np_span_starting_at": ("and words[i].endswith((\"ed\", \"en\")) and following_is_nominal", "and function_class(words[i]) is None and words[i].endswith((\"ed\", \"en\")) and following_is_nominal"),
-    }
-    for name, (before, after) in edits.items():
-        source = inspect.getsource(getattr(reference, name))
-        if before not in source:
-            raise RuntimeError(f"Reference correction no longer applies: {name}")
-        exec(compile(source.replace(before, after), f"<reviewed-reference-{name}>", "exec"), reference.__dict__)
+    reviewed_grammar()
     directory = ROOT / ".anagram_data/wordnet31/dict"
     lex = reference.WordNetLexicon.load(directory)
     rng = random.Random(917)

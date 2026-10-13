@@ -54,8 +54,15 @@ jobs:
           python - <<'PY'
           import sys
           from pathlib import Path
-          sys.path.insert(0, str(Path('archive') if Path('archive').exists() else Path('.')))
+          sys.path.insert(0, str(Path('tests/oracle')))
           import anagram_rerank_core as reference
           reference.ensure_wordnet(reference.DEFAULT_WORDNET_DIR)
           PY
       - run: python tests/parity/grammar.py
+      - name: Reviewed native ordering, ranking, storage and learned policy
+        run: |
+          python tests/parity/ordering.py
+          python tests/parity/ranking.py
+          python tests/parity/corpus_storage.py
+          python tests/parity/learned.py
+          python tests/parity/training.py

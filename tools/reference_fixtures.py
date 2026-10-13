@@ -8,8 +8,11 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "archive"))
-from capture_reference import REFERENCE, verify_reference_source
+sys.path.insert(0, str(ROOT / "tests/oracle"))
+if __package__:
+    from .capture_reference import REFERENCE, verify_reference_source
+else:
+    from capture_reference import REFERENCE, verify_reference_source
 
 
 def verify_sources():
@@ -18,11 +21,34 @@ def verify_sources():
         raise RuntimeError("Reference commit drift")
     for item in manifest["source_files"]:
         verify_reference_source(REFERENCE, item["path"])
+    derived_policy = None
     for item in manifest["corpus_files"]:
         path = ROOT / item["path"]
         with path.open("rb") as stream:
             if hashlib.file_digest(stream, "sha256").hexdigest() != item["sha256"]:
+                if item["path"] == ".anagram_data/dictionary/normal_user_v2.json":
+                    derived_policy = path
+                    continue
                 raise RuntimeError(f"Corpus drift: {path}")
+    if derived_policy is not None:
+        verify_derived_policy(derived_policy, ROOT / ".anagram_data/dictionary/large.txt",
+                              ROOT / ".anagram_data/ngrams/count_1w.txt")
+        print("Derived policy metadata refreshed; raw corpus hashes and recomputed short-word policy verified")
+
+
+def verify_derived_policy(path, dictionary, unigrams):
+    """Verify a rebuilt cache semantically; never exempt dictionary/count bytes."""
+    import anagram_generate as generator
+    import anagram_user_lexicon as lexical
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    required = {"schema", "policy_source", "source_token", "dictionary_stamp", "unigram_stamp", "extra_short_words"}
+    expected = dict(schema=lexical.USER_LEXICON_SCHEMA,policy_source=lexical._policy_source_token(),
+                    source_token=lexical._cache_source_token(generator.DEFAULT_DICT_URL, unigrams.parent),
+                    dictionary_stamp=list(lexical._source_stamp(dictionary)),
+                    unigram_stamp=list(lexical._source_stamp(unigrams)),
+                    extra_short_words=list(lexical.select_corpus_short_words(dictionary, generator.load_unigram_model(unigrams))))
+    if not isinstance(payload, dict) or set(payload) != required or payload != expected:
+        raise RuntimeError(f"Derived lexical policy drift: {path}")
 
 
 def capture():

@@ -12,13 +12,15 @@ import tempfile
 import hashlib
 
 ROOT=Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT / "archive"))
+sys.path.insert(0,str(ROOT / "tests/oracle"))
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import anagram_rerank as reference
 from scoring import close
+from compatibility import reviewed_grammar, native_rows
 
 
 def main():
+    reviewed_grammar()
     import argparse
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phrase-db",type=Path)
@@ -92,7 +94,7 @@ def main():
     actual=[json.loads(line) for line in output.stdout.splitlines()]
     assert len(actual)==len(expected)
     for i,(got,want) in enumerate(zip(actual,expected)):
-        try: close(got,want)
+        try: close(got,native_rows(want))
         except AssertionError as error:
             (ROOT/".codex/temp/ranking-mismatch.json").write_text(json.dumps(dict(case=cases[i],got=got,want=want),indent=2),encoding="utf-8")
             raise AssertionError((i,error)) from error

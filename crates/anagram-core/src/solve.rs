@@ -352,7 +352,8 @@ fn run(
                             schema_version: 1,
                             kind: "ranked",
                             engine_version: env!("CARGO_PKG_VERSION"),
-                            normalized_input: normalize_letters(&request.generation.text),
+                            normalized_input: request::validate(&request.generation)?
+                                .normalized_input,
                             generated: hit.generated,
                             deep_analyzed: hit.deep_analyzed,
                             shown,

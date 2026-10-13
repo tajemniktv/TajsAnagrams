@@ -85,11 +85,14 @@ def manifest(args, cases):
               "unigrams": args.unigrams, "bigrams": args.bigrams,
               "cases": Path(args.cases), "desktop_defaults_source": root / "apps/desktop/src-tauri/src/settings.rs"}
     inputs.update({f"wordnet/{path.name}": path for path in sorted(args.wordnet.iterdir()) if path.is_file()})
+    for role in ("phrase_db", "model"):
+        if getattr(args, role, None) is not None:
+            inputs[role] = getattr(args, role)
     metadata = {"schema_version": 1,
                 "inputs": {name: {"sha256": file_hash(path), "bytes": path.stat().st_size}
                            for name, path in inputs.items()},
                 "case_ids": list(cases), "os_filesystem_cache": "uncontrolled",
-                "runtime": "CLI adapter, not installed desktop; no phrase DB or learned model",
+                "runtime": "CLI adapter, not installed desktop; optional phrase/model inputs explicitly hashed",
                 "binary_source_correspondence": "Hash recorded; build correspondence requires separate build evidence"}
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=False)
     metadata["source_head"] = head.stdout.strip() if head.returncode == 0 else None
@@ -105,12 +108,18 @@ def add_corpus_arguments(parser):
     parser.add_argument("--bigrams", default=".anagram_data/ngrams/count_2w.txt", type=Path)
     parser.add_argument("--wordnet", default=".anagram_data/wordnet31/dict", type=Path)
     parser.add_argument("--cases", default="tests/quality/cases.v1.json")
+    parser.add_argument("--phrase-db", type=Path)
+    parser.add_argument("--model", type=Path)
 
 
 def cli_command(args, mode="solve"):
     command = [str(args.cli.resolve()), mode, str(args.dictionary.resolve()), str(args.unigrams.resolve())]
     if mode == "solve":
-        command += [str(args.bigrams.resolve()), str(args.wordnet.resolve()), "-"]
+        phrase = getattr(args, "phrase_db", None)
+        model = getattr(args, "model", None)
+        command += [str(args.bigrams.resolve()), str(args.wordnet.resolve()), str(phrase.resolve()) if phrase else "-"]
+        if model is not None:
+            command.append(str(model.resolve()))
     return [*command, "--timeout-ms", str(args.timeout_ms)]
 
 
@@ -142,6 +151,10 @@ def main():
             req["generation"]["strategy"] = args.strategy
     strategy = next(iter(requests.values()))["generation"]["strategy"]
     variant = f"native_{args.profile}_{strategy}_{args.candidate_budget}_{args.timeout_ms}ms"
+    if args.phrase_db:
+        variant += f"_phrase-{file_hash(args.phrase_db)[:12]}"
+    if args.model:
+        variant += f"_model-{file_hash(args.model)[:12]}"
     if args.shuffle_input:
         variant += f"_shuffled_seed{args.seed}"
     metadata = manifest(args, cases)

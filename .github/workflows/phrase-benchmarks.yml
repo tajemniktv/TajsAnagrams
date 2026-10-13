@@ -1,146 +1,77 @@
-name: phrase corpus benchmarks
+name: native phrase data and quality
 
 on:
   pull_request:
   schedule:
-    # Refresh the default-branch corpus snapshot near the start of each month.
     - cron: "17 3 1 * *"
   workflow_dispatch:
-
+    inputs:
+      include_wikipedia:
+        description: "Also build the expensive combined Wikipedia title corpus"
+        type: boolean
+        default: false
 permissions:
   contents: read
-
 concurrency:
   group: phrase-benchmarks-${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    working-directory: archive
-
 jobs:
-  corpus-matrix:
-    name: phrase ordering A/B or manual full corpus matrix
+  native-phrase:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - name: Rust dependency cache
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
-          python-version: "3.14"
-
-      - name: Choose monthly corpus snapshot cache key
-        id: corpus-key
-        shell: bash
-        run: echo "month=$(date -u +'%Y-%m')" >> "$GITHUB_OUTPUT"
-
-      - name: Restore project-local language data and phrase indexes
-        id: corpus-cache
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+          workspaces: '. -> build'
+      - run: cargo build --release --locked -p anagram-cli
+      - name: Monthly input snapshot
+        id: month
+        run: echo "value=$(date -u +'%Y-%m')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: |
-            .anagram_data
-            .ci_phrase_cache
-          key: phrase-corpora-${{ runner.os }}-${{ steps.corpus-key.outputs.month }}-${{ hashFiles('phrase_index_schema.txt') }}
-          restore-keys: |
-            phrase-corpora-${{ runner.os }}-${{ steps.corpus-key.outputs.month }}-
-
-      - name: Restore legacy corpus cache for path migration
-        id: legacy-corpus-cache
-        if: steps.corpus-cache.outputs.cache-matched-key == ''
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+          path: build/phrase-data
+          key: native-phrase-${{ runner.os }}-${{ steps.month.outputs.value }}-${{ inputs.include_wikipedia || false }}-${{ hashFiles('crates/anagram-cli/src/**', 'tools/prepare-native-data.ps1') }}
+      - name: Native dictionary and phrase preparation (no Python engine)
+        shell: pwsh
+        run: |
+          if (-not (Test-Path build/phrase-data/manifest.json)) {
+            $parameters = @{
+              NativeCli = 'build/release/anagram-cli'
+              OutputDirectory = "$env:GITHUB_WORKSPACE/build/phrase-data"
+              IncludeWiktionary = $true
+              IncludeWikipedia = ("${{ inputs.include_wikipedia }}" -eq 'true')
+            }
+            & ./tools/prepare-native-data.ps1 @parameters
+          }
+      # Python is only a measurement/report harness; all solve/data/model work is Rust.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        if: github.event_name != 'schedule'
         with:
-          path: |
-            ~/.multi_anagram
-            .ci_phrase_cache
-          key: legacy-phrase-corpora-${{ runner.os }}-${{ steps.corpus-key.outputs.month }}
-          restore-keys: |
-            phrase-corpora-${{ runner.os }}-${{ steps.corpus-key.outputs.month }}-
-
-      - name: Migrate legacy language-data path
-        if: steps.legacy-corpus-cache.outputs.cache-matched-key != ''
-        shell: bash
+          python-version: '3.14'
+      - name: Native full-solve phrase A/B, fixed profile and explicit input hashes
+        if: github.event_name != 'schedule'
         run: |
-          if [ -d "$HOME/.multi_anagram" ]; then
-            mkdir -p ../.anagram_data
-            cp -a "$HOME/.multi_anagram/." ../.anagram_data/
-            rm -rf "$HOME/.multi_anagram"
-          fi
-
-      - name: Drop code-sensitive prepared-feature cache
-        shell: bash
-        run: rm -rf ../.anagram_data/prepared_cache
-
-      - name: Build Wiktionary phrase index
-        shell: bash
-        run: |
-          mkdir -p ../.ci_phrase_cache
-          if [ ! -s ../.ci_phrase_cache/wiktionary.db ]; then
-            python build_wikimedia_phrase_index.py \
-              --output ../.ci_phrase_cache/wiktionary.db \
-              --rebuild
-          else
-            echo "Using cached Wiktionary phrase index"
-          fi
-
-      - name: Build Wiktionary + Wikipedia phrase index
-        shell: bash
-        run: |
-          if [ ! -s ../.ci_phrase_cache/wiktionary-wikipedia.db ]; then
-            python build_wikimedia_phrase_index.py \
-              --include-wikipedia \
-              --output ../.ci_phrase_cache/wiktionary-wikipedia.db \
-              --rebuild
-          else
-            echo "Using cached Wiktionary + Wikipedia phrase index"
-          fi
-
-      - name: Run fast PR phrase-order matrix
-        if: github.event_name == 'pull_request'
-        run: |
-          python ci_phrase_matrix.py \
-            --wiktionary-db ../.ci_phrase_cache/wiktionary.db \
-            --wikipedia-db ../.ci_phrase_cache/wiktionary-wikipedia.db \
-            --workers 8 \
-            --order-only
-
-      # Informational by design: this is held-out model research, not a hard
-      # regression threshold. A losing or temporarily broken experiment should
-      # report diagnostics without turning otherwise-correct solver CI red.
-      - name: Evaluate explicit-feature ranker with grouped held-out folds
-        if: github.event_name == 'pull_request' && hashFiles('archive/train_feature_ranker.py') != ''
+          mkdir -p .codex/temp/phrase-report
+          for mode in baseline phrases; do
+            extra=()
+            if [ "$mode" = phrases ]; then extra+=(--phrase-db build/phrase-data/phrases.db); fi
+            python tools/run_quality_baseline.py --cli build/release/anagram-cli --dictionary build/phrase-data/dictionary/normal_user_v2.txt --unigrams build/phrase-data/ngrams/count_1w.txt --bigrams build/phrase-data/ngrams/count_2w.txt --wordnet build/phrase-data/wordnet31/dict --timeout-ms 10000 --seed 13 --output ".codex/temp/phrase-report/$mode.jsonl" "${extra[@]}"
+            python tools/tajsbench.py --runs ".codex/temp/phrase-report/$mode.jsonl" --usefulness tests/quality/usefulness.v1.json --output ".codex/temp/phrase-report/$mode.report.json"
+          done
+      - name: Native grouped trainer (informational, never a promotion gate)
+        if: github.event_name != 'schedule'
         continue-on-error: true
         run: |
-          python train_feature_ranker.py \
-            --phrase-db ../.ci_phrase_cache/wiktionary-wikipedia.db \
-            --order-candidates 56 \
-            --folds 5
-
-      - name: Run manual full corpus benchmark matrix
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          python ci_phrase_matrix.py \
-            --wiktionary-db ../.ci_phrase_cache/wiktionary.db \
-            --wikipedia-db ../.ci_phrase_cache/wiktionary-wikipedia.db \
-            --workers 8
-
-      - name: Monthly corpus cache refresh only
-        if: github.event_name == 'schedule'
-        run: |
-          if [ "${{ steps.corpus-cache.outputs.cache-hit }}" = "true" ]; then
-            echo "Monthly project-local corpus cache is already warm; no benchmark requested."
-          else
-            echo "Monthly project-local corpus cache was populated/rebuilt and will be saved; no benchmark requested."
-          fi
-
-      - name: Save project-local language data and phrase indexes
-        if: success() && steps.corpus-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+          jq '{cases:[.cases[] | select((.suites // ["all"]) | any(. == "core" or . == "all" or . == "feature_ranker"))],options:{retained_orders:56,phrase_bonus_max:10}}' anagram_benchmarks.json | build/release/anagram-cli ranker-build build/phrase-data/wordnet31/dict build/phrase-data/phrases.db > .codex/temp/phrase-report/groups.json
+          jq '{groups:.groups,options:{folds:5,epochs:80,learning_rate:0.08,l2:0.002}}' .codex/temp/phrase-report/groups.json | build/release/anagram-cli ranker-train .codex/temp/phrase-report/model.json > .codex/temp/phrase-report/training.report.json
+      - name: Upload reports only, not corpora or trained models
+        if: always() && github.event_name != 'schedule'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          path: |
-            .anagram_data
-            .ci_phrase_cache
-          key: ${{ steps.corpus-cache.outputs.cache-primary-key }}
+          name: native-phrase-reports
+          path: .codex/temp/phrase-report/*.report.json
+          if-no-files-found: warn

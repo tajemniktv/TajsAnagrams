@@ -266,7 +266,13 @@ fn ranked_key_with_build_id(
     let generation = &mut semantic["generation"];
     generation["text"] = normalize_letters(&request.generation.text).into();
     generation["forbid_chars"] = normalize_letters(&request.generation.forbid_chars).into();
-    for name in ["required", "hints", "excluded", "extra_short_words"] {
+    for name in [
+        "required",
+        "hints",
+        "excluded",
+        "extra_short_words",
+        "subtract",
+    ] {
         if let Some(words) = generation[name].as_array_mut() {
             for word in words {
                 *word =

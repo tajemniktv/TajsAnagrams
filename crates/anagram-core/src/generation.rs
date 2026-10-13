@@ -365,6 +365,20 @@ pub fn search(
     cancel: &AtomicBool,
     deadline: Option<Instant>,
 ) -> Result<ResultSet, &'static str> {
+    search_observed(target, candidates, options, cancel, deadline, &mut |_| {
+        Ok(())
+    })
+}
+
+/// Observe only accepted unique bags, never the extra cap-detection probe.
+pub fn search_observed(
+    target: Inventory,
+    candidates: &[Candidate],
+    options: &Options,
+    cancel: &AtomicBool,
+    deadline: Option<Instant>,
+    observer: &mut dyn FnMut(&[String]) -> Result<(), &'static str>,
+) -> Result<ResultSet, &'static str> {
     if options.min_words > options.max_words {
         return Err("invalid word-count range");
     }
@@ -484,6 +498,7 @@ pub fn search(
                             stop: Stop::CandidateCap,
                         });
                     }
+                    observer(&bag)?;
                     bags.push(bag);
                     streams.push_back(stream);
                     break;

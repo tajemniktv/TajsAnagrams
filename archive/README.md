@@ -2,10 +2,14 @@
 
 This is the retired Python implementation, retained for reference and regression
 checks. The current app and CLI are native Rust; see the [project README](../README.md).
-Run the commands below from `archive/`. Existing runtime data remains in the
+The executable reference and all still-used scripts/tests moved to
+[`tests/oracle/`](../tests/oracle/README.md). This directory is historical only:
+no current tool or CI step depends on it, and deleting it loses no active pipeline.
+The command examples below are historical; run their maintained counterparts from
+`tests/oracle/`. Existing runtime data remains in the
 repository's `.anagram_data/`, not a second copy inside this directory. The shared
-case registry remains at `../anagram_benchmarks.json`. Explicit relative data paths
-in historical examples below must therefore be prefixed with `../`.
+case registry remains at repository root. Historical relative-path examples are
+not current invocation instructions.
 
 The Python source is a pinned historical oracle, not a maintained fallback.
 Known historical limitations include oversized integer scores in damaged ranking

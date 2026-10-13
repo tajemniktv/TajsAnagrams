@@ -19,6 +19,9 @@ pub struct GenerateRequest {
     #[schemars(range(min = 1, max = 1))]
     pub schema_version: u32,
     pub text: String,
+    /// Letter chunks removed from the target, not inserted as output words.
+    #[serde(default)]
+    pub subtract: Vec<String>,
     #[serde(default)]
     pub required: Vec<String>,
     #[serde(default)]
@@ -134,7 +137,7 @@ fn words(values: &[String]) -> Result<Vec<String>, Error> {
 
 /// Validated semantics, independent of corpus availability or deployment policy.
 pub struct Validated {
-    normalized_input: String,
+    pub(crate) normalized_input: String,
     remaining: Inventory,
     required: Vec<String>,
     hints: BTreeSet<String>,
@@ -172,7 +175,40 @@ pub fn validate(request: &GenerateRequest) -> Result<Validated, Error> {
             "Invalid word-count, length or frequency limits",
         ));
     }
-    let normalized_input = normalize_letters(&request.text);
+    let original = normalize_letters(&request.text);
+    let mut available = Inventory::from_text(&original);
+    let mut removed = Inventory::default();
+    for chunk in &request.subtract {
+        let letters = normalize_letters(chunk);
+        if letters.is_empty() {
+            return Err(Error::new(
+                "invalid_subtraction",
+                "Subtraction contains no A-Z letters",
+            ));
+        }
+        let inventory = Inventory::from_text(&letters);
+        available = available.subtract(inventory).ok_or_else(|| {
+            Error::new(
+                "unavailable_letters",
+                "Subtraction exceeds available letters",
+            )
+        })?;
+        for (total, amount) in removed.0.iter_mut().zip(inventory.0) {
+            *total += amount;
+        }
+    }
+    let normalized_input: String = original
+        .chars()
+        .filter(|letter| {
+            let count = &mut removed.0[*letter as usize - 'a' as usize];
+            if *count > 0 {
+                *count -= 1;
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
     let mut remaining = Inventory::from_text(&normalized_input);
     if remaining.is_empty() {
         return Err(Error::new("empty_input", "Input contains no A-Z letters"));
@@ -257,6 +293,7 @@ pub fn generate(
         cancel,
         deadline,
         &control,
+        &mut |_| Ok(()),
     )
 }
 
@@ -285,6 +322,20 @@ pub fn generate_with_limits(
     control: &crate::control::Control,
     limits: &crate::policy::DeploymentLimits,
 ) -> Result<Generated, Error> {
+    generate_observed_with_limits(request, dictionary, unigrams, control, limits, &mut |_| {
+        Ok(())
+    })
+}
+
+/// Stream exact accepted bags during enumeration; failure aborts generation.
+pub fn generate_observed_with_limits(
+    request: &GenerateRequest,
+    dictionary: impl BufRead,
+    unigrams: Option<&Unigrams>,
+    control: &crate::control::Control,
+    limits: &crate::policy::DeploymentLimits,
+    observer: &mut dyn FnMut(&[String]) -> Result<(), &'static str>,
+) -> Result<Generated, Error> {
     control
         .check()
         .map_err(|reason| Error::new(reason, reason))?;
@@ -299,6 +350,7 @@ pub fn generate_with_limits(
         control.flag(),
         control.deadline(),
         &control,
+        observer,
     )
 }
 
@@ -309,6 +361,7 @@ fn generate_inner(
     cancel: &AtomicBool,
     deadline: Option<Instant>,
     control: &crate::control::Control,
+    observer: &mut dyn FnMut(&[String]) -> Result<(), &'static str>,
 ) -> Result<Generated, Error> {
     let check = || {
         if cancel.load(std::sync::atomic::Ordering::Relaxed) {
@@ -361,6 +414,9 @@ fn generate_inner(
                     HintMode::Any => !initial_clues.is_empty(),
                     HintMode::ExactlyOne => initial_clues.len() == 1,
                 });
+        if valid {
+            observer(&required).map_err(|reason| Error::new(reason, reason))?;
+        }
         generation::ResultSet {
             bags: if valid { vec![Vec::new()] } else { vec![] },
             stop: Stop::Exhausted,
@@ -405,8 +461,34 @@ fn generate_inner(
             hint_mode: request.hint_mode,
             strategy: request.strategy,
         };
-        generation::search(remaining, &candidates, &options, cancel, deadline)
-            .map_err(|e| Error::new("invalid_search", e))?
+        generation::search_observed(
+            remaining,
+            &candidates,
+            &options,
+            cancel,
+            deadline,
+            &mut |bag| {
+                if required.is_empty() {
+                    return observer(bag);
+                }
+                let full: Vec<_> = required
+                    .iter()
+                    .cloned()
+                    .chain(bag.iter().cloned())
+                    .collect();
+                observer(&full)
+            },
+        )
+        .map_err(|e| {
+            Error::new(
+                if e == "export_error" {
+                    "export_error"
+                } else {
+                    "invalid_search"
+                },
+                e,
+            )
+        })?
     };
     let mut bags = Vec::with_capacity(result.bags.len());
     for bag in result.bags {

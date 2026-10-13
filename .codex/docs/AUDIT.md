@@ -4,6 +4,121 @@ Date: 2026-10-13. This is the single consolidated audit. Architecture findings
 are revalidated below; the earlier quality experiments and initial investigation
 retain their own dated evidence boundaries rather than becoming fresh claims.
 
+## Phase C: port gaps and active-pipeline organization (2026-10-13)
+
+This phase supersedes the compatibility/harness dispositions in the earlier
+port review below. `IMPLEMENTED.md` confirms the accepted migration policy:
+useful feature coverage and hard invariants, not perpetual byte-for-byte Python
+equivalence. The pinned Python logic stays a test oracle, not a production fallback.
+
+| Stable finding | Disposition | Implementation and acceptance evidence |
+| --- | --- | --- |
+| F-08: missing letter-subtraction surface | Implemented | Optional native `subtract` chunks remove letters without adding output words; required words consume the residual. CLI and desktop Advanced expose it. Tests cover normalization, unavailable/overlapping chunks and required multiplicity. |
+| F-09: missing native import/stream/report/export conveniences | Native equivalents implemented; historical formats retained as compatibility tools | Repeated exclusion-file imports; during-enumeration accepted-bag JSONL streaming; native JSON/deep-result exports; scoped hint statistics and answer diagnostics. New-file-only publication, cap-probe exclusion and exact CLI outputs have tests. These do not silently widen returned ranked rows or claim compatibility with Python's old text export format. |
+| F-10: active pipelines depended on archive contents | Reorganized | All 56 executable/config/test files moved together to `tests/oracle/`; active tools/workflows now point there. Three root-path adaptations retain existing corpus/registry locations. Archive contains historical documentation only; hiding it is an explicit pipeline acceptance test. |
+| F-11: parity harnesses conflated intentional differences with port defects | Policy implemented | `tests/parity/compatibility.py` centralizes exactly three reviewed grammar corrections and constructs the exact expected native `display_phrase`. Shared fields, unknown fields, order and score comparisons stay strict. Negative-row rejection is tested separately, not deleted from coverage. |
+| F-12: native trainer existed without differential fitted-weight proof | Differential harness added | `training.py` compares 12 fixed-seed fold/epoch/regularization configurations, fitted weights and pooled held-out metrics against Python. Inputs remain bag-grouped. Native validation/update budgets remain intentional stricter boundaries. |
+| F-13: mutable policy-cache metadata treated as immutable corpus bytes | Corrected narrowly | All raw dictionary/count/WordNet inputs remain SHA-256 checked. Only regenerated `normal_user_v2.json` is independently validated against the exact frozen lexical policy, current source token/stamps and recomputed short-word list; unknown fields or changed policy still fail. Historical hashes are not rewritten. |
+| F-14: current corpus/performance jobs still executed the Python engine | Native workflows selected | Existing Rust preparation/build/train/solve commands supersede the old engine paths. Thin Python capture/report tooling remains useful; obsolete Python internal caches/backends are not reimplemented in Rust. Legacy experiments remain optional reference commands. |
+| F-07: stale App response publication | Open, outside port compatibility work | The previously reproduced component-script race is not fixed or reclassified by this phase. |
+
+Native code changes are in `request.rs`, `generation.rs`, `cache.rs`, `solve.rs`
+and CLI `compat.rs`/`main.rs`. Subtraction runs in linear inventory/target passes,
+normalizes the **residual target** in results, participates in cache identity and
+keeps required-word conflict/multiplicity checks. Cache-hit presentation uses the
+same validated residual target rather than the original text. Original-input
+deployment limits remain conservative; subtraction does not bypass them.
+
+The generation observer sees unique accepted bags (including required words),
+never the extra truncation-detection bag. It is opt-in at the API/CLI surface;
+normal requests retain enumeration/stop semantics. Streaming does not eliminate
+the engine's retained bag vector. A transcript begins `complete:false`; failures
+or interrupted work cannot acquire a successful completion footer. Exports never
+overwrite an existing file, but an I/O failure can leave a partial **new** file.
+Native deep exports filter returned rows and explicitly retain original counters;
+answer/hint diagnostics name returned-bag/returned-row scope and run after scoring.
+
+No active script is lost to make archive appear clean. The Python compatibility
+CLI, corpus builder, trainer, benchmark/ordering/refinement/matrix runners and
+258 tests remain executable under `tests/oracle/`; their deployed-native
+counterparts are documented in the existing `NATIVE_TOOLS.md`. Workflows preserve
+reference capabilities, but current phrase/performance jobs now run native
+preparation and solving; the phrase job also uses native grouped build/train.
+Python only captures measurements/reports in those jobs. The obsolete Python
+test/benchmark workflows are not treated as the current application pipeline:
+reference validation is manual or selected by reference-file changes. Native CI
+still uses valuable independent Python comparisons alongside Rust tests, with
+selected ordering/ranking/storage/model/training comparisons added.
+The current phrase job uses Wiktionary by default; expensive combined Wikipedia
+data is an explicit manual input. Scheduled runs prepare/cache inputs but do not
+claim benchmark execution. Legacy full matrices remain callable through the
+oracle wrapper, not reconstructed as duplicate Rust pipelines.
+Historical source manifests keep their recorded paths/hashes; lookup
+accepts old names but resolves **only current oracle files**, not archive fallback.
+Pinned identity checks permit only the three documented path relocations.
+
+Strict-policy regressions demonstrate that a wrong display string, an unknown
+extra field or changed score still fails. Presentation is independently expected,
+not stripped from actual results. Grammar adaptations occur in memory before
+ordering/ranking/solve tests, without rewriting the pinned Python source.
+The preceding raw-failure logs remain historical evidence rather than being
+relabeled passes; fresh policy-aligned runs are recorded separately.
+
+### Phase C completed validation and dogfood
+
+- **126 native/desktop tests**, strict all-target Clippy, **31 quality tests**,
+  **21 UI/build-policy tests**, generated-contract checks and **19 independent
+  shared schema fixtures** passed. Desktop type checking had zero errors/warnings.
+- With the actual `archive/` directory temporarily moved out of the workspace
+  root (and restored in `finally`), all **258 oracle tests with CLI integration**,
+  frozen behavior verification, generation (500), scoring (200), real-corpus
+  admission (24), WordNet (6,483), reviewed grammar (305), ordering (118), ranking
+  (12), refinement (160), phrase/cohesion (400), storage, model inference (253),
+  training (12) and full solve (10, including phrase cold/warm/rebuild) checks
+  passed. These case counts are coverage, not independent human judgments.
+- The full **five-workload native registry** passed cold/warm checks, including
+  both 100,000-candidate workloads at original caps. The retained user-CLI smoke
+  also passed all five cases via `tools/run_oracle.py`; retained refinement A/B
+  ran successfully with UTF-8 output and no archive dependency. Initial attempts
+  that invoked non-argparse runners with `--help` from the wrong cwd were not
+  valid pipeline tests; the wrapper and real invocations provide the evidence.
+- Integration regenerated the local derived dictionary-policy cache. Its old
+  metadata SHA no longer matched the historical manifest, while **all other
+  recorded corpus hashes still matched**. F-13 validates that one cache's exact
+  derived meaning/identity rather than ignoring drift or manufacturing the old
+  bytes. Bad short-word lists, invented source identities and unknown fields have
+  rejection tests. Original dictionary/count content was not refreshed.
+- Native preparation was exercised offline using existing dictionary/count/
+  WordNet sources and six **project-authored synthetic titles**, producing a
+  24-row phrase index. Native grouped dataset construction and training completed
+  for 52 bags. Native pooled baseline metrics were R@1 **0.3654**, MRR
+  **0.5405**; fitted held-out metrics were R@1 **0.3269**, MRR **0.5073**. This
+  losing model is not promoted. The saved all-group fit is not generalization
+  evidence, and synthetic titles are not a validated real Wikimedia corpus.
+- A native full-solve capture with those explicit phrase/model artifacts recorded
+  14 attempts over seven familiar fixtures: 12 completed, two `actions_words`
+  deadlines at ten seconds. Their failures remain in TajsBench denominators.
+  Optional artifacts are hashed in manifests and variant IDs. This verifies the
+  pipeline/report plumbing, not a quality gain or a representative speed estimate.
+- Both revised workflow YAML files parse and their native preparation/training/
+  capture steps were exercised locally. No hosted Actions run, live corpus
+  download, full Wikipedia matrix, branch-protection change or public release is
+  claimed. Reports upload separately from raw corpora/trained model artifacts.
+- The release desktop build, transactional installation and restart succeeded.
+  Installed executable equals `build/release/TajsAnagrams.exe`, SHA-256
+  `7DF10E4D81D64ACC5706104E8D38EBD4B05829933714D9CEC47DEE15CE80847F`,
+  at `%LOCALAPPDATA%/Programs/TajemnikTV/TajsAnagrams/TajsAnagrams.exe`.
+  PID 39464 was running/responding with title TajsAnagrams. Existing installation
+  data/settings were preserved; the research model was not selected as a default.
+
+Raw logs/captures are project-local in `.codex/temp/port-validation/`. The local
+native preparation/model inputs remain isolated there. This is build/install/
+launch and CLI/API evidence, not a rendered or physical interaction test of the
+new desktop control. No fresh visual/control-interaction acceptance is claimed.
+F-07 and the previously documented data
+rights/process-memory boundaries remain open. No redundant legacy Python
+implementation is ported merely to increase the Rust line count.
+
 ## Python-to-Rust port completeness review (2026-10-13 follow-up)
 
 **Not a complete, behavior-identical port of everything in `archive/`, and not
@@ -175,7 +290,7 @@ no production code, corpus, deployment or CI policy is changed here.
 | F-04, P2 negative bigram rows | Resolved | Each parsed negative integer is rejected before normalization, vocabulary filtering or duplicate aggregation. |
 | F-05, P2 differential coverage | Partly addressed, still a maintenance gap | Native CI now includes scoring parity and quality tests, but most available ranking/ordering/full-solve harnesses remain outside that workflow. |
 | F-06, P3 missing guide | Resolved | `NATIVE_TOOLS.md` exists; all six local file links across both READMEs resolve. |
-| UI polling probe | Reproduced in actual component script with controlled IPC | An old result or error can publish after a new job starts. This is not an installed-GUI observation. |
+| F-07, UI polling probe | Reproduced in actual component script with controlled IPC | An old result or error can publish after a new job starts. This is not an installed-GUI observation. |
 | Multilingual boundary | Confirmed intentional contract, not an accepted feature request | English A-Z normalization is frozen; loading another dictionary does not establish language support. |
 
 ### F-01: provenance is not distribution clearance
@@ -283,7 +398,7 @@ targets. It did not validate external URLs or Markdown section anchors.
 The old missing-file remedy is complete, although no permanent link-check CI
 step is inferred from this one-off check.
 
-### UI probe: controlled reproduction upgrades the evidence
+### F-07: UI probe; controlled reproduction upgrades the evidence
 
 `apps/desktop/src/App.svelte::refresh` assigns an inactive status, then awaits
 `bridge.result(job.id)` without a request revision/current-job guard. While

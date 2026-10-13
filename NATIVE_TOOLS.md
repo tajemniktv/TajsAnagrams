@@ -120,6 +120,63 @@ measured.
 
 ## Deliberately retained differences
 
+### Native input and output conveniences
+
+Generation/solve JSON accepts optional `generation.subtract` (or `subtract` on
+the generation endpoint), an array of letter chunks. They are removed without
+inserting output words. Unavailable letters, empty chunks and a fully empty
+residual target are errors. Required words still consume the remaining inventory.
+The desktop Advanced panel exposes the same option. Normalized result input is
+the residual target, including on cache hits; subtraction participates in cache identity.
+
+CLI generation/solve accepts repeated `--subtract TEXT` and `--exclude-file FILE`.
+Exclusion files are whitespace-separated words, bounded to 1 MiB aggregate,
+appended to JSON exclusions rather than replacing them. Corpus paths remain explicit.
+
+`generate --stream-export NEW.jsonl` emits a header with `complete:false`,
+one exact accepted bag per line during enumeration, then a terminal count/stop
+record on successful completion. The extra cap probe is never exported. An
+interrupted or failed stream can retain a partial transcript without a successful
+footer; it must not be treated as a completed generation. Stream export currently
+applies to generation, not ranked solve, and does not make generation constant-memory.
+
+`--export NEW.json` writes the complete **returned** native JSON result.
+`solve --deep-export NEW.json` filters returned rows to deep rows, retaining
+original solve counters and an explicit export scope. These are native JSON,
+not Python's legacy pre/deep text formats or an implicit widening of result limits.
+All output paths must be new: existing files are never overwritten. A filesystem
+write failure may leave a partial new file; no successful result is claimed.
+
+`solve --hint-stats` reports hint occurrence among returned rows;
+`solve --benchmark-answer PHRASE` reports exact displayed-answer ranks among
+returned rows only, after scoring. Neither report changes search or ranking.
+An absent answer is not proof that it was absent from unreturned candidates.
+On generation these flags report hint counts and exact **word-bag** matches,
+explicitly scoped to `returned_bags`, not a chosen sentence order.
+The full legacy text/report workflows remain available in `tests/oracle`, rather
+than requiring archive contents. They are validation/compatibility tools, not
+installed app dependencies.
+
+### Current benchmark/data workflows
+
+The current phrase/performance CI jobs build and execute the native CLI. Data
+preparation reuses `tools/prepare-native-data.ps1`; phrase indexing, grouped
+dataset construction, training and solve are Rust operations. Python is a thin
+measurement/report harness, not the engine or installed runtime.
+`tools/run_quality_baseline.py` accepts optional `--phrase-db` and `--model`,
+hashes both and distinguishes their variants. `tools/tajsbench.py` preserves
+failures and cache strata rather than equating exact-target recovery with usefulness.
+Model training is informational: a completed fit is not a quality promotion.
+Current phrase snapshots default to Wiktionary, with expensive combined Wikipedia
+preparation opt-in on manual workflow runs; monthly cache refreshes are not
+benchmark evidence. Corpora/models are not published in the report artifacts.
+
+Legacy baseline/experimental commands remain available through
+`python tools/run_oracle.py COMMAND [-- ARGUMENTS]`. Do not recreate their
+obsolete intermediate files, Python worker backends or pickle caches in Rust
+when native operations already supersede them. Native/reference validation
+still uses an independent Python oracle where it adds useful comparison evidence.
+
 - Rust regex excludes backreferences and look-around; invalid patterns are errors.
 - Phrase databases must have a real `ngrams` table with unique text keys.
 - Python pickle caches and historical command-line flag syntax are not imported.

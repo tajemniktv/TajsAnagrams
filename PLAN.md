@@ -7,6 +7,14 @@ desktop acceptance and historical milestones have moved to
 
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
+- Port follow-up: active Python compatibility/reference pipelines are organized
+  under `tests/oracle/`, independent of archive contents. Native subtraction,
+  exclusion-file import, streaming and scoped JSON/report exports close concrete
+  missing surfaces; reviewed semantic differences are named in parity policy,
+  not hidden by broad field/tolerance exclusions. Stable findings F-08–F-14 and
+  the current validation/install evidence are in `.codex/docs/AUDIT.md` Phase C.
+  This is feature/validation work, not a newly passed human-quality promotion gate.
+
 - A correctness-preserving final-slot feasibility check now avoids allocating
   impossible search children. Three paired trials observed generation median
   reductions of roughly 20–40% on several larger cases; 21 completed real-output
