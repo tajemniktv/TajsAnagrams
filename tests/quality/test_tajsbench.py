@@ -116,6 +116,18 @@ class TajsBenchTests(unittest.TestCase):
         cold, warm = tajsbench.preference_accuracy(runs, judgments)
         self.assertEqual((cold["accuracy"], warm["accuracy"]), (1, 0))
 
+    def test_actual_usefulness_labels_are_separate_from_exact_target_recovery(self):
+        judgments = tajsbench.load_usefulness(ROOT / "tests/quality/usefulness.v1.json", self.cases)
+        run = {"variant": "v", "case_id": "testing_anagram_solver", "cache_state": "uncached",
+               "wall_ms": 100, "rows": [{"phrase": "Several Migrants Tango"},
+                                         {"phrase": "Solver Testing Anagram"}]}
+        self.assertEqual(tajsbench.case_metrics(self.cases[run["case_id"]], run["rows"])["recall_at_1"], 0)
+        top_one, top_five, _ = tajsbench.standalone_usefulness([run], judgments)
+        self.assertEqual((top_one["useful_rows"], top_one["not_useful_rows"]), (1, 0))
+        self.assertEqual(top_five["unreviewed_rows"], 1)
+        self.assertEqual(top_five["not_useful_rows"], 0)
+        self.assertEqual(top_one["unique_phrase_judgments"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -318,6 +318,24 @@ impl<'a> Stream<'a> {
             for &(letter, amount) in &candidate.sparse {
                 remaining.0[letter] -= amount;
             }
+            let start = if self.options.allow_repeat {
+                index
+            } else {
+                index + 1
+            };
+            // The final slot already has an exact signature lookup. Reject an
+            // impossible child before allocating its chosen/clue vectors and
+            // pushing a frame, using the same monotone admission cursor.
+            if slots_after == 1
+                && self
+                    .by_signature
+                    .get()
+                    .unwrap()
+                    .get(&remaining)
+                    .is_none_or(|indices| indices.partition_point(|&i| i < start) == indices.len())
+            {
+                continue;
+            }
             let mut chosen = frame.chosen.clone();
             chosen.push(index);
             let mut matched = frame.matched.clone();
@@ -325,11 +343,6 @@ impl<'a> Stream<'a> {
                 matched.insert(candidate.word.clone());
             }
             let left = frame.left - 1;
-            let start = if self.options.allow_repeat {
-                index
-            } else {
-                index + 1
-            };
             self.frames.push(Frame {
                 remaining,
                 left,

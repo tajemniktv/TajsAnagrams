@@ -15,6 +15,61 @@ fn options() -> Options {
 }
 
 #[test]
+fn final_slot_pruning_preserves_signature_siblings_and_monotone_cursor() {
+    for (words, expected) in [
+        (
+            vec!["a", "ab", "ba"],
+            vec![vec!["a", "ab"], vec!["a", "ba"]],
+        ),
+        (
+            vec!["ab", "ba", "a"],
+            vec![vec!["ab", "a"], vec!["ba", "a"]],
+        ),
+    ] {
+        let candidates: Vec<_> = words
+            .into_iter()
+            .map(|w| Candidate::new(w).unwrap())
+            .collect();
+        for repeat in [false, true] {
+            let mut request = options();
+            request.min_words = 2;
+            request.max_words = 2;
+            request.max_results = 0;
+            request.allow_repeat = repeat;
+            request.clues = BTreeSet::from(["ab".into(), "ba".into()]);
+            request.hint_mode = HintMode::ExactlyOne;
+            let result = search(
+                Inventory::from_text("aba"),
+                &candidates,
+                &request,
+                &AtomicBool::new(false),
+                None,
+            )
+            .unwrap();
+            assert_eq!(result.bags, expected);
+            assert_eq!(result.stop, Stop::Exhausted);
+        }
+    }
+    let candidates = [Candidate::new("a").unwrap()];
+    for repeat in [false, true] {
+        let mut request = options();
+        request.min_words = 2;
+        request.max_words = 2;
+        request.allow_repeat = repeat;
+        let result = search(
+            Inventory::from_text("aa"),
+            &candidates,
+            &request,
+            &AtomicBool::new(false),
+            None,
+        )
+        .unwrap();
+        assert_eq!(result.bags.len(), usize::from(repeat));
+        assert_eq!(result.stop, Stop::Exhausted);
+    }
+}
+
+#[test]
 fn expired_empty_diverse_setup_is_not_exhaustion() {
     let mut options = options();
     options.strategy = Strategy::Diverse;

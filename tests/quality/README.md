@@ -5,6 +5,8 @@ Splits are bag-disjoint. The first cases deliberately start with the product
 sanity phrase and existing project registry phrases. The registry is migration
 evidence, not itself a human-quality label. New external phrases require a
 source/version/license note in each case's `provenance`.
+Its negative contrasts concern intended-target recovery; they are not actual
+human judgments that those alternatives are useless.
 
 Run `python -m unittest discover -s tests/quality` to validate the fixtures and
 metric semantics. Evaluate recorded solver snapshots with:
@@ -75,6 +77,15 @@ control. Compare output buckets, not `normalized_input`, against the unshuffled
 run. This checks source-order dependence but does not turn familiar targets into
 a new held-out dataset or demonstrate naturalness.
 
+`usefulness.v1.json` stores actual standalone-usefulness judgments separately
+from exact target recovery and pairwise preference. Use `--usefulness
+tests/quality/usefulness.v1.json` when evaluating them. The current two positive
+labels came directly from the user; they are unblinded and express no relative
+preference. `standalone_usefulness` reports useful/not-useful/unreviewed rows;
+unreviewed phrases remain unknown, not fabricated negatives. Two phrase labels
+on one bag are not a general naturalness benchmark. The frozen gold set and empty
+pairwise preference dataset are deliberately unchanged.
+
 Cache states are `disk_cache_empty`, `disk_cache_reuse`, `in_process_warm`,
 `uncached`, or `unspecified`. Legacy `warm` booleans map to the first two states.
 These are not interchangeable with cold/warm OS pages or desktop-process reuse.
@@ -99,6 +110,22 @@ feature's tie-break influence too. Six-word pools retain at most 512 of 720
 evaluated orders; reports explicitly flag incomplete pools. This tests ordering
 objectives, not full corpus-rescored quality or human naturalness. Raw requests,
 responses, summaries and input hashes remain under `.codex/temp` by default.
+
+## Paired generation performance
+
+Preserve a known baseline CLI in a fresh project-local temporary path, then run:
+
+```text
+python tools/benchmark_generation.py --before .codex/temp/baseline-cli.exe --repeats 3 --output .codex/temp/generation-paired.jsonl
+```
+
+This pairs generation requests under the same desktop admission settings,
+randomizes both case/trial order and before/after order within each pair, and
+records full outputs and input hashes. Output comparisons include candidate
+order, inventory/admission counters and exhaustion/truncation, not just bag sets.
+Version labels are excluded from semantic equality. A pair that does not finish
+has unknown output equality and no completion-speedup estimate, rather than
+vacuous success or a latency gain inferred from equal timeout ceilings.
 
 `preferences.v1.json` holds human pairwise judgments separately from curated
 relevance. Present pairs with `make_pair(case, a, b, seed)`, record the returned

@@ -3,7 +3,103 @@
 Date: 2026-10-13. This is the single consolidated audit; the initial investigation
 is retained below as a historical appendix.
 
-## Outcome
+## Current outcome: a validated, installed performance improvement
+
+We found a useful improvement without changing ranking, admission, dictionaries
+or generated answers: reject impossible final-word branches **before** cloning
+the chosen-word vector and clue state and pushing a search frame. The existing
+signature index proves that no remaining candidate at the allowed monotone
+cursor can consume the residual inventory. Repeated-word and hint semantics,
+candidate order, cap/exhaustion reporting and cancellation remain intact.
+
+The implementation is in `crates/anagram-core/src/generation.rs`. This is not
+quality-directed search or a new heuristic: it skips work that cannot yield an
+answer under the current exact constraints.
+
+### Paired experiment and retained limits
+
+A preserved pre-change CLI was paired with the prototype, with randomized
+case/trial order and randomized before/after order inside each pair. Requests
+used desktop generation defaults, a 500-candidate cap, no solver-result cache,
+and a ten-second limit. Each condition had three paired trials. OS page caching
+was uncontrolled; timings include process startup and corpus loading.
+
+| Case / strategy | Before median | After median | Median-time reduction |
+| --- | ---: | ---: | ---: |
+| actions_words / prefix | 5,016 ms | 2,999 ms | 40% |
+| actions_words / diverse | 2,508 ms | 1,692 ms | 33% |
+| quiet_machine / prefix | 1,182 ms | 873 ms | 26% |
+| quiet_machine / diverse | 855 ms | 684 ms | 20% |
+| small_birds / prefix | 722 ms | 578 ms | 20% |
+| testing_anagram_solver / prefix | 502 ms | 469 ms | 7% |
+| testing_anagram_solver / diverse | 557 ms | 464 ms | 17% |
+
+All **21 completed pairs** had identical full semantic generation output,
+including exact bag order, admission counters and exhaustion/truncation.
+`small_birds` diverse timed out in all three pairs on both binaries: output
+equality and completion speedup are unknown there, not vacuously successful.
+The initial one-trial screen had mixed timings, so it was not used to declare
+a win. These medians are observed on four cases, not a universal speed guarantee.
+
+Raw screen/paired runs and hashes are in
+`.codex/temp/quality-improvements-2026-10-13/`. Use
+`two-slot-paired-verified.summary.json`, which rechecks complete output semantics
+and marks uncompleted comparisons null, rather than the preliminary summary.
+Baseline CLI SHA-256: `67bf25d36c04ab9a0407c0d093a36fb3879fbaec838d7cafea5a4c29cf43bed5`;
+measured prototype: `553d60a3b055482ad38388bfc0710e4427939270f40026688b2517856466cc19`.
+The final source was formatted and rebuilt after the prototype; its outputs were
+verified independently. The committed reusable recorder is
+`tools/benchmark_generation.py`; reproduce the selected experiment with:
+
+```text
+python tools/benchmark_generation.py --before .codex/temp/quality-improvements-2026-10-13/baseline-cli.exe --case-ids testing_anagram_solver actions_words small_birds quiet_machine --repeats 3 --output .codex/temp/generation-paired.jsonl
+```
+
+### Validation and local dogfood
+
+- Full native core/CLI tests and strict all-target Clippy passed.
+- Ordered generation differential checks passed **500 seeded cases** against the
+  unchanged Python reference, including bounded/exhaustive, repeat/no-repeat,
+  clue modes, initial clues and both strategies.
+- All **19 desktop-host tests** and **27 quality tests** passed. A focused new
+  regression covers same-inventory sibling words, monotone cursors, repeated
+  words and exactly-one-clue semantics.
+- A final desktop-profile CLI run completed six of seven cases in both cache
+  states; all **12 completed full-solve result buckets** were identical to all
+  three original baseline trials. `actions_words` still hit the ten-second
+  experiment deadline. Exact-target Recall@1 remains 1/7, not a quality gain.
+- Desktop type checking had zero errors/warnings; the frontend build reused its
+  validated cache. Release build, transactional installation and restart passed.
+  The installed executable matches `build/release/TajsAnagrams.exe` by SHA-256
+  `BE518A713D693227A77A24AAD7211820E79F0F2F422E94B1E785C6D558DB731D`.
+  One matching process was running and responding with window title TajsAnagrams.
+  Installation is `%LOCALAPPDATA%/Programs/TajemnikTV/TajsAnagrams`.
+- This proves build/install/launch and CLI behavior, not a measured desktop UI
+  latency improvement or user visual acceptance. Generation-only timing changes
+  must not be advertised as identical percentage gains in total solve latency.
+
+### Human feedback challenges the quality assumption itself
+
+The user explicitly confirmed that fluent sentences and coherent titles/noun
+phrases can both be useful, judged individually. On the actual sanity-bag
+outputs, the user judged **both “Several Migrants Tango” and “Testing Anagram
+Solver” useful on their own**. These are direct, unblinded usefulness judgments,
+not a relative preference and not a representative human-quality dataset.
+
+`tests/quality/usefulness.v1.json` records these two positive labels separately.
+TajsBench's opt-in `--usefulness` report counts useful/not-useful/unreviewed rows;
+unreviewed answers are unknown, never invented negatives. The frozen seven-case
+gold set and empty pairwise preference file remain unchanged.
+
+Consequently, the historical 14.3% exact-target recovery does **not** mean that
+only 14.3% of results are useful. The current native first result on the sanity
+bag is explicitly accepted as useful. The Pareto-dominance finding below remains
+valid for strictly preferring the named target, but by itself does not establish
+that the solver's alternative is a usability failure or that a new language
+model is needed. Further quality work should collect broader real judgments and
+independent cases before promoting new features or data.
+
+## Phase A: initial measurement corrections (historical checkpoint)
 
 Implemented the measurement corrections and ran the stage-isolation experiments.
 The evidence supports several distinct losses in gold-phrase recovery, plus an
@@ -11,10 +107,11 @@ ordering-feature representation limitation for the product sanity phrase. It
 does not support switching dictionaries, adopting a language model, removing
 grammar, or blindly raising search budgets as a complete remedy.
 
-Production Rust/desktop behavior and corpora remain unchanged. Research tooling,
-tests, evaluator semantics and the roadmap checkpoint changed. There are still
-no actual human judgments, and these seven familiar cases are not a promotion
-gate or an untouched held-out set.
+At this earlier checkpoint, production Rust/desktop behavior and corpora were
+unchanged; only research tooling, tests, evaluator semantics and the roadmap
+checkpoint changed. No actual human judgments had yet been collected. The seven
+familiar cases were not a promotion gate or an untouched held-out set. Subsequent
+production validation and direct judgments are recorded in the current section.
 
 ## Implementation
 

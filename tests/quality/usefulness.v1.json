@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "judgments": [
+    {
+      "case_id": "testing_anagram_solver",
+      "phrase": "Several Migrants Tango",
+      "useful": true,
+      "provenance": "Direct user judgment, 2026-10-13: both presented outputs useful on their own; unblinded, no relative preference expressed"
+    },
+    {
+      "case_id": "testing_anagram_solver",
+      "phrase": "Testing Anagram Solver",
+      "useful": true,
+      "provenance": "Direct user judgment, 2026-10-13: both presented outputs useful on their own; unblinded, no relative preference expressed"
+    }
+  ]
+}

@@ -7,6 +7,18 @@ desktop acceptance and historical milestones have moved to
 
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
+- A correctness-preserving final-slot feasibility check now avoids allocating
+  impossible search children. Three paired trials observed generation median
+  reductions of roughly 20–40% on several larger cases; 21 completed real-output
+  pairs and 500 ordered reference cases preserved exact enumeration and stop
+  semantics. Native/host/quality validation passed, and the local desktop was
+  built, installed and restarted. This is a performance improvement, not proof
+  of improved ranking or a universal solve-latency percentage gain.
+- Two actual user usefulness judgments now live in `usefulness.v1.json`,
+  separately from frozen exact-target recovery and still-empty pairwise
+  preference data. Both the sanity target and “Several Migrants Tango” were
+  judged useful. Unreviewed phrases remain unknown; poor target recovery alone
+  is not evidence of poor naturalness. Broader independent judgment is required.
 - TajsBench evaluation report v2 defaults to actual desktop bucket/display order;
   global final-score sorting is now a separately named diagnostic. Primary
   quality includes failed attempts, with conditional successful-call quality
@@ -21,7 +33,7 @@ desktop acceptance and historical milestones have moved to
   native retained-order feature ablations test scoring hypotheses without
   changing production behavior. Required-word oracle interventions deliberately
   bypass admission/search and must not count as end-to-end quality wins.
-- The seven familiar fixtures and empty human-preference dataset remain too
+- The seven familiar fixtures and empty pairwise-preference dataset remain too
   small to authorize corpus/model replacement or general quality claims. Freeze
   independent holdout cases and collect real judgments before tuning/promoting
   a ranking change. Phases 6–8 are not accepted by this tooling work.

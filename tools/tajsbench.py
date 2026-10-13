@@ -270,6 +270,50 @@ def make_pair(case, a, b, seed):
     return [a, b] if random.Random(seed).randrange(2) == 0 else [b, a]
 
 
+def load_usefulness(path, cases):
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if payload.get("schema_version") != 1:
+        raise ValueError("unsupported usefulness schema")
+    seen = set()
+    for judgment in payload["judgments"]:
+        case = cases[judgment["case_id"]]
+        identity = judgment["case_id"], phrase_key(judgment["phrase"])
+        if identity in seen or not isinstance(judgment["useful"], bool) or not judgment.get("provenance"):
+            raise ValueError("usefulness needs unique phrases, boolean labels and provenance")
+        if signature(judgment["phrase"]) != signature(case["source"]):
+            raise ValueError("usefulness phrases must be exact anagrams")
+        seen.add(identity)
+    return payload["judgments"]
+
+
+def standalone_usefulness(runs, judgments, ranking="desktop"):
+    """Sparse actual judgments: unreviewed rows are unknown, not negative labels."""
+    labels = {(j["case_id"], phrase_key(j["phrase"])): j["useful"] for j in judgments}
+    judged_cases = {j["case_id"] for j in judgments}
+    groups = defaultdict(list)
+    for run in latest_attempts(runs):
+        if run["case_id"] in judged_cases:
+            groups[(run["variant"], cache_state(run))].append(run)
+    output = []
+    for (variant, state), group in sorted(groups.items()):
+        for limit in (1, 5, 10):
+            useful = not_useful = unknown = 0
+            for run in group:
+                if "error" in run:
+                    continue
+                for row in extract_rows(run, ranking)[:limit]:
+                    label = labels.get((run["case_id"], phrase_key(row_phrase(row))))
+                    useful += label is True
+                    not_useful += label is False
+                    unknown += label is None
+            output.append({"variant": variant, "cache_state": state, "ranking": ranking, "top_n": limit,
+                           "judged_case_ids": sorted({run["case_id"] for run in group}),
+                           "unique_phrase_judgments": len(labels), "attempts": len(group),
+                           "completed": sum("error" not in run for run in group),
+                           "useful_rows": useful, "not_useful_rows": not_useful, "unreviewed_rows": unknown})
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cases", default="tests/quality/cases.v1.json")
@@ -277,6 +321,7 @@ def main():
     parser.add_argument("--preferences", default="tests/quality/preferences.v1.json")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--ranking", choices=("desktop", "final_score", "both"), default="desktop")
+    parser.add_argument("--usefulness", type=Path, help="Optional separate actual standalone-usefulness judgments")
     args = parser.parse_args()
     cases = load_cases(args.cases)
     runs = [json.loads(line) for line in args.runs.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -295,6 +340,10 @@ def main():
               "groups": [row for ranking in rankings for row in summarize(runs, cases, ranking)],
               "quality_at_budgets": [row for ranking in rankings for row in quality_at_budgets(runs, cases, ranking)],
               "pairwise_preference": [row for ranking in rankings for row in preference_accuracy(runs, comparisons, ranking)]}
+    if args.usefulness:
+        judgments = load_usefulness(args.usefulness, cases)
+        report["standalone_usefulness"] = [row for ranking in rankings
+                                           for row in standalone_usefulness(runs, judgments, ranking)]
     content = json.dumps(report, indent=2) + "\n"
     if args.output:
         args.output.write_text(content, encoding="utf-8")
