@@ -1,7 +1,227 @@
-# TajsAnagrams quality audit: evidence, experiments and improvements
+# TajsAnagrams audit: architecture, assumptions and validated evidence
 
-Date: 2026-10-13. This is the single consolidated audit; the initial investigation
-is retained below as a historical appendix.
+Date: 2026-10-13. This is the single consolidated audit. Architecture findings
+are revalidated below; the earlier quality experiments and initial investigation
+retain their own dated evidence boundaries rather than becoming fresh claims.
+
+## Architecture/product audit consolidation and current validation
+
+Source: **TajsAnagrams Architecture and Product Audit**, reviewed 2 October
+2026, pinned to `94cd91ff4344bd7b3f6e73231c3d7c4396d10455` (21 September).
+User-provided source: `D:/TajemnikTV/Downloads/tajsanagrams-architecture-product-audit.docx`.
+SHA-256: `7d4394272c3c11d3f67f50e80c1ae8fd2f936eb79ea5f114e66dea819202c7e7`.
+All document-body paragraphs and its architecture table were extracted in order;
+there are no embedded images, tracked insertions/deletions or comments. Footer
+text is just the title/page field. This is content consolidation, not Word layout QA.
+
+Current validation pin: `91aafc7` with an initially clean worktree. The attached
+audit's suggested actions and phased backlog are proposals, not instructions
+executed by this review. The requested change is consolidation and validation;
+no production code, corpus, deployment or CI policy is changed here.
+
+### Finding disposition at the current pin
+
+| Source ID | Current disposition | Evidence-supported conclusion |
+| --- | --- | --- |
+| F-01, P1 distribution gate | Still open as a repository evidence gap | The corpus ledger does not establish redistribution permission for dictionary/frequency/real phrase/model artifacts. It is not a finding that private local use is unlawful. |
+| F-02, P2 input resilience | Original unbounded-source finding resolved; memory claim narrowed | Finite per-role/aggregate intake budgets exist and enforce actual reads. They do not guarantee bounded parser heap or SQLite disk/page usage. |
+| F-03, P2 stale ranked cache | Resolved for core source/build identity | Ranked cache includes a deterministic core content fingerprint, not just package/ranking version strings. |
+| F-04, P2 negative bigram rows | Resolved | Each parsed negative integer is rejected before normalization, vocabulary filtering or duplicate aggregation. |
+| F-05, P2 differential coverage | Partly addressed, still a maintenance gap | Native CI now includes scoring parity and quality tests, but most available ranking/ordering/full-solve harnesses remain outside that workflow. |
+| F-06, P3 missing guide | Resolved | `NATIVE_TOOLS.md` exists; all six local file links across both READMEs resolve. |
+| UI polling probe | Reproduced in actual component script with controlled IPC | An old result or error can publish after a new job starts. This is not an installed-GUI observation. |
+| Multilingual boundary | Confirmed intentional contract, not an accepted feature request | English A-Z normalization is frozen; loading another dictionary does not establish language support. |
+
+### F-01: provenance is not distribution clearance
+
+`tests/reference/CORPORA.md` explicitly leaves the Feldman dictionary and
+Norvig/Google-derived count-data permissions unverified, requires review of
+real Wikimedia-derived indexes and trained models, and records WordNet notice
+preservation. `PLAN.md` keeps redistribution review and wider distribution
+deferred. This validates the **state of repository evidence**, not the legal
+terms themselves; no new legal adjudication or external license review occurred.
+
+The source recommendation remains a release dependency: before bundling or
+mirroring datasets, enumerate exact sources/releases/hashes, reviewed terms,
+attribution and notices, and check actual package contents for unapproved data.
+WordNet-bearing packages need their notices preserved. No package-content
+clearance test was run or inferred from local parity. The ledger is historical
+and distinguishes original from derived vocabulary; it is not a substitute for
+an inventory of the exact future release. Local user-provisioned use remains a
+separate boundary.
+
+### F-02: source budgets exist, but are not heap limits
+
+`crates/anagram-core/src/policy.rs::DeploymentLimits::default` sets 2 GiB
+per role and 3 GiB aggregate intake defaults; explicit null limits can disable
+them for intentional local workloads. `provenance.rs::Snapshot::load_with_budget`
+uses `CorpusReadBudget` readers before retaining bytes, with an overflow-probe
+byte rather than trusting potentially stale metadata. Ranked solve shares one
+budget across model, unigram, dictionary, bigram, WordNet and phrase intake
+(`solve.rs::run`); generation has its own intake budget in `request.rs`.
+Preparation paths also have budget regression tests in
+`crates/anagram-cli/tests/corpus_budget.rs`.
+
+Fresh native tests cover exact-limit/limit+1, cumulative role and aggregate
+limits, growing and sparse files, cancellation during EOF/overflow, deferred
+buffered errors, model format versus intake limits, WordNet/model aggregation,
+canonical phrase bytes and decompressed title inputs. These are bounded synthetic
+tests, not deliberate real OOM tests. `request.rs` maps intake failures to
+`corpus_too_large`; the passing UI settings regression verifies that clearing a
+limit saves explicit null rather than accidentally reinstating defaults.
+
+Important residual: snapshots still materialize bytes, parsed maps can coexist,
+and a multi-GiB source ceiling is not a measured safe memory envelope. Phrase
+indexes budget **canonical logical JSON bytes**, not raw SQLite file size;
+decompressed titles are charged by their expanded bytes. Budgets are per intake
+phase, not a global process/concurrent-job heap cap. Peak parsed-state memory,
+SQLite resources and suitable machine-specific defaults remain unmeasured.
+The attached proposal's metadata-preflight step is not required to prove actual
+read enforcement; it could be a separate optimization, not an absent correctness
+guard.
+
+### F-03: build-aware cache invalidation is implemented
+
+`crates/anagram-core/build.rs::fingerprint` hashes logical filenames and bytes
+for Rust core sources, build script and package/workspace manifests and locks
+when present. It includes dirty source edits without relying on a Git SHA;
+location, modification times and unrelated files are intentionally excluded.
+`cache.rs::ranked_key` includes `ANAGRAM_CORE_BUILD_ID` alongside format,
+engine/ranking versions, role identities and canonical request settings.
+
+Fresh tests verify same identity/key, different identity/key, compiled versus
+source fingerprint, dirty source/manifests/locks, added/deleted modules,
+path/mtime reproducibility and normalized package builds. Existing cache tests
+also pass input/request invalidation and bounded storage/corrupt-payload recovery.
+This disproves the old same-version **core-source** mechanism. The fingerprint
+is not a complete toolchain/environment/software supply-chain attestation;
+unchanged source compiled with different toolchains is not claimed to invalidate
+automatically. Cache format identity remains separate from algorithm identity.
+
+### F-04: cancelling negative duplicates are rejected
+
+`crates/anagram-core/src/scoring.rs::Bigrams::load` checks `count < 0`
+immediately after successful `i64` parsing. Fresh tests in `tests/scoring.rs`
+reject `10` followed by `-1`, negative out-of-vocabulary pairs and `i64::MIN`;
+nonnegative duplicates aggregate and checked integer overflow still fails.
+Unparseable/noninteger/NaN/infinite/out-of-range values retain the explicit
+skip policy; rejecting every malformed text row was not the original acceptance
+criterion and is not silently inferred. The old aggregate-only acceptance path
+is gone. This run did not separately exercise Data -> Validate in the installed
+UI, so its displayed error wording is not fresh runtime evidence.
+
+### F-05: workflow coverage is improved, not comprehensive
+
+`.github/workflows/native.yml` runs native core/CLI tests, contract generation
+and parity, scoring parity, quality tests, generation, refinement and grammar
+parity on Windows and Ubuntu. `.github/workflows/desktop.yml` separately covers
+desktop build/checks, UI async regressions, installation rollback and host tests.
+Available `tests/parity/{ordering,ranking,wordnet,corpus,corpus_storage,learned,solve,registry,phrase}.py`
+are not called by native CI. Passing recorded/manual suites are not continuous
+coverage, nor is a successful historical Actions run proof of current branch
+protection. Remote runs and required-check enforcement were not inspected here.
+
+Next decision remains to select a reliable, fixed-seed low-cost subset around
+order/tie semantics, full solve, cache and optional evidence, with a deliberate
+mutation showing each new gate detects its intended regression. Expensive
+real-corpus/performance matrices can remain explicit manual/scheduled evidence.
+No new required merge gate is established by this document.
+
+### F-06: README guidance is restored
+
+Both README links to `NATIVE_TOOLS.md` resolve. The guide explains the native
+CLI and its optional data/model tools, states that desktop never launches the
+CLI or needs Python, and documents root build caches. A fresh filesystem check
+of all six local Markdown file links in root/desktop README found no missing
+targets. It did not validate external URLs or Markdown section anchors.
+The old missing-file remedy is complete, although no permanent link-check CI
+step is inferred from this one-off check.
+
+### UI probe: controlled reproduction upgrades the evidence
+
+`apps/desktop/src/App.svelte::refresh` assigns an inactive status, then awaits
+`bridge.result(job.id)` without a request revision/current-job guard. While
+that promise is held, `start` can see the old inactive job, clear the result/error,
+start a new job and refresh to its active status. Resolving the old promise then
+publishes its result; rejecting it publishes its error from the old catch path.
+`jobs.rs` permits replacement of completed snapshots; one joined worker does
+not prevent this frontend response-order race.
+
+Reproduction: `.codex/temp/audit-consolidation-2026-10-13/polling-probe.cjs`
+extracts/transpiles the actual component script, stubs Svelte runtime primitives
+and IPC/timers, exposes `refresh/start`, holds an old inactive result promise,
+starts an active new job, then separately resolves/rejects the old promise.
+Both assertions reproduced stale publication with the new job still active.
+Run `node .codex/temp/audit-consolidation-2026-10-13/polling-probe.cjs` against
+the retained local artifact. No copied refresh implementation or solver mock
+result is treated as production-quality evidence. The harness has no DOM and
+does not measure incidence in installed Tauri/Svelte scheduling.
+
+The existing nine `tools/test-desktop-ui.cjs` tests pass: they exercise
+Experimental/Management races and corpus-limit settings, **not this App path**.
+Remedy proposed for a subsequent scoped fix: guard both success and failure
+publication with request revision/current job, invalidate old polls on start
+and disposal, and add held-response tests for old status/result/error. These
+tests must demonstrate both prevention and continued new-job progress.
+
+### Architecture, product boundaries and retained recommendations
+
+Current `bridge.ts` invokes Tauri commands; `jobs.rs` runs/join-shuts down the
+native worker. Keep the Rust core, Tauri host, Svelte/TypeScript UI, versioned
+contracts and local selected data; the installed solver is not a Python wrapper,
+HTTP solver or account/service client. Python remains active validation/parity
+tooling and its archived solver is the comparison oracle. The native core can
+still intentionally prepare/download data through separately selected tooling;
+local solver independence does not mean the whole repository never uses network.
+
+`lib.rs::normalize_letters` and its passing compatibility test retain
+NFKD -> ASCII(ignore) -> lowercase -> A-Z, without transliterating Polish l-stroke
+or German sharp-s. English grammar/WordNet remains the contract. Multilingual
+support would require an explicitly accepted versioned alphabet, surface form,
+tokenization, constraints, frequency/morphology/grammar profile and fixtures;
+it is not implemented simply by changing dictionaries.
+
+`tauri.conf.json` still disables bundling. Public signed packaging, WebView2
+prerequisites/update-channel decisions, exact artifact provenance and wider
+upgrade/rollback acceptance are separate release work. Linux/macOS desktop
+acceptance and website hosting are not established by cross-platform core CI.
+Website hosting remains deferred and would need its own isolation, admission,
+rate/memory limits and operational proof. No remotely reachable critical exploit
+or defect in merge ordering, cancellation ownership, cache fail-open behavior,
+IPC exposure, rollback or frozen letter arithmetic was established here.
+
+The source audit's backlog is retained by dependency rather than replayed:
+input/cache/guide remedies are already implemented; regression coverage selection
+and the reproduced UI publication race remain actionable; parser-memory/resource
+measurement is distinct from input caps; multilingual/platform/website scope
+requires separate product decisions; data rights/notices and package-content
+proof remain release gates. Do not replace foundations or broaden product scope
+to satisfy an outdated recommendation.
+
+### Fresh checks and historical evidence boundaries
+
+- `cargo test -p anagram-core -p anagram-cli --offline --locked`: **102 tests
+  passed**, zero failed/ignored, including the relevant intake/cache/parser suites.
+- `python tests/parity/scoring.py`: **200 seeded comparisons passed**.
+- `python -m unittest discover -s tests/quality -q`: **27 tests passed**.
+- `node --test tools/test-desktop-ui.cjs`: **9 tests passed**.
+- `python tools/generate_contracts.py --check`: **16 artifacts match**.
+- Both controlled App stale-publication variants reproduced; all six local
+  README file links resolve. Raw native log, extracted DOCX and probe live in
+  `.codex/temp/audit-consolidation-2026-10-13/` (ignored, project-local).
+
+The attached audit performed no builds/tests and cites historical exact-SHA
+Actions and acceptance records: 51 Rust tests, differential/52-case quality and
+12-pipeline cases, five CLI workloads, Windows interactions, cold/warm timings
+and a failed Python stress baseline (~10.2 GB sampled RSS). Those remain claims
+about their recorded binaries, data and machine, not fresh current-pin results.
+The October monthly phrase refresh with skipped benchmark steps is not performance
+evidence. Older plan phase-number summaries also predate the current roadmap;
+use current `PLAN.md` instead of treating historical checklist text as scope.
+The separately retained quality/performance sections below identify their own
+binary hashes, experiments, checks and installation proof. No new desktop build,
+installation/restart, visual acceptance, remote CI success, broad quality gain
+or license clearance is claimed by this Markdown-only consolidation.
 
 ## Current outcome: a validated, installed performance improvement
 
