@@ -4,6 +4,152 @@ Date: 2026-10-13. This is the single consolidated audit. Architecture findings
 are revalidated below; the earlier quality experiments and initial investigation
 retain their own dated evidence boundaries rather than becoming fresh claims.
 
+## Python-to-Rust port completeness review (2026-10-13 follow-up)
+
+**Not a complete, behavior-identical port of everything in `archive/`, and not
+proven correct for all inputs.** The supported native solver has implementations
+of the main generation/ranking pipeline and substantial differential evidence.
+There are explicit compatibility differences, unported legacy conveniences and
+remaining validation gaps. The installed solver is independent of Python;
+that does not mean every Python script or behavior was translated to Rust.
+
+Review pin: `fa3c7d2` (initial worktree clean); native implementation unchanged
+from the architecture validation above. `tests/reference/NATIVE_PHASE3_ACCEPTANCE.md`
+records acceptance under a user policy prioritizing feature coverage, useful
+results and speed over exhaustive one-to-one equivalence. It does not authorize
+calling the port universally equivalent. The opening comment in core `lib.rs`
+still refers to future full parity gates; that is not a machine-checked certificate
+of completeness, nor proof that the desktop calls Python.
+
+### Feature coverage and remaining compatibility boundaries
+
+| Python responsibility | Current native coverage | Remaining distinction |
+| --- | --- | --- |
+| Normalization, letter inventories, required/hint/excluded words, word/length/frequency/short policies, repeats, prefix/diverse bounded generation | `lib`, `lexicon`, `generation`, `request` | Frozen English alphabet, not multilingual; native defaults/validation are not all legacy CLI defaults. |
+| Lexical, pair, family and pre-ranking; WordNet morphology/POS/frames | `scoring`, `wordnet`, `ranking` | Requires comparable exact corpora/options; port parity is not dictionary equivalence. |
+| Local grammar, noun phrases, clauses, auxiliaries, comparative/parallel structures, validity | `grammar`, `phrase`, `clause`, `auxiliary`, `comparative`, `structure`, `validity` | Three reviewed changes deliberately differ from frozen core Python helpers; raw ordering comparison fails until the comparison oracle accounts for them. |
+| Exact/beam retained order pools, diversity, shortlist/family expansion, refinement, final buckets | `ordering`, `diversity`, `ranking`, `refinement`, `solve` | Tested pools are finite. Full-pipeline diagnostic control is needed for additive fields and reviewed grammar differences; see below. |
+| Positive bigrams, SQLite phrase evidence, cohesion and alternative-order rescoring | `corpus_ranking`, `phrase_index`, `phrase`, `cohesion`, `phrase_evidence` | Rust rejects some malformed corpora Python accepts/skips; canonical SQLite table/key constraints differ. |
+| Explicit 18-feature learned ranker and training | `learned`, `training`, native `ranker-build/train/rank` | Inference/model parity is tested; native build/train round-trip tests are not a proof of identical Python training trajectories for all configurations. |
+| User dictionary/data preparation and title-index construction | Native CLI utilities/phrase builder and desktop maintenance | Native alternatives exist, not identical script interfaces or output-file/cache workflows. Exact derived dictionaries still require controlled comparison. |
+| Python prepared/ranked caches and subprocess/worker orchestration | Bounded native SQLite caches, direct calls and Rust workers | Pickle/prepared cache import, Python subprocess/backends/batch controls and old cache formats are not ported; cache correctness is validated through native invariants, not file compatibility. |
+| Legacy CLI convenience/exports | Structured JSON generation/solve plus desktop final TXT/JSON export | No request field for legacy `--subtract`, exclusion-file import, hint-stat report, generator stream/deep/full text exports or benchmark-answer console mode. Some can be emulated by callers, but those entry points are not implemented equivalents. |
+| Benchmark/CI/reference/research scripts | Active Python tooling plus native probe binaries | Not all Python tooling is Rust, by design; the frozen Python oracle stays in `archive/`. No installed-app fallback is inferred. |
+
+`archive/anagram_generate.py` explicitly subtracts `--subtract` letter chunks
+without adding them as required output words, reads `--exclude-file`, and writes
+`--stream-export` while generating. `GenerateRequest` exposes required/excluded
+arrays and target text, but no corresponding subtraction/import/stream-output
+contract. `Inventory::subtract` is an internal primitive, not an exposed
+equivalent of those workflows. These are absent surface capabilities, not proof
+that ordinary native exact-letter answers are incorrect.
+
+Other deliberate differences already documented in `NATIVE_TOOLS.md` and the
+native acceptance record: Rust regex does not support Python look-around or
+backreferences; phrase sources require a real `ngrams` table and unique keys
+rather than noncanonical views/duplicate-text modes; native solve ranks fully
+required answers rather than retaining Python's zero-residual restriction.
+Finite source/deployment/model limits, checked integer arithmetic, negative-row
+rejection, typed errors and new status/display fields are not behavior-identical
+to historical Python. These should remain named compatibility decisions rather
+than silently weakening Rust checks to make malformed-input comparisons pass.
+
+### Fresh differential evidence and failures
+
+Eleven existing harnesses were rerun serially using current native builds,
+Python 3.14.6, provisioned local data and offline Cargo dependency resolution.
+Outputs/logs are in `.codex/temp/python-rust-port-review-2026-10-13/`.
+`reference_fixtures.verify_sources()` also passed: pinned Python source and
+reference corpus hashes match the recorded manifest. Differences below are not
+explained by a silently edited oracle or drifted reference data.
+The previous architecture validation's 102 native tests and 200 scoring
+comparisons still apply because production source has not changed.
+
+| Unmodified harness | Fresh result | What it does and does not establish |
+| --- | --- | --- |
+| `generation.py` | Pass: 500 seeded cases | Ordered enumeration, clues/repetition/caps and stop semantics on its cases. |
+| `wordnet.py` | Pass: 6,483 words | Features, morphology, frames and valency on the selected word set. |
+| `grammar.py` | Pass: 305 cases | **Adjusted-reference parity**, not unchanged Python equivalence: it patches three reviewed helpers in memory. |
+| `refinement.py` | Pass: 160 pools | Single/refined/augmented bounded pools, not unrestricted searches. |
+| `corpus.py` | Pass: 24 cases | Real-corpus short-policy admission/prefix cases. |
+| `phrase.py` | Pass: 400 cases | Synthetic phrase/cohesion calculations, not the combined Wikimedia corpus matrix. |
+| `learned.py` | Pass: 253 cases | Feature/model/ranking behavior; not differential trainer equivalence. |
+| `ordering.py` | Fail | Real structure/valency/objective and retained-order mismatch on `actions speak louder than words`. |
+| `ranking.py` | Fail | Initially additive `display_phrase` schema mismatch; omitting only that field exposes the comparative semantic mismatch on a later case. |
+| `corpus_storage.py` | Fail | Its negative-count corpus expects Python's skip behavior; Rust returns an error. |
+| `solve.py` | Fail | The raw comparator rejects the additive `display_phrase` field; separate control below distinguishes shared pipeline values. |
+
+For the exact five-word ordering case, Rust returns first-order structure
+`0.957`, valency `0.78`, kind `comparative`, objective `0.7871370393229093`;
+frozen Python returns `0.9397056`, `0.86592`, `comparative-clause`,
+`0.7898379033229093`. Both choose the named phrase first in this case, but their
+remaining retained pools differ. This is a genuine semantic divergence, not
+floating-point tolerance or a missing corpus explanation.
+
+`grammar.py` names the reviewed corrections: use graded comparative evidence
+for comparative-like detection, remove the legacy "any adjective/adverb"
+comparative-span fallback, and prevent function words from being treated as
+participial noun-phrase starts. Current Rust `clause.rs`/`phrase.rs` implements
+these changes; the frozen Python files are not edited. Consequently the existing
+historical statement that 118 unchanged-reference order cases pass must not be
+read as current evidence without those corrections.
+
+### Discriminating controls (not raw parity passes)
+
+The retained project-local `diagnostic_controls.py` changes only the comparison
+conditions stated here, without editing production code or the archived oracle:
+
+- Apply exactly the same three in-memory reference adjustments as `grammar.py`:
+  all **118 exact/beam ordering cases pass**. This explains the observed ordering
+  mismatch as the reviewed grammar divergence for these cases; it does not prove
+  no other ordering differences exist.
+- For ranking, omitting **only** additive `display_phrase` passes the common
+  values in its first case but still fails at case 1 on `0.957` versus `0.9397056`.
+  Adding the same three reviewed-reference adjustments then passes all **12
+  complete ranking/corpus-rescoring pipeline cases** with all other fields and
+  numerical tolerances unchanged. This is conditional equivalence, not a raw gate.
+- For corpus storage, remove its one negative `c a` row from both loaders' input.
+  The remaining SQLite batching/errors/immutability and nonnegative collocation
+  comparison passes. `corpus_ranking.rs::Collocation::load` rejects negatives;
+  Python's positive model skips them. This confirms intentional validation
+  disagreement, not a defect in valid-input counts on this fixture.
+- For full solve, omitting only additive `display_phrase` passes **10 real-corpus
+  CLI cases** (five requests, both strategies), including synthetic optional
+  SQLite and cold/warm/rebuild comparisons for both phrase-enabled variants.
+  Every shared result field is compared with the original tolerance; no grammar
+  adjustment was needed for these small-cap fixtures. This validates this subset,
+  not every comparative bag or every retained pool from the ranking harness.
+
+Reproduce the controls with
+`python .codex/temp/python-rust-port-review-2026-10-13/diagnostic_controls.py ordering`,
+`... ranking --reviewed-grammar`, `... corpus_storage`, and `... solve`.
+Ignored local diagnostics are retained evidence, not committed permanent gates.
+Raw harness failures remain failures; comparison adaptations do not erase them.
+
+### Outstanding port evidence, not automatically implementation work
+
+1. Align permanent parity harness expectations with an explicit versioned
+   compatibility policy: frozen Python, reviewed semantic corrections, additive
+   native presentation/status fields and deliberately stricter malformed input.
+   Preserve tests of each divergence rather than blanket dropping unknown fields
+   or relaxing score/order comparisons.
+2. Decide whether the absent legacy CLI conveniences are actually required in
+   the product. Do not call them ported because a caller could reconstruct them.
+3. Native training exists, but inference tests and training round trips do not
+   establish Python trainer equivalence. If equivalence is required, compare
+   grouped folds, pool membership, labels, updates, fitted weights and held-out
+   metrics on frozen inputs/options before claiming it.
+4. The full five-workload normal-user registry and optional real combined-corpus
+   matrix were not rerun in this follow-up. Their historical passes/unfinished
+   matrices retain their dates and pins. This is not all option/corpus combinations
+   or a formal proof; familiar fixtures also do not establish human usefulness.
+
+No Python/Rust implementation is changed by this completeness review. The
+actionable finding is **incomplete strict compatibility and stale differential
+harness policy**, not evidence that the main Rust pipeline is missing or that
+the app must return to Python. Known legacy Python cache/cleft heuristics are
+not declared fixed merely because their code has a Rust analogue.
+
 ## Architecture/product audit consolidation and current validation
 
 Source: **TajsAnagrams Architecture and Product Audit**, reviewed 2 October
