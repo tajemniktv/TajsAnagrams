@@ -5,6 +5,27 @@ already implemented. The completed migration, parity work, performance evidence,
 desktop acceptance and historical milestones have moved to
 [`IMPLEMENTED.md`](IMPLEMENTED.md). This file is deliberately forward-looking.
 
+### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
+
+- TajsBench evaluation report v2 defaults to actual desktop bucket/display order;
+  global final-score sorting is now a separately named diagnostic. Primary
+  quality includes failed attempts, with conditional successful-call quality
+  reported separately. Latency-budget reports separate cache states and count
+  unique cases independently from repeated trials and snapshots.
+- The baseline recorder now defaults to the native desktop request profile;
+  a regression test checks for drift against `Settings::default`. The old
+  diverse/500 profile remains available explicitly. Both are CLI measurements,
+  not installed-desktop or human acceptance evidence.
+- `tools/run_quality_stages.py` measures word admission, candidate inclusion,
+  deep selection, chosen order and final display separately. Optional frozen
+  native retained-order feature ablations test scoring hypotheses without
+  changing production behavior. Required-word oracle interventions deliberately
+  bypass admission/search and must not count as end-to-end quality wins.
+- The seven familiar fixtures and empty human-preference dataset remain too
+  small to authorize corpus/model replacement or general quality claims. Freeze
+  independent holdout cases and collect real judgments before tuning/promoting
+  a ranking change. Phases 6–8 are not accepted by this tooling work.
+
 ### 2026-09-27 implementation checkpoint (Phases 5–7)
 
 - **Phase 5 in progress, not gated:** `tests/quality/cases.v1.json` starts a

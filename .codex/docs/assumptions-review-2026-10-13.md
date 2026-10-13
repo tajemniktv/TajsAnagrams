@@ -1,10 +1,222 @@
-# TajsAnagrams: assumptions and discriminating evidence
+# TajsAnagrams quality audit: evidence, experiments and improvements
+
+Date: 2026-10-13. This is the single consolidated audit; the initial investigation
+is retained below as a historical appendix.
+
+## Outcome
+
+Implemented the measurement corrections and ran the stage-isolation experiments.
+The evidence supports several distinct losses in gold-phrase recovery, plus an
+ordering-feature representation limitation for the product sanity phrase. It
+does not support switching dictionaries, adopting a language model, removing
+grammar, or blindly raising search budgets as a complete remedy.
+
+Production Rust/desktop behavior and corpora remain unchanged. Research tooling,
+tests, evaluator semantics and the roadmap checkpoint changed. There are still
+no actual human judgments, and these seven familiar cases are not a promotion
+gate or an untouched held-out set.
+
+## Implementation
+
+- TajsBench report schema v2 defaults to the native desktop display order:
+  ascending word-count buckets, preserving native order inside each bucket.
+  The former global final-score sort remains an explicitly labelled diagnostic.
+- Primary grouped metrics include terminal failures as zero-relevance attempts;
+  conditional successful-call metrics and latency are named separately.
+- Cache states and trials are distinct strata. Multiple snapshots of a trial
+  are not independent attempts. Budget coverage separates unique puzzle IDs
+  from trials and does not count cold/warm repeats as additional cases.
+- Unobserved budget rankings remain null. `delivery_metrics` measures operational
+  delivery over all recorded attempts; no delivery contributes zero without
+  inventing an intermediate ranking. Previously delivered partial snapshots
+  remain delivery evidence if a later snapshot records a failure.
+- Exact shallow bags with no chosen order keep their blank display positions and
+  score zero. The evaluator no longer crashes on these diagnostic-wide outputs
+  or fabricates an order from their underlying words.
+- The baseline recorder defaults to the native desktop request profile, checked
+  against `Settings::default` by a regression test. Legacy diverse/500 remains
+  explicit. Variant names, requests, corpus/binary hashes, cache state and trials
+  are recorded; subprocess/JSON/deadline failures remain evidence.
+- The stage recorder isolates single-word admission, generation, deep selection,
+  full analysis, chosen orders and a projection of the final display limit.
+  Required-word oracle controls bypass admission/search and are not end-to-end
+  successes. Retained-order ablations remove a feature's tie-break influence too.
+
+## Reproduction and limits
+
+Native binaries were rebuilt offline using the persistent project `build`
+directory, from native source at `660a227` (the working changes were Python/tests/
+documentation, not production Rust). SHA-256:
+
+- CLI: `67bf25d36c04ab9a0407c0d093a36fb3879fbaec838d7cafea5a4c29cf43bed5`
+- ordering_probe: `6fc0faaf1b2c151a22016c46b1dcbc7db2d9f5daffa4c696ca1b1b0f5f440596`
+
+All raw runs, hash manifests and reports are project-local ignored artifacts in
+`.codex/temp/quality-controlled-2026-10-13/`, not included in the commit. They use
+local baseline dictionary/ngram/WordNet data, no phrase DB and no learned model.
+The source HEAD and dirty-state marker are in each manifest; tool request/seed
+identities and full responses are retained. No external artifacts were fetched.
+
+Commands (run serially to avoid shared CPU pressure):
+
+```text
+cargo build -p anagram-cli --release --offline
+cargo build -p anagram-core --example ordering_probe --release --offline
+python tools/run_quality_baseline.py --timeout-ms 10000 --repeats 3 --seed 13 --output .codex/temp/quality-controlled-2026-10-13/desktop.jsonl
+python tools/tajsbench.py --runs .codex/temp/quality-controlled-2026-10-13/desktop.jsonl --ranking both --output .codex/temp/quality-controlled-2026-10-13/desktop-report.json
+python tools/run_quality_stages.py --deep-all --seed 13 --ordering-probe build/release/examples/ordering_probe.exe --output .codex/temp/quality-controlled-2026-10-13/stages.jsonl
+python tools/run_quality_baseline.py --timeout-ms 10000 --shuffle-input --seed 13 --output .codex/temp/quality-controlled-2026-10-13/shuffled.jsonl
+```
+
+The builds in this run used `CARGO_INCREMENTAL=0`; no build directories were
+cleaned or relocated. These are CLI adapter measurements with a controlled
+10-second deadline, **not** the full desktop runtime's 120-second default limit,
+installed desktop tests, or visual/user acceptance. OS filesystem cache was
+uncontrolled; “disk cache empty” means an empty solver-result cache, not cold OS
+pages. Three trials of seven cases are still only seven independent puzzles.
+
+## 1. Corrected baseline: rankings genuinely differ
+
+The desktop-profile baseline recorded three trials for each case, each with an
+empty result cache followed by reuse: 42 invocations. Per cache state:
+
+| Ranking definition | Attempted | Completed | Timed out | Recall@1 | Recall@5/10 | MRR |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Desktop display order | 21 | 18 | 3 | 14.29% | 14.29% | 0.1429 |
+| Global final-score diagnostic | 21 | 18 | 3 | 0% | 14.29% | 0.0286 |
+
+Only `knowledge_power` recovered its expected phrase. `actions_words` timed out
+in all three trials in both cache states. All 18 completed empty-cache calls
+reported `cache.hit=false`; all 18 completed reuse calls reported `cache.hit=true`.
+Reuse attempts after failures also failed; they were not labelled successful hits.
+
+Completed-call p50/p95 were about 2.14/7.58 seconds for empty result caches and
+195/217 ms for actual reuse. These are descriptive timings of completed calls,
+not an end-to-end latency guarantee. At five seconds, empty-cache coverage was
+15/21 trials across five cases; reuse coverage was 18/21 across six cases.
+
+Regrading the historical six-case snapshot yields 1/6 = 16.67% top-one recovery
+per cache state, rather than the old conditional 1/5 = 20%. Do not compare that
+number against this new seven-case, different-profile run as an algorithm gain
+or regression. The solver was not modified by this research work.
+
+## 2. Generation is usually the earliest loss
+
+The stage matrix holds the desktop admission/scoring profile fixed and varies
+only strategy and candidate cap. Each attempted configuration has seven cases
+and one trial; deadlines do not count as completed generation or observed absence.
+
+| Strategy / cap | Completed generation | Gold bags observed | Cases with gold bags |
+| --- | ---: | ---: | --- |
+| Prefix / 500 | 7/7 | 1/7 attempts | knowledge_power |
+| Diverse / 500 | 6/7 | 1/7 attempts | knowledge_power |
+| Prefix / 5,000 | 6/7 | 3/7 attempts | knowledge_power, testing_anagram_solver, quiet_machine |
+| Diverse / 5,000 | 5/7 | 1/7 attempts | knowledge_power |
+
+All 29 ordinary gold words pass single-word admission; `voldemort` does not.
+Disabling its frequency cutoff still admits no bag, separating this absence
+from a frequency-threshold explanation. The required-word oracle orders its
+complete phrase correctly, but does not prove ordinary admission works.
+
+`small_birds` diverse generation times out at both caps; prefix completes.
+`actions_words` generation times out at 5,000 for both strategies. Those
+generation-only outcomes rule out deep ranking as a necessary cause of these
+observed deadlines. Bigger caps and more deep work are not automatic remedies.
+
+## 3. Search, shortlist and display do not imply one another
+
+For the sanity phrase under prefix/5,000, the gold bag appears at position 2,605.
+Normal selection leaves it shallow (144 total deep rows). Full analysis evaluates
+all 5,000 bags, but its chosen order is still `solver testing anagram`, at rank
+1,388 within the three-word bucket. The gold phrase is never displayed. Under
+desktop-profile diverse/5,000, the bag is absent; the earlier legacy-profile
+result must not be generalized to this different admission configuration.
+
+For `quiet_machine` under prefix/5,000, generation finds the bag, deep selection
+analyzes it, and ordering chooses `this machine runs quietly`. It is first in its
+own word-count bucket but position **11** in the desktop presentation, after ten
+shorter results. Full deep analysis does not change that position. This is an
+observed presentation-order effect, not a failure to choose the correct order
+or evidence that the result was removed by the per-bucket display limit.
+
+The stage matrix produced 129 native invocations: 31 admission probes, 28 each
+of generation/normal-selection/full-analysis probes, seven gold-bag oracles and
+seven native order-pool probes. Twelve invocations recorded native deadlines;
+the other 117 retained results. Oracle ordering returned six of seven expected
+phrases; the sanity phrase remained the exception.
+
+## 4. Weight-only tuning cannot strictly prefer the sanity gold
+
+The native exact ordering probe evaluates and retains all six sanity permutations.
+Its four objective features give the competing phrase these values:
+
+| Feature | solver testing anagram | testing anagram solver |
+| --- | ---: | ---: |
+| Grammar normalization | 0.658418 | 0.546738 |
+| Structure normalization | 0.763600 | 0.420000 |
+| Valency normalization | 1.000000 | 0.080000 |
+| Syntax coverage | 1.000000 | 1.000000 |
+
+The expected phrase is Pareto-dominated by that competitor: every feature is
+no better, and three are strictly worse. Therefore **no nonnegative linear
+reweighting of these four feature values can make the expected phrase strictly
+outscore that competitor**. This is a statement about this frozen feature
+representation, not all possible ranking algorithms or corpus evidence.
+
+The native objective ranks the gold fifth of six. Removing grammar, structure
+or syntax-coverage weight leaves it fifth; removing valency moves it to fourth.
+None changes the winner. The probe classifies the gold as a clause; the evidence
+motivates testing title/compound/fragment representation or independently useful
+corpus evidence, rather than assuming a coefficient adjustment will suffice.
+It does not prove which new feature or model would help.
+
+On the seven frozen retained-order pools, native ordering recovers six gold
+orders at rank one. Grammar-objective removal recovers zero, structure removal
+five, and valency/syntax removal six. Thus removing grammar is not a supported
+general remedy. The six-word keys case retains 512 of 720 evaluated orders;
+its ablations are only over that retained subset, not an exhaustive new search.
+These are objective-feature ablations, not modules removed from the full solver.
+
+## 5. Source-order leakage control
+
+All seven benchmark inputs exactly preserve their expected phrase's normalized
+letter sequence, with spaces removed. That could make segmentation-based methods
+appear effective without demonstrating anagram generalization.
+
+A seeded input shuffle was run for all seven cases, with one empty/reuse trial
+each (14 invocations). For all six completed cases, **full result buckets were
+identical to all three unshuffled trials**, not merely equal top-one metrics.
+`actions_words` again timed out in both cache states. Thus source order did not
+explain the observed output for the six completed cases. This does not remove
+the fixture-design risk for future input-order-aware methods; retain shuffled
+controls and collect independently sourced, genuinely held-out cases.
+
+## Validation and next decision
+
+- CLI and existing ordering-probe release builds passed offline.
+- All 22 quality tests passed; the suite now covers actual native defaults,
+  display ordering, unconditional failure denominators, cache/trial/snapshot
+  handling, partial delivery, blank rows, malformed processes, exact inventories,
+  feature/tie-break ablations and shuffled-input controls.
+- Re-evaluating all 129 frozen stage records with the final recorder code
+  reproduced their diagnostic summaries exactly.
+- No desktop app build/install/restart or production scoring/data changes occurred.
+
+The most discriminating next research is (1) preserving useful bags through the
+shortlist on a frozen candidate pool, and (2) testing a compound/title-sensitive
+feature that contributes information not already dominated here. Run admission,
+frequency and order-scoring changes separately, not as a bundled replacement.
+Promotion still requires independent held-out cases, genuine human judgments,
+predeclared quality/resource thresholds and desktop acceptance. None is supplied
+by these 185 diagnostic invocations.
+
+## Historical appendix: initial assumptions review before measurement fixes
 
 Date: 2026-10-13. Scope: the quality/search/data roadmap in `PLAN.md`, not a
 general code audit. No solver, corpus, model, desktop settings or installed app
 was changed. This report distinguishes observed failures from proposed remedies.
 
-## Conclusion
+### Conclusion
 
 The evidence supports multiple independent bottlenecks, not a single diagnosis
 of an inadequate language model. For the product sanity phrase, lexical
@@ -18,7 +230,7 @@ not general human preference. Its ordering and baseline settings also differ
 from desktop presentation. Correct those measurement assumptions before using
 it to accept a production ranking or data change.
 
-## Evidence and reproduction boundary
+### Evidence and reproduction boundary
 
 - Source inspected: `32f86579407d42c9c9757690ea4a25637366be65`; initial tracked tree clean.
 - Tested the existing `build/release/anagram-cli.exe`, SHA-256
@@ -40,9 +252,9 @@ it to accept a production ranking or data change.
   Run the script normally, then with `--followup`; runs append to JSONL. These
   project-local artifacts are ignored and are not included in this report commit.
 
-## Observations that discriminate between explanations
+### Observations that discriminate between explanations
 
-### 1. The sanity phrase has admission, search, shortlist and order distinctions
+#### 1. The sanity phrase has admission, search, shortlist and order distinctions
 
 Target: **Testing Anagram Solver**.
 
@@ -67,7 +279,7 @@ The output begins `several migrants tango`. This is not an installed-app test:
 it retains local CLI corpora, no phrase DB, and a 10-second rather than the
 desktop's default 120-second runtime deadline.
 
-### 2. Most other fixtures do not fail their isolated ordering test
+#### 2. Most other fixtures do not fail their isolated ordering test
 
 With all gold words required, six of seven cases return the expected order:
 knowledge_power, actions_words, voldemort_reveal, small_birds, keys_table,
@@ -79,7 +291,7 @@ This supports investigating upstream admission/search before blaming ordering
 for every miss. It does not establish general ordering quality, since the inputs
 are supplied by an oracle and the fixtures are few and familiar.
 
-### 3. The birds timeout is reproducible without ranking
+#### 3. The birds timeout is reproducible without ranking
 
 `small_birds` diverse-500 **generation alone** reaches the 10-second deadline.
 Prefix-500 generation completes in about 0.57 seconds and its full solve in
@@ -92,7 +304,7 @@ than a universally expensive ranking stage. One run does not establish a stable
 speedup or prove precisely which generation operation dominates. Faster wrong
 results are not a quality win.
 
-### 4. Proper names are a different failure class
+#### 4. Proper names are a different failure class
 
 `voldemort` is absent from the local baseline dictionary and its single-word
 generation produces no bag. Supplying the complete required-word bag produces
@@ -100,7 +312,7 @@ generation produces no bag. Supplying the complete required-word bag produces
 fixture, unlike the sanity phrase. It does not prove ESDB is a better production
 lexicon or that admitting every proper name improves overall quality.
 
-### 5. Wide output reveals a separate presentation limitation
+#### 5. Wide output reveals a separate presentation limitation
 
 At output limit 5,000, prefix returns 4,849 shallow rows with an empty display
 phrase and empty `best_order`; diverse returns 4,525. Their underlying `words`
@@ -111,7 +323,7 @@ interpret merely increasing the display limit as a useful-result improvement.
 TajsBench rejects such rows as non-anagrams because it evaluates displayed
 phrases, so it cannot currently grade this wider shallow-output diagnostic.
 
-## Assumptions the current evaluation does not justify
+### Assumptions the current evaluation does not justify
 
 1. **Recall@1 is what the desktop user sees.** `tajsbench.py::extract_rows`
    globally sorts by final score. `Results.svelte` displays ascending word-count
@@ -145,7 +357,7 @@ phrases, so it cannot currently grade this wider shallow-output diagnostic.
    could also increase competition and search work. That is a hypothesis to
    measure, not a demonstrated regression or improvement.
 
-## Next discriminating experiments, in order
+### Next discriminating experiments, in order
 
 | Question | Controlled experiment | Decision rule |
 | --- | --- | --- |
@@ -162,7 +374,7 @@ is necessary. No experiment proposed here authorizes use of previously flagged
 ARPA artifacts, resolves redistribution rights, or substitutes for desktop
 runtime/visual acceptance.
 
-## Validation and remaining limits
+### Validation and remaining limits
 
 Four existing `tests/quality` unit tests passed. The probes made 33 completed
 invocations including one recorded generation deadline; an earlier wide-output
