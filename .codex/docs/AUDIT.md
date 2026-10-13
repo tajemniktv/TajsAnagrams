@@ -4,6 +4,45 @@ Date: 2026-10-13. This is the single consolidated audit. Architecture findings
 are revalidated below; the earlier quality experiments and initial investigation
 retain their own dated evidence boundaries rather than becoming fresh claims.
 
+## Phase E: product baseline design (2026-10-13)
+
+The next work is Phase 5 of `PLAN.md`: establish the native **TajsBench** product
+baseline, not create another TajsAnaBench implementation. The existing tools are
+implemented; representative collection, broader actual judgments and a clean
+freeze are not. The canonical design now lives in the existing
+`tests/quality/README.md`, with completion tracked in `PLAN.md`.
+
+| Stable finding | Disposition | Evidence and design response |
+| --- | --- | --- |
+| F-19: product plan treated one named answer as the sanity success condition | Corrected | The user reaffirmed both “Testing Anagram Solver” and “Several Migrants Tango” make sense and can be useful; showing both is desirable. PLAN now separates useful-answer delivery from reconstruction. These are still two standalone positives, not a new pairwise preference/tie judgment. |
+| F-20: existing split tags could be mistaken for an untouched holdout | Qualified; new split/exposure protocol designed | All nineteen current cases have been inspected and measured. Their four `test`, one `train` and fourteen `validation` tags do not establish untouched generalization evidence. Existing files stay historical; all nineteen belong to development in the next pool. |
+| F-21: the native pilot snapshot was not a complete promotion baseline | Qualified; clean/full freeze pending | `native-baseline.v1.json` explicitly records a dirty working tree, one trial per cache state and top-three-per-bucket projections. It cannot establish full top-ten usefulness, measurement stability or a clean release baseline. Preserve it; collect full raw output under a new baseline identity. |
+| F-22: sparse useful-row counts were not whole-dataset useful-delivery metrics | New report design pending implementation | Current report v2 reports sparse standalone rows on judged bags. The new protocol requires attempt-denominated useful-success, unknown-label bounds/coverage, distinct useful answer counts and finite known-useful coverage, plus paired bag-clustered comparisons. No new metric is claimed implemented here. |
+
+The proposed initial collection budget is 120 independent residual letter bags:
+80 development, 20 validation and 20 locked pilot holdout, including at least
+60 independently sourced/user-contributed bags. This is a practical starting
+allocation, not statistical power or a release threshold. Source families,
+constraint variants and shuffled inputs must not leak or inflate independent
+case counts. Sentences, coherent titles/noun phrases and multi-useful-answer bags
+all belong in the quality pool; correctness/error/stress cases remain a separate
+engineering track. Authored/published targets are not automatically actual human
+naturalness labels, and unknown alternatives are not negative examples.
+
+The user has no additional personal puzzle examples yet and offered to dispatch
+Echo for public real-use sourcing. A source-packet brief is included in the
+existing benchmark README: links/context/constraints, exact-letter checks,
+answer/endorsement provenance, deduplication and exposure. This review did **not**
+dispatch Echo, perform an online collection or invent user examples/judgments.
+
+This checkpoint changes documentation/design only, not solver scoring, corpora,
+datasets, evaluator code or deployment. Current source/fixtures confirm the
+nineteen-case count, two actual labels, empty preference set and pilot limitations;
+local links and Markdown diff checks validate the documentation. Existing native
+test/build/dogfood results remain dated Phase D evidence, not fresh checks from
+this design turn. Phase 5 is still in progress; next implement the report gaps,
+collect/source and judge actual outputs, then freeze and compare native revisions.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose

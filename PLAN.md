@@ -5,6 +5,17 @@ already implemented. The completed migration, parity work, performance evidence,
 desktop acceptance and historical milestones have moved to
 [`IMPLEMENTED.md`](IMPLEMENTED.md). This file is deliberately forward-looking.
 
+### Current next step — Phase 5 native baseline design
+
+TajsBench is the existing name; do not start a second TajsAnaBench project.
+The Rust measurement/evaluation tools exist, but a trustworthy product baseline
+does not yet exist. Phase 5 now has a concrete protocol in
+[`tests/quality/README.md`](tests/quality/README.md#next-native-baseline-protocol).
+The nineteen inspected curator cases, two actual phrase judgments on one bag,
+empty preference file and dirty working-tree snapshot are pilot evidence only.
+Design is recorded; collection, new report metrics and a clean baseline freeze
+are still required before a broader quality gate can be accepted.
+
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
 - Native authority: Python oracle/parity/legacy workflows are retired historical
@@ -88,12 +99,16 @@ desktop acceptance and historical milestones have moved to
 
 The next goal is no longer “port the Python solver”. It is:
 
-> **Make TajsAnagrams reliably surface the natural, useful anagram a person
-> actually wanted, quickly and with effectively zero setup.**
+> **Make TajsAnagrams quickly surface exact anagrams people find useful,
+> including fluent sentences and coherent titles/noun phrases, with effectively
+> zero setup.**
 
-For the canonical sanity case, a user should be able to open the application,
-type `testinganagramsolver`, press Solve, and see **Testing Anagram Solver**
-at or extremely near the top. They should not need to understand corpora,
+For the sanity bag `testinganagramsolver`, **Testing Anagram Solver** and
+**Several Migrants Tango** are both actual user-accepted useful answers.
+Recovering the named target is a separate reconstruction diagnostic, not the
+sole definition of success or a reason to label every alternative useless.
+A user should be able to open the application, enter a puzzle, press Solve and
+find useful exact results near the top. They should not need to understand corpora,
 language models, training, feature weights, cache identities or any other piece
 of machinery that exists solely because software engineers enjoy inventing
 new ways to expose implementation details.
@@ -168,7 +183,7 @@ The completed system already provides, among other things:
 - parallel deep ranking and phrase preparation;
 - a native Tauri/Svelte Windows desktop app with no Python/Node runtime dependency;
 - multi-dictionary word search;
-- differential/parity fixtures and measured cold/warm performance evidence.
+- independent native correctness/regression checks and measured empty/reuse cache evidence.
 
 The historical proof, exact checks and migration notes live in
 [`IMPLEMENTED.md`](IMPLEMENTED.md).
@@ -232,64 +247,74 @@ The old exact generator remains valuable as:
 
 ---
 
-## Phase 5 — Build TajsBench before changing the brain
+## Phase 5 — Establish the native TajsBench baseline
 
-The existing ordering registry and Python/Rust parity corpus were designed mainly
-to freeze behavior during the migration. They are not sufficient to decide whether
-a new linguistic model actually produces better anagrams.
+The historical ordering/migration registry froze earlier behavior. The current
+native evaluator and nineteen curator targets establish useful measurement
+machinery, not representative human quality or a reliable promotion threshold.
 
-Create an anagram-specific benchmark and make it the quality gate for all phases below.
+Use the protocol in `tests/quality/README.md` as the canonical specification.
+Do not count a larger authored fixture file as completion of this phase.
 
 ### 5.1 Benchmark dataset
 
-- [x] Create `tests/quality/` with versioned grouped cases keyed by normalized
-      source-letter multiset. Initial six-case gold set; expansion remains.
-- [ ] Include known natural reconstruction cases, beginning with explicit sanity
-      fixtures such as:
-      - `testinganagramsolver` → `Testing Anagram Solver`;
-      - existing useful-result/order registry phrases;
-      - naturally occurring multi-word titles/phrases that can be recovered from
-        their letter bags.
-- [ ] Add adversarial valid negatives:
-      - common-word nonsense;
-      - rare-word soup;
-      - short-word soup;
-      - grammatically plausible but semantically/idiomatically bizarre orders;
-      - inflectional/morphological awkwardness;
-      - repeated-word artifacts;
-      - proper-name cases;
-      - cases where raw bigram evidence is misleading.
-- [ ] Keep source splits separate so near-duplicate word bags do not leak between
-      training and evaluation.
-- [ ] Store provenance for any externally derived phrase source.
+- [x] Versioned cases exist: seven familiar targets plus twelve authored targets.
+- [x] Design an initial **120-independent-bag collection target**, not a power
+      guarantee: 80 development (including all nineteen already inspected),
+      20 validation and 20 locked pilot holdout. Existing `test` tags do not make
+      previously examined cases untouched; preserve their historical files.
+- [ ] Collect at least 60 independently sourced/user-contributed bags across that
+      pool; report their results separately from authored engineering fixtures.
+- [ ] Cover sentences, titles/noun phrases, ambiguous multiple-useful-answer bags,
+      short/name puzzles, morphology, rarities and constraint-bearing requests.
+- [ ] Store source rights/provenance, curator versus human labels, semantic
+      context, bag-family identity and exposure history. Keep parameter variants,
+      shuffled strings and near-duplicate source families together across splits.
+- [ ] Keep adversarial/empty/error/cancellation/corpus-budget checks in an
+      engineering suite; do not invent human negative labels for their outputs.
 
 ### 5.2 Human preference data
 
-- [ ] Prefer pairwise comparisons over 1–10 naturalness ratings:
-      “Which of A/B is the better phrase/anagram?”
-- [ ] Randomize left/right presentation and store the randomization.
-- [ ] Allow graded relevance where appropriate rather than pretending every bag
-      has one uniquely correct answer.
-- [ ] Keep an explicit gold/curated subset separate from weakly supervised data.
+- [x] Two actual standalone useful labels exist; no pairwise judgments exist yet.
+- [ ] First judge outputs independently: useful / not useful / unsure, accepting
+      coherent titles and noun phrases as well as fluent sentences.
+- [ ] Judge a deduplicated, variant-blinded union of actual baseline/candidate
+      top-ten outputs per bag; include an original target only as a labelled
+      curator/reconstruction reference, not automatic proof that alternatives fail.
+- [ ] Add randomized pairwise preference with ties/neither/unsure when comparing
+      two already inspected valid outputs. Record presentation, judgment origin
+      and disagreement; current preference schema must be extended before use.
+- [ ] Freeze the rubric and labels before final candidate scoring. New labels
+      change the judgment-set version and require rescoring both revisions.
 
 ### 5.3 Metrics
 
-Record at least:
-
-- [ ] Recall@1, Recall@5 and Recall@10 for known desirable answers.
-- [ ] MRR.
-- [ ] NDCG@5 and NDCG@10 for graded relevance.
-- [ ] Pairwise human-preference accuracy.
-- [ ] Quality at fixed latency budgets: 50 ms, 200 ms, 1 s, 5 s.
-- [ ] Generated/expanded state counts.
-- [ ] Deep-analyzed rows and evaluated orders.
-- [ ] Cold/warm p50 and p95 wall time.
-- [ ] Peak RSS and persistent data/index size.
-- [ ] Metrics broken down by 1/2/3/4/5+ word answers and by puzzle length.
+- [x] Native reporting already preserves target Recall/MRR/NDCG, failures,
+      cache/trial strata, observed budgets and work/latency counters.
+- [ ] Add **useful delivery at 1/5/10**, judgment coverage and lower/upper bounds
+      when actual output judgments are incomplete. Failed/no-delivery attempts
+      stay in operational denominators; unknown judgments are not negative labels.
+- [ ] Report distinct judged-useful answer counts/known-useful coverage at K,
+      alongside success-at-K. Showing both accepted sanity answers is desirable;
+      a single useful hit should not hide whether the rest of the list helps.
+- [ ] Add paired revision deltas with bag-clustered uncertainty; timing repeats
+      must not become independent quality cases or confidence samples.
+- [ ] Report exact-target recovery separately, plus name/title/sentence,
+      source-origin, puzzle-length and constraint cohorts; avoid a composite
+      score with arbitrary weights. Small slices remain descriptive.
+- [ ] Separate actual anytime delivery from terminal CLI observations; a final
+      result cannot establish intermediate 50/200 ms quality or first-result time.
+- [ ] Report sampled RSS as sampled, persistence sizes as observed, and raw
+      attempt latency/failure coverage alongside completed-call p50/p95.
 
 ### 5.4 Ablation harness
 
-Make it possible to compare, one change at a time:
+- [x] Native stage isolation and paired executable measurements exist.
+- [ ] Attribute each candidate change using controlled candidate/order pools and
+      equal end-to-end budgets, including admission, generation, shortlist,
+      chosen order, final display and a separately labelled required-bag control.
+
+Compare one change at a time:
 
 ```text
 current baseline
@@ -301,8 +326,28 @@ current baseline
 + data-layout/performance changes
 ```
 
-Gate: later phases must be able to demonstrate where a quality/performance change
-came from rather than merely reporting that the final pile of machinery “seems better”.
+### 5.5 Freeze and acceptance
+
+- [ ] Freeze a clean, signed native source revision; record exact executable,
+      corpus, settings, dataset and judgment hashes, compiler/OS/hardware and
+      measurement-tool identity. Retain full raw outputs, not just top-three
+      projections, and identify installed-app versus CLI observations explicitly.
+- [ ] Capture the default desktop-equivalent profile and separate diagnostic/
+      stress profiles; use paired runs on the same machine, inputs and budgets.
+- [ ] Start with three paired timing trials per bag/cache state, inspect
+      variability and expand trials where needed; do not call this a power study.
+- [ ] Complete sufficient actual top-output judgments to evaluate the desired
+      practical improvement. Set the minimum useful effect and latency/resource
+      tradeoffs before final candidate evaluation, using pilot variability.
+- [ ] Reserve the locked holdout from tuning and record all exposure. Twenty
+      pilot holdout bags are a starting allocation, not a broad significance gate.
+
+Gate: exactness/constraints/lifecycle remain hard native checks. Promote quality
+changes only with comparable, adequately judged paired evidence, meaningful
+benefit and no unexplained important cohort/resource regressions. Admit
+correctness fixes or deliberately chosen tradeoffs for explicit reasons rather
+than demanding every change increase one target-recovery percentage. No new
+quality gate is accepted merely by writing this design or capturing a pilot.
 
 ---
 
@@ -852,11 +897,12 @@ An experiment being modular in code does not mean the user needs a dropdown for 
 
 Keep these patches individually reviewable:
 
-1. **Create TajsBench.**
-   - quality fixtures;
-   - natural reconstruction cases;
-   - hard negatives;
-   - grouped Recall/MRR/NDCG and quality-vs-time reports.
+1. **Establish the native TajsBench baseline (Phase 5).**
+   - extend existing tooling, not a second benchmark implementation;
+   - collect the larger provenance/exposure-aware bag pool;
+   - add useful-delivery/coverage and paired comparison reports;
+   - collect actual blinded output judgments and freeze full native evidence;
+   - retain target-recovery diagnostics without treating every alternative as bad.
 
 2. **Prototype the new lexical evidence offline.**
    - ESDB metadata;
