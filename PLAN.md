@@ -5,7 +5,7 @@ already implemented. The completed migration, parity work, performance evidence,
 desktop acceptance and historical milestones have moved to
 [`IMPLEMENTED.md`](IMPLEMENTED.md). This file is deliberately forward-looking.
 
-### Current next step — Phase 5 native baseline design
+### Current next step — Phase 5 native baseline collection
 
 TajsBench is the existing name; do not start a second TajsAnaBench project.
 The Rust measurement/evaluation tools exist, but a trustworthy product baseline
@@ -13,8 +13,12 @@ does not yet exist. Phase 5 now has a concrete protocol in
 [`tests/quality/README.md`](tests/quality/README.md#next-native-baseline-protocol).
 The nineteen inspected curator cases, two actual phrase judgments on one bag,
 empty preference file and dirty working-tree snapshot are pilot evidence only.
-Design is recorded; collection, new report metrics and a clean baseline freeze
-are still required before a broader quality gate can be accepted.
+Echo's first public packet is now independently checked by Rust: 56 candidate
+bags from 25 families, with origin/constraints/exposure preserved locally. Report
+v3 implements terminal usefulness bounds/distinct counts and correct display-slot
+accounting. A 12-family dry run and admission controls identified missing proper
+names in the selected dictionary. Broader collection, contextual human judgments,
+paired evaluation and a clean baseline freeze remain required before a quality gate.
 
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
@@ -265,6 +269,13 @@ Do not count a larger authored fixture file as completion of this phase.
       previously examined cases untouched; preserve their historical files.
 - [ ] Collect at least 60 independently sourced/user-contributed bags across that
       pool; report their results separately from authored engineering fixtures.
+- [x] Independently intake Echo's first public packet (56 candidate residual bags,
+      25 families; 48 source-defined inputs, eight answer-paired/reconstructed).
+      Keep the evidence development-exposed, unjudged and local; validate all
+      65 records and preserve nine quarantines rather than promoting a gold set.
+- [x] Run a 12-family native feasibility sample with full captures and explicit
+      request mappings; distinguish missing dictionary entries from ranking with
+      admission/frequency-cutoff/required-bag controls. No quality win inferred.
 - [ ] Cover sentences, titles/noun phrases, ambiguous multiple-useful-answer bags,
       short/name puzzles, morphology, rarities and constraint-bearing requests.
 - [ ] Store source rights/provenance, curator versus human labels, semantic
@@ -291,12 +302,14 @@ Do not count a larger authored fixture file as completion of this phase.
 
 - [x] Native reporting already preserves target Recall/MRR/NDCG, failures,
       cache/trial strata, observed budgets and work/latency counters.
-- [ ] Add **useful delivery at 1/5/10**, judgment coverage and lower/upper bounds
+- [x] Add terminal **useful delivery at 1/5/10**, judgment coverage and lower/upper bounds
       when actual output judgments are incomplete. Failed/no-delivery attempts
       stay in operational denominators; unknown judgments are not negative labels.
-- [ ] Report distinct judged-useful answer counts/known-useful coverage at K,
+- [x] Report distinct judged-useful answer counts/known-useful coverage at K,
       alongside success-at-K. Showing both accepted sanity answers is desirable;
       a single useful hit should not hide whether the rest of the list helps.
+- [x] Preserve duplicate display positions without repeated relevance credit;
+      preserve punctuation/accents in usefulness/preference judgment matching.
 - [ ] Add paired revision deltas with bag-clustered uncertainty; timing repeats
       must not become independent quality cases or confidence samples.
 - [ ] Report exact-target recovery separately, plus name/title/sentence,

@@ -96,8 +96,24 @@ a new held-out dataset or demonstrate naturalness.
 from exact target recovery and pairwise preference. Use `--usefulness
 tests/quality/usefulness.v1.json` when evaluating them. The current two positive
 labels came directly from the user; they are unblinded and express no relative
-preference. `standalone_usefulness` reports useful/not-useful/unreviewed rows;
-unreviewed phrases remain unknown, not fabricated negatives. Two phrase labels
+preference. Report **v3** retains every displayed position (including duplicates)
+for target metrics and gives repeated target phrases no additional relevance
+credit. Historical v2 reports remain dated evidence; do not compare their scores
+with v3 without rescoring both raw captures. `standalone_usefulness` covers all
+recorded attempts per variant/cache/ranking, not only already-judged bags. It
+reports useful/not-useful/unreviewed positions, operational useful-success bounds
+at 1/5/10, per-attempt distinct useful answers, and coverage of the finite known
+useful set. Duplicates occupy slots but do not multiply distinct useful counts.
+Unknown delivered phrases remain unresolved possible successes; failed and empty
+terminal deliveries score operational zero. Blank shallow bags are not phrases
+to judge. Coverage with no relevant denominator is null, not a perfect score.
+
+Usefulness and preference matching folds case/whitespace only: punctuation and
+accents remain part of the rendered phrase. Case ID fixes the context; do not
+reuse a case ID for a different task/rubric. Legacy target matching still strips
+punctuation as a separately identified reconstruction diagnostic. This is an
+explicit matching policy, not automatic permission to transfer a judgment across
+different punctuation, capitalization-sensitive tasks or contexts. Two phrase labels
 on one bag are not a general naturalness benchmark. The frozen gold set and empty
 pairwise preference dataset are deliberately unchanged.
 
@@ -245,12 +261,12 @@ Record judge origin, context, rubric version, disagreement and adjudication;
 do not erase disagreement by silently changing an old label. Version any label
 expansion and rescore **both** baseline and candidate against that same version.
 
-### Primary useful-delivery metrics to implement
+### Primary useful-delivery metrics and remaining work
 
-The current report v2 preserves target metrics and sparse useful-row counts.
-It does **not** yet provide the following complete product acceptance report.
-Extend/version the native evaluator rather than claiming existing counts already
-establish useful delivery on the whole dataset:
+Report v3 implements terminal attempt-denominated useful-success bounds,
+judgment coverage and distinct/known-useful counts below. Paired bag/family-clustered
+uncertainty, cohort reporting and actual anytime usefulness instrumentation remain
+pending. Two labels do not establish a complete product acceptance report:
 
 - **Useful-success at 1/5/10:** fraction of attempted solves with at least one
   actual judged-useful answer in those visible positions. Failed/no-delivery
@@ -338,5 +354,63 @@ Deduplicate by residual bag/source family, flag overlap with existing fixtures
 and record who has seen the case/answers. A published answer is not uniquely
 correct, and a researcher's generated alternative is not a human label. Return
 candidate source packets; do not promote them to judged positives/negatives or
-declare them locked holdouts automatically. This is a ready research brief, not
-an already dispatched task or completed online collection.
+declare them locked holdouts automatically. The first returned packet was
+received on 2026-10-14; its intake is described below. This is not a claim that
+the whole collection target or blinded human evaluation is complete.
+
+### Public puzzle intake and development dry run (2026-10-14)
+
+Echo's review and ZIP are preserved byte-for-byte under project-local
+`.codex/temp/echo-research-2026-10-14`. Attached programs were inspected but not
+executed; they are evidence, not repository instructions or new Python tooling.
+`cargo xtask research puzzles` independently verifies the manifest, source/family
+references, candidate residual uniqueness, ASCII inventories, explicit removals,
+word/character counts, ordered lengths, initials, token shapes, equivalent inputs
+and proposed corrections. Unknown structural rules fail closed. The packet's
+ASCII contract is deliberately distinct from production NFKD normalization.
+
+```text
+cargo xtask research puzzles --packet .codex/temp/echo-research-2026-10-14/public-puzzles-2026-10-13 --output .codex/temp/echo-research-2026-10-14/native-intake.json
+cargo xtask research puzzles --packet DIR --case-ids ID,ID --workloads-output .codex/temp/puzzles.workloads.json --output .codex/temp/puzzles.intake.json
+cargo xtask benchmark --cli build/release/anagram-cli.exe --workloads .codex/temp/puzzles.workloads.json --timeout-ms 10000 --guard-ms 15000 --output .codex/temp/puzzles.runs.jsonl
+cargo xtask research puzzles --packet DIR --runs .codex/temp/puzzles.runs.jsonl --output .codex/temp/puzzles.delivery.json
+```
+
+The pool has **56 unique candidate bags, 25 source families, 30 source posts and
+nine quarantine records**. All 65 independently recomputed checks agree with the
+attachment, including nine letter-mismatched proposals and two exact proposals
+failing a character-count rule. All 56 candidates have at least one structurally
+valid published answer; that proves neither semantic correctness nor usefulness.
+There is no overlap with the nineteen current v2 bags checked by default. Forty-eight
+inputs are source-defined (46 text, two count vectors); eight are paired with or
+reconstructed from answers. Report these origins separately. Thirteen book inputs
+share one source family. This is a convenience pool of mostly thematic puzzles,
+not a real traffic sample, 56 independent families, or a held-out gold set.
+
+Retain the authentic input, source context/constraints, published proposals and
+quarantine reasons alongside the exact executable request. Explicit removal
+inventories become a documented residual-letter projection; source-specified word
+counts can map to native bounds, with no desired answer in hints/required words.
+Ordered word lengths may supply a word-count bound, but their positional constraint
+remains unsupported. Semantic themes, punctuation shapes, character preservation,
+initials and other unsupported rules are visible in the report, not silently
+claimed enforced. Over-40-letter or over-six-word inputs stay in Extended/stress,
+not the normal dry run. Quarantine never becomes eligible just because one
+alternative is exact. Identity/mere-reordering eligibility needs task review;
+neither should receive automatic usefulness credit.
+
+The 12-family dry run retained full desktop-order responses, failures and hashes
+locally. Eleven families have source-defined inputs; `gaps-thirteen` is an explicit
+answer-derived calibration case. One empty/reuse cache trial per bag at 10 seconds
+is a feasibility experiment, not a performance comparison or baseline freeze.
+Delivery diagnostics enforce the documented request, independently check output
+invariants and test original structural rules against actual rendering. Published
+order recovery remains separate from literal constraint satisfaction and human
+usefulness. All inputs/answers are development-exposed to Echo and Codex; no new
+human labels or holdout are created, and source licensing/quotation notes remain
+with the local packet rather than republishing whole posts.
+
+Next judge a small blinded actual-output pool with task context, adjudicate
+identity/rendering policy, expand source-family diversity and compare native corpus
+admission policies before freezing a baseline. Do not patch in the published
+names just to make this exposed sample score better.

@@ -319,11 +319,11 @@ fn tubelex(path: &str, unigrams: &str, cases: &Cases, max: u64) -> Result<Value>
 }
 pub fn command(args: &[String]) -> Result<()> {
     let Some(name) = args.first() else {
-        return Err("Expected research lexicon|ngram|tubelex".into());
+        return Err("Expected research lexicon|ngram|tubelex|puzzles".into());
     };
     if args.get(1).is_some_and(|s| s == "--help") {
         println!(
-            "research lexicon --db ESDB.sqlite [--current DICTIONARY --cases FILE --output FILE]\nresearch ngram --arpa FILE --groups FILE [--output FILE]\nresearch tubelex --tubelex FILE.tsv[.xz] [--unigrams FILE --cases FILE --max-bytes N --output FILE]\nOffline reports only; no data/model promotion. ESDB database creation is upstream work, not a dependency on its Python builder."
+            "research lexicon --db ESDB.sqlite [--current DICTIONARY --cases FILE --output FILE]\nresearch ngram --arpa FILE --groups FILE [--output FILE]\nresearch tubelex --tubelex FILE.tsv[.xz] [--unigrams FILE --cases FILE --max-bytes N --output FILE]\nresearch puzzles --packet DIR [--cases FILE --output FILE --case-ids ID,ID --workloads-output FILE --runs FILE]\nOffline reports only; no data/model/quality-label promotion. ESDB database creation is upstream work, not a dependency on its Python builder."
         );
         return Ok(());
     }
@@ -339,10 +339,21 @@ pub fn command(args: &[String]) -> Result<()> {
             "tubelex",
             "unigrams",
             "max-bytes",
+            "packet",
+            "case-ids",
+            "workloads-output",
+            "runs",
         ],
         &[],
     )?;
     let result = match name.as_str() {
+        "puzzles" => crate::puzzles::intake(
+            a.required("packet")?,
+            &quality::load_cases(a.value("cases", "tests/quality/cases.v2.json"))?,
+            a.get("case-ids"),
+            a.get("workloads-output"),
+            a.get("runs"),
+        )?,
         "ngram" => ngram(a.required("arpa")?, a.required("groups")?)?,
         "lexicon" => lexicon(
             a.required("db")?,

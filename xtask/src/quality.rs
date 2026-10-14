@@ -39,6 +39,13 @@ pub fn phrase_key(s: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
+/// Judgments fold only case and whitespace, preserving punctuation and accents.
+fn rendered_key(s: &str) -> String {
+    s.split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
+}
 pub fn load_cases(path: impl AsRef<Path>) -> Result<Cases> {
     let v = read_json(path)?;
     if v["schema_version"] != 1 {
@@ -174,9 +181,11 @@ pub fn metrics(case: &Case, rows: &[Value]) -> Result<Value> {
             return Err(format!("Non-anagram result: {} / {p}", case.id).into());
         }
         let p = phrase_key(&p);
-        if seen.insert(p.clone()) {
-            grades.push(*labels.get(&p).unwrap_or(&0));
-        }
+        grades.push(if seen.insert(p.clone()) {
+            *labels.get(&p).unwrap_or(&0)
+        } else {
+            0
+        });
     }
     let hits = grades
         .iter()
@@ -437,7 +446,7 @@ fn labels(path: Option<&str>, field: &str, cases: &Cases) -> Result<Vec<Value>> 
             if !r["useful"].is_boolean()
                 || text(r, "provenance")?.is_empty()
                 || signature(p) != sig
-                || !seen.insert((c.id.clone(), phrase_key(p)))
+                || !seen.insert((c.id.clone(), rendered_key(p)))
             {
                 return Err("Invalid/duplicate usefulness label".into());
             }
@@ -456,6 +465,93 @@ fn labels(path: Option<&str>, field: &str, cases: &Cases) -> Result<Vec<Value>> 
         }
     }
     Ok(rows)
+}
+fn usefulness_panel(
+    group: &[&Value],
+    labels: &[Value],
+    ranking: &str,
+    variant: &str,
+    state_name: &str,
+    n: usize,
+) -> Result<Value> {
+    let mut judgments = BTreeMap::new();
+    for l in labels {
+        let k = (
+            text(l, "case_id")?.to_owned(),
+            rendered_key(text(l, "phrase")?),
+        );
+        let useful = l["useful"].as_bool().ok_or("Invalid useful label")?;
+        if judgments.insert(k, useful).is_some() {
+            return Err("Duplicate rendered usefulness judgment".into());
+        }
+    }
+    let (mut yes, mut no, mut unknown) = (0, 0, 0);
+    let (mut successes, mut unresolved, mut distinct, mut covered, mut known) = (0, 0, 0, 0, 0);
+    let mut attempt_rows = Vec::new();
+    for r in group {
+        let id = text(r, "case_id")?;
+        let known_set = judgments
+            .iter()
+            .filter(|((c, _), useful)| c == id && **useful)
+            .map(|((_, p), _)| p.clone())
+            .collect::<BTreeSet<_>>();
+        let mut useful_set = BTreeSet::new();
+        let mut unreviewed = 0;
+        if success(r) {
+            for row in rows(r, ranking)?.iter().take(n) {
+                let p = rendered_key(&row_phrase(row));
+                // A blank shallow bag is not a delivered phrase to judge.
+                if p.is_empty() {
+                    continue;
+                }
+                match judgments.get(&(id.to_owned(), p.clone())) {
+                    Some(true) => {
+                        yes += 1;
+                        useful_set.insert(p);
+                    }
+                    Some(false) => no += 1,
+                    None => {
+                        unknown += 1;
+                        unreviewed += 1;
+                    }
+                }
+            }
+        }
+        let hit = !useful_set.is_empty();
+        let possible = !hit && unreviewed > 0;
+        successes += usize::from(hit);
+        unresolved += usize::from(possible);
+        distinct += useful_set.len();
+        covered += useful_set.intersection(&known_set).count();
+        known += known_set.len();
+        attempt_rows.push(
+            json!({"case_id":id,"trial":r.get("trial").cloned().unwrap_or(json!(0)),
+            "completed":success(r),"known_useful_success":hit,"unresolved_success":possible,
+            "distinct_useful_answers":useful_set.len(),"unreviewed_positions":unreviewed,
+            "known_useful_answers":known_set.len(),"known_useful_covered":useful_set.len()}),
+        );
+    }
+    let fraction = |count: usize, total: usize| {
+        if total == 0 {
+            Value::Null
+        } else {
+            json!(count as f64 / total as f64)
+        }
+    };
+    Ok(
+        json!({"variant":variant,"cache_state":state_name,"ranking":ranking,"top_n":n,
+        "judgment_matching":"case-insensitive whitespace-folded rendering; punctuation and accents preserved; case_id fixes context",
+        "attempts":group.len(),"completed":group.iter().filter(|r|success(r)).count(),
+        "unique_phrase_judgments":judgments.len(),
+        "useful_rows":yes,"not_useful_rows":no,"unreviewed_rows":unknown,
+        "judgment_coverage":fraction(yes+no,yes+no+unknown),
+        "known_useful_successes":successes,"unresolved_successes":unresolved,
+        "useful_success_lower_bound":fraction(successes,group.len()),
+        "useful_success_upper_bound":fraction(successes+unresolved,group.len()),
+        "distinct_useful_answers":distinct,"mean_distinct_useful_answers":fraction(distinct,group.len()),
+        "known_useful_coverage":fraction(covered,known),"known_useful_denominator":known,
+        "per_attempt":attempt_rows}),
+    )
 }
 pub fn report(
     runs: &[Value],
@@ -525,15 +621,15 @@ pub fn report(
                     for (i, row) in rows(r, ranking)?.iter().enumerate() {
                         let phrase = row_phrase(row);
                         if !phrase.is_empty() {
-                            ranks.entry(phrase_key(&phrase)).or_insert(i);
+                            ranks.entry(rendered_key(&phrase)).or_insert(i);
                         }
                     }
                     let left = ranks
-                        .get(&phrase_key(text(p, "left")?))
+                        .get(&rendered_key(text(p, "left")?))
                         .copied()
                         .unwrap_or(usize::MAX);
                     let right = ranks
-                        .get(&phrase_key(text(p, "right")?))
+                        .get(&rendered_key(text(p, "right")?))
                         .copied()
                         .unwrap_or(usize::MAX);
                     if left != right {
@@ -546,45 +642,15 @@ pub fn report(
             }
             prefs.push(json!({"variant":variant,"cache_state":state_name,"ranking":ranking,"judgments":preferences.len(),"evaluated":total,"accuracy":if total==0{Value::Null}else{json!(correct as f64/total as f64)}}));
             if let Some(labels) = usefulness {
-                let labels = labels
-                    .iter()
-                    .map(|l| {
-                        Ok((
-                            (
-                                text(l, "case_id")?.to_owned(),
-                                phrase_key(text(l, "phrase")?),
-                            ),
-                            l["useful"].as_bool().ok_or("Invalid useful label")?,
-                        ))
-                    })
-                    .collect::<Result<BTreeMap<_, _>>>()?;
-                let judged = group
-                    .iter()
-                    .filter(|r| labels.keys().any(|(c, _)| r["case_id"] == *c))
-                    .copied()
-                    .collect::<Vec<_>>();
-                if !judged.is_empty() {
-                    for n in [1, 5, 10] {
-                        let (mut yes, mut no, mut unknown) = (0, 0, 0);
-                        for r in judged.iter().filter(|r| success(r)) {
-                            for row in rows(r, ranking)?.iter().take(n) {
-                                match labels.get(&(
-                                    text(r, "case_id")?.into(),
-                                    phrase_key(&row_phrase(row)),
-                                )) {
-                                    Some(true) => yes += 1,
-                                    Some(false) => no += 1,
-                                    None => unknown += 1,
-                                }
-                            }
-                        }
-                        useful.push(json!({"variant":variant,"cache_state":state_name,"ranking":ranking,"top_n":n,"judged_case_ids":judged.iter().map(|r|text(r,"case_id").unwrap()).collect::<BTreeSet<_>>(),"unique_phrase_judgments":labels.len(),"attempts":judged.len(),"completed":judged.iter().filter(|r|success(r)).count(),"useful_rows":yes,"not_useful_rows":no,"unreviewed_rows":unknown}));
-                    }
+                for n in [1, 5, 10] {
+                    useful.push(usefulness_panel(
+                        &group, labels, ranking, variant, state_name, n,
+                    )?);
                 }
             }
         }
     }
-    let mut out = json!({"schema_version":2,"cases":cases.len(),"snapshots":runs.len(),"attempts":attempts.len(),"failures":failures,"unattempted_cases":unattempted,"groups":group_rows,"quality_at_budgets":budget_rows,"pairwise_preference":prefs});
+    let mut out = json!({"schema_version":3,"cases":cases.len(),"snapshots":runs.len(),"attempts":attempts.len(),"failures":failures,"unattempted_cases":unattempted,"groups":group_rows,"quality_at_budgets":budget_rows,"pairwise_preference":prefs});
     if usefulness.is_some() {
         out["standalone_usefulness"] = json!(useful);
     }
@@ -678,6 +744,20 @@ mod tests {
         assert_eq!(v["mrr"], 0.5);
         assert!(metrics(c, &[json!({"phrase":"Testing Solver"})]).is_err());
         assert_eq!(key("Łß ÉX"), "ex");
+    }
+    #[test]
+    fn duplicate_rows_occupy_positions_without_duplicate_credit() {
+        let cases = cases();
+        let c = &cases["testing_anagram_solver"];
+        let mut rows = vec![json!({"phrase":"Solver Testing Anagram"}); 10];
+        rows.push(json!({"phrase":"Testing Anagram Solver"}));
+        let v = metrics(c, &rows).unwrap();
+        assert_eq!(v["mrr"], 1. / 11.);
+        assert_eq!(v["recall_at_5"], 0.);
+        assert_eq!(v["recall_at_10"], 0.);
+        let v = metrics(c, &vec![json!({"phrase":"Testing Anagram Solver"}); 10]).unwrap();
+        assert_eq!(v["recall_at_10"], 1.);
+        assert_eq!(v["ndcg_at_10"], 1.);
     }
     #[test]
     fn desktop_not_global_score() {
@@ -824,6 +904,59 @@ mod tests {
         assert_eq!(v["standalone_usefulness"][0]["useful_rows"], 1);
         assert_eq!(v["standalone_usefulness"][1]["unreviewed_rows"], 1);
         assert_eq!(v["standalone_usefulness"][1]["not_useful_rows"], 0);
+    }
+    #[test]
+    fn usefulness_bounds_include_unjudged_bags_failures_and_empty_delivery() {
+        let c = cases();
+        let labels = vec![
+            json!({"case_id":"testing_anagram_solver","phrase":"Testing Anagram Solver","useful":true}),
+        ];
+        let known = run("Testing Anagram Solver", 1.);
+        let unknown = json!({"case_id":"knowledge_power","variant":"v","wall_ms":1,"cache_state":"disk_cache_empty","rows":[{"phrase":"Knowledge Is Power"}]});
+        let failed = json!({"case_id":"knowledge_power","variant":"v","trial":1,"wall_ms":1,"cache_state":"disk_cache_empty","error":{"code":"timed_out"}});
+        let empty = json!({"case_id":"testing_anagram_solver","variant":"v","trial":1,"wall_ms":1,"cache_state":"disk_cache_empty","rows":[]});
+        let v = report(
+            &[known, unknown, failed, empty],
+            &c,
+            &["desktop"],
+            &[],
+            Some(&labels),
+        )
+        .unwrap();
+        let p = &v["standalone_usefulness"][0];
+        assert_eq!(v["schema_version"], 3);
+        assert_eq!(p["attempts"], 4);
+        assert_eq!(p["known_useful_successes"], 1);
+        assert_eq!(p["unresolved_successes"], 1);
+        assert_eq!(p["useful_success_lower_bound"], 0.25);
+        assert_eq!(p["useful_success_upper_bound"], 0.5);
+        assert_eq!(p["judgment_coverage"], 0.5);
+        assert_eq!(p["known_useful_coverage"], 0.5);
+        let v = report(&[], &c, &["desktop"], &[], Some(&labels)).unwrap();
+        assert_eq!(v["standalone_usefulness"], json!([]));
+    }
+    #[test]
+    fn usefulness_keeps_rendering_and_display_slots_but_counts_distinct_answers() {
+        let labels = vec![
+            json!({"case_id":"testing_anagram_solver","phrase":"Testing Anagram Solver","useful":true}),
+            json!({"case_id":"testing_anagram_solver","phrase":"Several Migrants Tango","useful":true}),
+        ];
+        let mut r = run("Testing Anagram Solver!", 1.);
+        r["rows"] = json!([
+            {"phrase":"Testing Anagram Solver!"},
+            {"phrase":"Testing Anagram Solver"},
+            {"phrase":" testing  ANAGRAM solver "},
+            {"phrase":"Several Migrants Tango"}
+        ]);
+        let v = report(&[r], &cases(), &["desktop"], &[], Some(&labels)).unwrap();
+        assert_eq!(v["standalone_usefulness"][0]["known_useful_successes"], 0);
+        assert_eq!(v["standalone_usefulness"][0]["unresolved_successes"], 1);
+        let p = &v["standalone_usefulness"][1];
+        assert_eq!(p["useful_rows"], 3);
+        assert_eq!(p["distinct_useful_answers"], 2);
+        assert_eq!(p["known_useful_coverage"], 1.);
+        assert_ne!(rendered_key("It's"), rendered_key("Its"));
+        assert_ne!(rendered_key("café"), rendered_key("cafe"));
     }
     #[test]
     fn preferences_do_not_select_fastest_cache_state() {

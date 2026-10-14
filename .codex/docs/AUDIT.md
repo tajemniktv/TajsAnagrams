@@ -1,6 +1,6 @@
 # TajsAnagrams audit: architecture, assumptions and validated evidence
 
-Date: 2026-10-13. This is the single consolidated audit. Architecture findings
+Date: 2026-10-14. This is the single consolidated audit. Architecture findings
 are revalidated below; the earlier quality experiments and initial investigation
 retain their own dated evidence boundaries rather than becoming fresh claims.
 
@@ -17,7 +17,7 @@ freeze are not. The canonical design now lives in the existing
 | F-19: product plan treated one named answer as the sanity success condition | Corrected | The user reaffirmed both “Testing Anagram Solver” and “Several Migrants Tango” make sense and can be useful; showing both is desirable. PLAN now separates useful-answer delivery from reconstruction. These are still two standalone positives, not a new pairwise preference/tie judgment. |
 | F-20: existing split tags could be mistaken for an untouched holdout | Qualified; new split/exposure protocol designed | All nineteen current cases have been inspected and measured. Their four `test`, one `train` and fourteen `validation` tags do not establish untouched generalization evidence. Existing files stay historical; all nineteen belong to development in the next pool. |
 | F-21: the native pilot snapshot was not a complete promotion baseline | Qualified; clean/full freeze pending | `native-baseline.v1.json` explicitly records a dirty working tree, one trial per cache state and top-three-per-bucket projections. It cannot establish full top-ten usefulness, measurement stability or a clean release baseline. Preserve it; collect full raw output under a new baseline identity. |
-| F-22: sparse useful-row counts were not whole-dataset useful-delivery metrics | New report design pending implementation | Current report v2 reports sparse standalone rows on judged bags. The new protocol requires attempt-denominated useful-success, unknown-label bounds/coverage, distinct useful answer counts and finite known-useful coverage, plus paired bag-clustered comparisons. No new metric is claimed implemented here. |
+| F-22: sparse useful-row counts were not whole-dataset useful-delivery metrics | Terminal metrics implemented 2026-10-14; broader evaluation pending | Report v3 includes every terminal attempt, operational failure/empty zeros, unknown-label success bounds, judgment coverage and distinct/finite-known-useful coverage. Tests include unlabelled bags, failures, empty delivery and duplicate useful phrases. Bag/family-clustered paired comparisons and actual anytime usefulness remain pending; the two actual labels are unchanged. |
 
 The proposed initial collection budget is 120 independent residual letter bags:
 80 development, 20 validation and 20 locked pilot holdout, including at least
@@ -42,6 +42,93 @@ local links and Markdown diff checks validate the documentation. Existing native
 test/build/dogfood results remain dated Phase D evidence, not fresh checks from
 this design turn. Phase 5 is still in progress; next implement the report gaps,
 collect/source and judge actual outputs, then freeze and compare native revisions.
+
+### Phase E continuation: Echo intake and discriminating experiments (2026-10-14)
+
+The earlier documentation-only checkpoint above remains dated evidence. This
+continuation implements measurement fixes, not a solver/corpus quality promotion.
+The ZIP and design review are copied without alteration to
+`.codex/temp/echo-research-2026-10-14`; all 12 manifested payload sizes/hashes pass.
+Source programs were not executed. No Python dependency or oracle is restored.
+The native `research puzzles` command retains original evidence and source context,
+validates independent ASCII math and literal structural rules, and emits only
+explicit unjudged development workloads when selected. It does not translate a
+published proposal into a human label, clear quarantine, or establish a holdout.
+
+| Stable finding | Disposition | Current evidence |
+| --- | --- | --- |
+| F-23: duplicate rows compressed ranking positions in the evaluator | Fixed | Native regression failed before the change: ten irrelevant duplicate rows plus a target at display position 11 gave MRR 0.5. It now gives MRR 1/11 and Recall@5/@10 zero. Repeated relevant rows consume slots but add no relevance credit. Report version is explicitly 3; old reports are not silently rewritten. No production duplicate-emission bug was established. |
+| F-24: punctuation-stripped keys could transfer human rendering judgments | Fixed with explicit equivalence policy | Usefulness/preference keys now fold case and whitespace only, retaining punctuation and accents. Tests keep `It's` distinct from `Its` and keep an unjudged exclamation-mark rendering unknown. Legacy target matching remains a reconstruction diagnostic. Task context is fixed by case ID; capitalization-sensitive contexts need a stricter future policy, not relabeling by assumption. |
+| F-25: proper-name misses could be misdiagnosed as ranking failures | Confirmed product limitation; corpus experiment pending | Selected dictionary lacks `jameson`, `raphael`, `imangi` (also `chesil`, `indiana`, `gonna`, `youre` in the read-only spot check). Native single-word admission at default and zero Zipf does not admit the first three; ordinary `housewarming`, `red`, `studios` do pass. Required-bag interventions generate all four intended control bags, demonstrating that manually forced vocabulary bypasses the bottleneck rather than fixing normal admission. Do not tune the scorer or add target-specific names and call it a validated quality improvement. |
+| F-26: public candidate count could masquerade as independent, task-valid, judged evidence | Qualified; native intake/mapping added | 56 bags span 25 families; 13 book bags share one family. Forty-eight inputs are source-defined, eight answer-paired/reconstructed. All 65 checks agree independently, with nine wrong-inventory proposals and two exact proposals failing character count retained. All 56 have a structurally valid published alternative, not proven useful outputs. Semantic clues/rendering rules may be unsupported by the CLI. All cases are exposed; none become locked holdout or human labels. |
+
+**Source verification boundary.** Four primary pages were checked live, confirming
+the subtraction interpretation and incorrect extra-s alternative in
+[No tea / coffee / water](https://puzzling.stackexchange.com/questions/30873/no-tea-no-coffee-no-water),
+the original superhero context and actual solver-use account in
+[the turtle puzzle](https://puzzling.stackexchange.com/questions/128765/are-these-superheroes-plagiarised),
+explicit unchanged word count in
+[Multi-Grams](https://puzzling.stackexchange.com/questions/47941/list-of-related-multi-grams),
+and count-vector/punctuation clues in
+[Well-known quotations](https://puzzling.stackexchange.com/questions/22050/well-known-quotations).
+This does not freshly verify all 30 source posts, Reddit dates, title identities or
+rights to republish whole posts. The native overlap check covers current v2's
+nineteen bags, not a new claim about every historical fixture.
+
+**Feasibility experiment.** Twelve selected bags from twelve families, one trial
+per empty/reuse cache state, native prefix/10,000/no-repeat/default lexical policy,
+10-second terminal deadline and 15-second guard; supported source word counts
+applied without answer hints. One family (`gaps-thirteen`) is answer-derived and
+reported as calibration. The CLI hash was
+`1e4e0b9d63f11b6dfc1be0cade4a1f94a328fee53b5ba3e136090adae32783d4`;
+full requests/corpus hashes/raw outputs are retained under the same temp directory.
+The measurement tools were modified during collection: this is explicitly not a
+clean signed promotion freeze or proof of binary/source correspondence.
+
+- 22/24 terminal attempts completed; both `disguise-strahd` attempts timed out
+  at the 10-second endpoint. All completed results pass independent executable
+  invariants; all eleven completed cache pairs hit and preserve result buckets.
+- Three of twelve bags match a structurally valid published reference order
+  somewhere in the first ten visible positions: housewarming, extolsrfia and the
+  answer-derived calibration bag. Among eleven source-defined bags this is 2/11.
+  These are reconstruction counts, not usefulness ratings or semantic-task success.
+- The quote projection returns exact-letter phrases but none of its first ten
+  phrases satisfies the original ordered-length/punctuation-shape conditions.
+  Those constraints were explicitly unsupported, so bag-only delivery cannot be
+  counted as solving the authentic quote task.
+- Four control bags were measured with both native generation strategies at cap
+  500, word admission at default/zero Zipf, isolated order pools and explicitly
+  forced known-word bags. This local experiment discriminates vocabulary absence
+  from a frequency-threshold explanation for the three named entries. It does
+  not establish quality from source answers or an end-to-end benefit from forcing
+  them. No new solver score, search policy or production corpus was promoted.
+
+**Next valuable experiment.** Compare reviewed name/contraction-inclusive lexical
+tiers against the current dictionary across a family-balanced contextual pool,
+retaining actual outputs for blinded standalone usefulness judgments and measuring
+search noise/latency at equal budgets. A broad fixed-phrase lookup baseline is also
+worth testing for reconstruction. Do not assume all useful anagrams are sentence
+reconstructions or that better famous-name recovery implies general phrase quality.
+
+**Completed validation (2026-10-14).** `cargo xtask check` passes: 149 Rust tests
+(including 40 xtask unit tests and the independent process-capture integration),
+formatting, core/CLI/tooling Clippy, 16 generated-contract drift checks and 19
+AJV fixtures. The final intake guard changes also pass all five targeted puzzle
+tests, formatting/Clippy and Rust 1.90 all-target checks. Regression tests cover
+display-slot accounting, whole-attempt usefulness bounds, rendering distinctions,
+independent inventory/constraints, corrupt/unsafe manifests, provenance-preserving
+request mapping, quarantine exclusion and request-mismatch rejection. Packet and
+real-process delivery/stage experiments are additional evidence, not fabricated
+unit-test labels. Full logs/captures remain under the same project-local temp root.
+
+The incremental desktop build/type check passes and the normal installation
+pipeline dogfoods/restarts
+`%LOCALAPPDATA%/Programs/TajemnikTV/TajsAnagrams/TajsAnagrams.exe` (PID 50772,
+SHA256 `CEDB38DFABB7E3CB218E89C97D494FDC9A6AC071D283350E5FD4645DBD24C219`).
+Its installed path and responsive process were freshly verified. This proves
+build/install/startup, not visual UI interaction or installed-session benchmark
+equivalence. No hosted CI or push is claimed, and production solver/corpus behavior
+was not changed by these developer-tooling fixes.
 
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
