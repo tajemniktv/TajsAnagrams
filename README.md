@@ -16,7 +16,7 @@ The installed application does not require Python or a separate CLI executable.
 - `xtask/`: Rust contract generation, independent evaluation, benchmarking and research.
 - `tools/`: desktop build/install scripts and frontend regressions.
 - `tests/quality/`: versioned targets, actual judgments and native workload fixtures.
-- `tests/reference/`: historical migration evidence, not ordinary development gates.
+- `tests/reference/`: recovery index for locally archived migration evidence, not a gate.
 
 Rust is the authoritative implementation of TajsAnagrams. Active development and
 CI do not require Python. Correctness is checked by native contracts, independent
@@ -32,10 +32,13 @@ cargo xtask contracts
 cargo xtask benchmark --timeout-ms 10000
 cargo xtask quality --runs .codex/temp/native-benchmark/runs.jsonl
 cargo xtask research ngram --help
+cargo xtask review
 ```
 
 Retired Python code/tools/workflows were moved to the local-only ignored
 `.codex/archive/python-retired-2026-10-13/`; Git history also preserves them.
 They are historical source, not maintained or executed dependencies. Historical
-JSON evidence remains tracked. Existing corpora stay in `.anagram_data/`, and
+reference payloads are local-only in `.codex/archive/reference-evidence-2026-10-14/`
+and recoverable from Git commit `69c50d9`; current native quality evidence remains
+in `tests/quality/`. Existing corpora stay in `.anagram_data/`, and
 installed data/settings are unaffected. See `NATIVE_TOOLS.md` for current commands.

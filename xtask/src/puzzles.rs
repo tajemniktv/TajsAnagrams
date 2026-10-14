@@ -61,7 +61,7 @@ fn delta(answer: &str, input: &Counts) -> Value {
     let a = counts(answer);
     json!({"text":answer,"exact_letters":a==*input,"extra_letters":difference(&a,input),"missing_letters":difference(input,&a)})
 }
-fn verify(row: &Value) -> Result<Value> {
+pub(crate) fn verify(row: &Value) -> Result<Value> {
     let original = text(row, "original_input")?;
     let input = counts(original);
     let rules = row["constraints"]

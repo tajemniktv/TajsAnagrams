@@ -13,6 +13,13 @@
 
 ## Post-snapshot completed updates
 
+Historical `tests/reference/*` paths below describe their original storage at
+Git commit `69c50d9`. On 2026-10-14 all 23 payloads were hash-verified and moved
+to local-only `.codex/archive/reference-evidence-2026-10-14/`; the current
+`tests/reference/README.md` is the recovery index. Corpus provenance cautions are
+consolidated in `NATIVE_TOOLS.md`. No current test, solver or tool requires the
+archived payloads or retired Python regeneration commands.
+
 Current native-authority follow-up: Rust is the authoritative TajsAnagrams
 implementation, not an ongoing reproduction of the earlier AnagramSolver.
 Contract generation, evaluation, measurement, stage diagnostics and active

@@ -40,7 +40,7 @@ pub fn phrase_key(s: &str) -> String {
         .join(" ")
 }
 /// Judgments fold only case and whitespace, preserving punctuation and accents.
-fn rendered_key(s: &str) -> String {
+pub(crate) fn rendered_key(s: &str) -> String {
     s.split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
@@ -466,7 +466,7 @@ fn labels(path: Option<&str>, field: &str, cases: &Cases) -> Result<Vec<Value>> 
     }
     Ok(rows)
 }
-fn usefulness_panel(
+pub(crate) fn usefulness_panel(
     group: &[&Value],
     labels: &[Value],
     ranking: &str,

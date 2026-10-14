@@ -130,6 +130,111 @@ build/install/startup, not visual UI interaction or installed-session benchmark
 equivalence. No hosted CI or push is claimed, and production solver/corpus behavior
 was not changed by these developer-tooling fixes.
 
+### Phase E continuation: broad lexical matrix and human review (2026-10-14)
+
+The requested experiment is complete; no experimental dictionary or ranking
+weights have been installed as the production default. Reproducible summary:
+`tests/quality/lexicon-experiment.v1.json`. Full captures, dictionaries, source
+hashes and human CSVs remain in `.codex/temp/lexicon-experiment-2026-10-14`.
+This exposed research pool is not a clean release freeze or untouched holdout.
+
+| Stable finding | Disposition | Evidence |
+| --- | --- | --- |
+| F-27: dictionary coverage could be improved only by adding benchmark answers | Rejected; broad experiment implemented | Rust exports three answer-independent policies: baseline 181,121 keys; names80 198,643 (+17,522); frequency3 206,711 (+25,590). Names80 admits selected ESDB name/place/trademark/demonym and contraction classes under fixed size, variant, spelling and region rules. Frequency3 additionally admits alphabetic/apostrophe unigram entries at normalized Zipf >=3. Targets and puzzles are not export inputs. Both broad policies deliver human-useful `jameson` and `indiana jones`; neither establishes overall quality superiority. |
+| F-28: contraction inclusion would automatically produce correct English punctuation | Not established; normalization boundary documented | Apostrophe aliases collapse to letter keys (including `were`/`we're`); context-aware restoration is not implemented. Existing formatting restores only selected contractions. The new minimum three-letter export rule excludes two-letter keys. Vocabulary coverage is not grammar or orthographic disambiguation. |
+| F-29: historical reference consolidation could remove current verification | Archived safely; current pipeline validated | All 23 old reference payloads, including the old README, were moved to `.codex/archive/reference-evidence-2026-10-14`, with sizes, SHA256 and original Git blob IDs recorded and verified. Git commit `69c50d9` retains the complete original tree. The replacement index identifies current native tools/fixtures; active licensing/provenance cautions were consolidated into `NATIVE_TOOLS.md`. No active pipeline depends on removed payloads. |
+| F-30: tentative human responses could become invented negatives or a sufficient quality gate | Prevented; broader judgment pending | `usefulness.v2.json` records four actual standalone positives in three bags, plus four qualitative responses with unknown boolean usefulness. Jameson recognition is qualified; Indiana Jones is strongly useful; `chino bleaches` remains uncertain. The plausible/mid morning-train responses are not forced positive/negative labels or a definitive pairwise ordering. Only a small fraction of the 220 distinct case/rendered-output pairs is judged. Unknown alternatives are not noise. |
+| F-31: uniqueness or longer inputs could be inferred from one displayed result | Independent finite-domain tests added | Six small synthetic domains test zero, exhausted singleton, multiple, constraint singleton and repeat-policy distinctions under both strategies and caps 0/1/2. One capped result remains unknown; two distinct bags prove multiple. The actual raw one-word dictionary inventory for `listen` contains six keys, including `elints`, in all three policies. Jazz/jazzman/rhythm/queue/sphinx inventories are singleton before runtime admission. These are finite lexical counts, not semantic or multiword uniqueness, nor a general input-length/difficulty law. |
+| F-32: admitting a missing proper name would guarantee useful top-ten delivery | Disproved by stage experiment | Names80 admits Raphael and red at default and zero Zipf. Turtle generation exhausts 800 bags; the desired bag is deep-selected and correctly ordered `red raphael`, but ranks 11th in its word-count bucket, outside the default ten rows. A forced-bag intervention changes both search and clue pre-score, so its rank-one result is not a natural quality win. Vocabulary is necessary here, not sufficient; no target-specific cutoff or score tuning was applied. |
+
+**Protocol and source boundary.** Sixteen bags comprise twelve public source
+families and four exposed authored controls; one public family is answer-derived
+calibration. Three policies, three randomized trials and empty/reuse disk-cache
+states produce 288 attempts, with prefix/10,000/no repeats, runtime minZipf 1.8,
+a 10-second terminal deadline and 15-second guard. Only supported explicit source
+word counts are applied. Semantic themes and unsupported rendering constraints
+are not silently treated as solved. Lexical selection uses the existing read-only
+[ESDB source schema](https://github.com/en-wl/wordlist), not a Python builder.
+Corpus provenance and redistribution still need review before production bundling.
+
+An initial capture overlapped builds and is retained as preliminary evidence only.
+The primary controlled repeat ran after all project builds/tests finished, with
+no competing Rust compilation launched. Background apps and OS page caches were
+not controlled. Source was dirty relative to parent `69c50d9`; this is not a clean
+promotion freeze. CLI SHA256:
+`ebe938dd02d6538e7452f8944e88ea4912293dd1bb41b3c67dbd6ba731bd0c5d`;
+measurement-tool SHA256:
+`c1bfca6a3af885bf66ef02d47f057877e602941177cfaa3ff98adba7110b15a8`;
+controlled raw-capture SHA256:
+`7eb413f1f3308123ea353bd4368ed7d6dad9dbae87d131dd263791017de88361`.
+Fresh baseline outputs match all 22 successful earlier public capture buckets.
+
+**Quality, exposure and latency.** Each row contains 48 terminal attempts.
+Latency includes failures; reuse denotes the attempted cache state, not a promise
+that every call hits. Added-token exposure is intervention reach, not bad English.
+
+| Policy / state | Completed | p50 / p95 ms | Capped attempts | Added-token exposure | Known-useful success@10 bounds |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| baseline / empty | 45 | 1,255 / 8,889 | 30 | 0% | 6.25–93.75% |
+| baseline / reuse | 45 | 210 / 6,665 | 30 | 0% | 6.25–93.75% |
+| names80 / empty | 45 | 1,329 / 9,559 | 33 | 7.8% | 18.75–93.75% |
+| names80 / reuse | 45 | 210 / 6,676 | 33 | 7.8% | 18.75–93.75% |
+| frequency3 / empty | 46 | 1,175 / 8,814 | 37 | 12.8% | 18.75–95.83% |
+| frequency3 / reuse | 47 | 206 / 235 | 38 | 12.5% | 18.75–97.92% |
+
+273/288 attempts complete; 15 time out. Baseline and names80 both time out on
+disguise-strahd in every state/trial. Frequency3 completes that bag but regresses
+gish-reference to two empty-state and one reuse-state timeout. Successful
+cold/reuse pairs (136) hit and preserve buckets; one nominal reuse following a
+cold failure completes by computing fresh, without a cache hit.
+
+Known-useful delivery improves from one to three of sixteen bags, consistently
+across trials/states. Four-label finite-known-useful coverage rises from 25% to
+75%; this is not coverage of all useful English. Published reconstruction hits
+rise from four to six bags, a distinct diagnostic. The wide usefulness bounds
+overlap; no judged negatives or representative semantic-noise estimate exist.
+Paired per-bag median cold-latency differences are +38.3 ms for names80 (5 faster,
+11 slower) and +14.3 ms for frequency3 (8 faster, 8 slower), without confidence
+intervals. Pooled medians do not imply every bag is faster. Gish-reference and
+keys-table exhibit substantial individual slowdowns. Higher cap incidence and
+earlier capped completion are not evidence of better phrases.
+
+**Readable evidence and feedback.** `cargo xtask review` renders the existing
+captures and historical pilot into `.codex/docs/TAJSBENCH.md`, with actual phrases,
+failures, task context and a randomized variant-hidden judgment pool. Native tests,
+`cargo xtask check`, desktop builds and CLI builds refresh it without launching a
+new experiment. Separate CSVs preserve human cells and context identity; blank or
+unsure labels stay unknown. Source-task fit and standalone usefulness are separate.
+Historical pilot projections are explicitly retained positions, not full-list
+rank claims. Missing local research captures produce a marked pilot-only fallback
+for automatic refresh; explicitly requested missing captures fail closed.
+
+The additional pasted review was read and saved unchanged as
+`.codex/docs/benchmark-additional-review-2026-10-14.md` (SHA256
+`D61B17D5F452DBE97748496ADB247BB24F549EDCFABD87314F26C4AE9FEB794C`).
+Its uniqueness distinctions informed F-31; illustrative examples and vague source
+attributions were not adopted as empirical counts or instructions.
+
+**Validation and deployment.** `cargo xtask check` passes 155 Rust tests,
+formatting, strict core/CLI/tooling Clippy, 16 contract drift checks and 19 AJV
+fixtures. Rust 1.90 all-target tooling check passes. Regression coverage includes
+dictionary hash/tamper guards, target-independent export, CSV/context preservation,
+missing-artifact fallback, output escaping and independent finite-domain generation.
+Both normal build scripts pass after reference archival. Desktop type checking
+reports zero errors/warnings, frontend cache reuse is verified, and the incremental
+native build installs/restarts the app. Installed PID 60620 was responsive at the
+verification checkpoint, with SHA256
+`CEDB38DFABB7E3CB218E89C97D494FDC9A6AC071D283350E5FD4645DBD24C219`.
+This establishes build/install/startup, not visual UI interaction or an installed
+benchmark solve. No hosted CI or push is claimed.
+
+**Decision.** Names80 merits broader contextual judgment because it delivers two
+verified useful named outputs without answer insertion. Frequency3 is not ready
+for promotion given the clause timeout regression and unjudged added output.
+Neither policy is promoted. The benchmark still needs broader representative
+collection, actual judgments and a clean freeze; vocabulary, ranking and rendering
+remain distinct bottlenecks rather than one interchangeable quality score.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose

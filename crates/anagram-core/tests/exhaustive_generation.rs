@@ -70,6 +70,82 @@ fn next(seed: &mut u64) -> usize {
     (*seed >> 32) as usize
 }
 #[test]
+fn frozen_ambiguity_domains_distinguish_exhaustion_from_discovery() {
+    // Synthetic finite vocabularies, canonical word bags, not English judgments.
+    // Reordering a bag is not a different solution in this diagnostic domain.
+    for (name, text, words, min, max, repeat, expected_count) in [
+        ("zero", "ac", vec!["ab", "b"], 1, 2, false, 0),
+        ("singleton", "abc", vec!["abc", "a", "b"], 1, 2, false, 1),
+        ("multiple", "ab", vec!["a", "b", "ab", "ba"], 1, 2, false, 3),
+        (
+            "constraint-singleton",
+            "ab",
+            vec!["a", "b", "ab", "ba"],
+            2,
+            2,
+            false,
+            1,
+        ),
+        ("repeat-singleton", "aa", vec!["a"], 1, 2, true, 1),
+        ("repeat-forbidden-zero", "aa", vec!["a"], 1, 2, false, 0),
+    ] {
+        let words = words.into_iter().map(str::to_owned).collect::<Vec<_>>();
+        let mut options = Options {
+            min_words: min,
+            max_words: max,
+            allow_repeat: repeat,
+            max_results: 0,
+            clues: BTreeSet::new(),
+            initial_clues: BTreeSet::new(),
+            hint_mode: HintMode::Any,
+            strategy: Strategy::Prefix,
+        };
+        let exhaustive = enumerate(&words, counts(&[text.into()]), &options);
+        assert_eq!(exhaustive.len(), expected_count, "{name}");
+        let candidates = words
+            .iter()
+            .map(|w| Candidate::new(w).unwrap())
+            .collect::<Vec<_>>();
+        for strategy in [Strategy::Prefix, Strategy::Diverse] {
+            options.strategy = strategy;
+            for cap in [0, 1, 2] {
+                options.max_results = cap;
+                let result = search(
+                    Inventory::from_text(text),
+                    &candidates,
+                    &options,
+                    &AtomicBool::new(false),
+                    None,
+                )
+                .unwrap();
+                let observed = result.bags.len();
+                let cardinality = if observed >= 2 {
+                    "multiple"
+                } else if result.stop != Stop::Exhausted {
+                    "unknown"
+                } else if observed == 1 {
+                    "exactly-one"
+                } else {
+                    "zero"
+                };
+                let expected = if expected_count == 0 {
+                    "zero"
+                } else if expected_count == 1 {
+                    "exactly-one"
+                } else if cap == 1 {
+                    "unknown"
+                } else {
+                    "multiple"
+                };
+                assert_eq!(cardinality, expected, "{name}, {strategy:?}, cap={cap}");
+                if observed < 2 && result.stop == Stop::Exhausted {
+                    assert_eq!(observed, exhaustive.len());
+                }
+            }
+        }
+    }
+}
+#[test]
 fn optimized_search_agrees_with_independent_exhaustive_enumerator() {
     let mut seed = 20261013;
     let mut vocab = vec![];

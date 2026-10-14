@@ -1,8 +1,10 @@
 mod benchmark;
 mod contracts;
+mod lexicon;
 mod puzzles;
 mod quality;
 mod research;
+mod review;
 mod stages;
 mod verify;
 
@@ -147,7 +149,8 @@ fn check() -> Result<()> {
     let mut npm = Command::new("npm");
     run(npm
         .args(["run", "check"])
-        .current_dir(root().join("contracts")))
+        .current_dir(root().join("contracts")))?;
+    review::command(&[])
 }
 
 fn check_native_pipeline() -> Result<()> {
@@ -202,7 +205,11 @@ fn main_inner() -> Result<()> {
         Some("quality") => quality::command(&args[1..]),
         Some("benchmark") => benchmark::command(&args[1..]),
         Some("research") => research::command(&args[1..]),
+        Some("review") => review::command(&args[1..]),
         None | Some("help" | "--help") => {
+            println!(
+                "cargo xtask review [--runs FILE --workloads FILE --dictionaries FILE --judgments CSV --summary FILE --output FILE]"
+            );
             println!(
                 "cargo xtask check\ncargo xtask contracts [--check]\ncargo xtask quality --runs FILE [--cases FILE --ranking desktop|final_score|both --output FILE]\ncargo xtask benchmark [--cli PATH --before PATH --mode solve|generate --stages --output FILE]\ncargo xtask research lexicon --db FILE [--current FILE]\ncargo xtask research ngram --arpa FILE --groups FILE\ncargo xtask research tubelex --tubelex FILE [--unigrams FILE]\ncargo xtask research puzzles --packet DIR [--runs FILE]\nUse --help after quality, benchmark or a research command for options."
             );

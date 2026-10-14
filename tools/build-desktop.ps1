@@ -15,6 +15,8 @@ try {
     $env:CARGO_TARGET_DIR = $build
     & node (Join-Path $desktop 'node_modules/@tauri-apps/cli/tauri.js') build --no-bundle -- --locked
     if ($LASTEXITCODE -ne 0) { throw 'Desktop build failed; installed app unchanged' }
+    & cargo xtask review
+    if ($LASTEXITCODE -ne 0) { throw 'Stored TajsBench review refresh failed; installed app unchanged' }
     $candidate = Join-Path $build 'release/TajsAnagrams.exe'
     if (-not (Test-Path -LiteralPath $candidate)) { throw 'Desktop executable missing' }
     if ($TestOnly -or $env:CI) { Write-Output "Test/CI executable (not installed or restarted): $candidate"; return }

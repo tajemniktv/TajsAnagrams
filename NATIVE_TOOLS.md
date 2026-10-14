@@ -65,6 +65,32 @@ Standard final scores are retained so their existing interpretation does not cha
 
 ## Corpus preparation and updates
 
+### Provenance and distribution boundaries
+
+Historical byte/hash inventories now live in the local-only reference archive
+described by `tests/reference/README.md`. They are not current corpus manifests;
+use each native capture's recorded hashes and do not refresh corpora mid-comparison.
+Their still-relevant distribution cautions are consolidated here:
+
+- The original Feldman `large.txt` vocabulary has no established redistribution
+  grant in the recorded inventory. Preparing a derived dictionary or adding ESDB
+  names does not grant rights to that original base; do not bundle it on that basis.
+- Norvig's unigram/bigram files are Google Web Trillion Word Corpus derivatives.
+  The recorded MIT grant covered code, not automatically the datasets. Existing
+  local experiments do not establish redistribution permission.
+- WordNet 3.1 copies/modifications must retain their embedded Princeton copyright,
+  conditions and disclaimer and the complete notice in packaging.
+- A real Wikimedia-derived phrase index needs dump identities, attribution and
+  applicable reuse terms reviewed; SQLite format alone grants no content rights.
+  A learned model similarly needs training-input/configuration provenance.
+- ESDB's [upstream documentation](https://github.com/en-wl/wordlist) describes an
+  MIT-like combined-work license and direct read-only SQLite extraction. Preserve
+  its Copyright notices for any distribution. The experiment uses an existing
+  local database, not the upstream Python builder; no active Python dependency
+  is restored. Research lexicons remain local and are not automatically installed.
+
+### Preparation behavior
+
 Phrase building automatically uses up to eight workers for normalization and
 phrase extraction. Bounded batches combine duplicate phrases before sorted SQLite
 writes; a 64-MiB page cache and `WITHOUT ROWID` table reduce storage and random I/O.
@@ -172,6 +198,22 @@ preparation opt-in on manual workflow runs; monthly cache refreshes are not
 benchmark evidence. Corpora/models are not published in the report artifacts.
 
 ### Rust development interface
+
+`cargo xtask review` generates `.codex/docs/TAJSBENCH.md` as a readable view of
+captured phrases, failures, provenance boundaries and personal judgments. Native
+tests/checks and normal desktop/CLI build scripts refresh it; they do not launch
+new research benchmarks. Human annotations live in separate preserved CSVs.
+Absent ignored experiment artifacts yield an explicitly marked historical-only
+view rather than becoming a build dependency. Explicit review inputs fail closed.
+See `tests/quality/README.md` for the rubric and capture-registration command.
+
+For broad lexical interventions, `cargo xtask research lexicon --db ESDB.sqlite
+--variant-dir .codex/temp/LEXICONS` exports hash-pinned baseline, annotated
+name/contraction and frequency-assisted dictionaries independently of targets.
+`cargo xtask benchmark --workloads FILE --dictionaries VARIANTS.json --repeats 3`
+compares treatments in randomized order with separate solver-cache states.
+Raw phrases must be judged for quality/noise; added-vocabulary exposure and
+known-reference recovery are distinct diagnostics, not naturalness scores.
 
 `cargo xtask check` runs formatting, core/CLI/tool tests, strict Clippy, generated
 contract drift checks and independent AJV/TypeScript fixtures. Install contract

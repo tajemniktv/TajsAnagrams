@@ -414,3 +414,68 @@ Next judge a small blinded actual-output pool with task context, adjudicate
 identity/rendering policy, expand source-family diversity and compare native corpus
 admission policies before freezing a baseline. Do not patch in the published
 names just to make this exposed sample score better.
+
+### Broad lexical policies and human-readable review
+
+`cargo xtask research lexicon --db DB --variant-dir .codex/temp/LEXICONS` exports
+three answer-independent interventions: the unchanged normalized baseline;
+baseline union ESDB US/A size <=80, variants <=1, tagged names and contractions;
+and that union plus literal alphabetic/apostrophe unigram tokens at Zipf >=3.
+The last is deliberately a frequency-assisted noise challenge, not a validated
+English dictionary. No puzzle/answer file enters the export function. ESDB tags
+are incomplete; compounds/abbreviations and uncertain name classes are excluded.
+All treatments retain baseline keys and inherit the same runtime admission,
+candidate, ordering, corpus, output and timeout policies. None is auto-installed.
+
+`cargo xtask benchmark --workloads FILE --dictionaries VARIANTS.json --repeats 3`
+randomizes native vocabulary treatments within each case/trial, pins file hashes
+and gives every treatment its own empty/reuse solver cache. Compare all attempted
+calls and per-bag medians, retaining failures; three timing repeats do not create
+three independent human quality samples. Record competing build/process activity.
+All outputs remain exact-letter checked, but semantic noise must be judged rather
+than inferred from the proportion of newly admitted tokens or model scores.
+
+`cargo xtask review` refreshes **`.codex/docs/TAJSBENCH.md`** without running a new
+solve. Native tests, `cargo xtask check` and normal desktop/CLI build scripts call
+the same renderer. It shows stored native pilot phrases/failures and, when a local
+experiment is registered, a variant-hidden, randomized, deduplicated union of actual
+top-ten outputs with original task context, source constraints and explicit native
+projection limits. The historical top-three-per-bucket pilot loses original full-list
+positions: its retained-position numbers are not genuine full-list ranks or @K proof.
+
+Register a completed capture with:
+
+```text
+cargo xtask review --runs FILE --workloads FILE --dictionaries VARIANTS.json --judgments .codex/temp/judgments.csv --summary .codex/temp/report.json
+```
+
+Do not edit the generated Markdown. Edit the separate CSV (`standalone` and optional
+`source_task`: useful/not_useful/unsure). Blank/unsure stay unknown; context hashes
+prevent reuse across changed tasks, and existing human cells/notes survive refresh.
+Inspect the comparison panel only after judging if variant-hidden presentation matters.
+The pilot has its own `.codex/temp/tajsbench-pilot-judgments.csv`; partial historical
+judgments cannot reconstruct full-list coverage. Missing local research artifacts
+produce an explicitly marked pilot-only automatic view, not a production build
+dependency or fake comparison. Explicit `--runs` still fails on invalid evidence.
+
+`usefulness.v2.json` versions four actual standalone positives across three bags,
+plus four qualitative/uncertain responses which remain nonbinary. It contains public
+case IDs beyond v1/v2 curator datasets, so use the registered workload review for
+that combined pool rather than feeding it to an incompatible old `--cases` file.
+Rescore baseline and candidate with the same label version. Human verdicts here
+are personal and unblinded; no judge calibration or native-speaker agreement is assumed.
+
+### Ambiguity is a separate correctness diagnostic
+
+Finite-vocabulary cardinality, meaningful English, an author's intended answer and
+task difficulty are distinct. The independent exhaustive Rust enumerator now has
+frozen zero/singleton/multiple/constraint-dependent/repeat cases for both strategies
+and caps. Zero/exactly-one require exhaustion; finding two distinct canonical bags
+proves multiple even when capped. A single capped discovery remains unknown. These
+are explicitly synthetic small domains, with word order not creating another bag.
+
+The review JSON also groups every frozen research dictionary's normalized single
+tokens by inventory/length and verifies the illustrative jazz/listen/rhythm/etc.
+counts in that exact domain, before request-specific admission. Punctuation/case
+aliases collapse. Those mechanically exhaustive counts do not prove semantic or
+multiword uniqueness, and no monotonic length/difficulty relationship is assumed.

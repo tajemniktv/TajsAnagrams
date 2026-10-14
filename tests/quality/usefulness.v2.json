@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-14",
+  "purpose": "Personal standalone judgments; unblinded, not population-wide English-quality evidence. Qualitative feedback stays nonbinary.",
+  "judgments": [
+    {"case_id":"testing_anagram_solver","phrase":"Several Migrants Tango","useful":true,"provenance":"Direct user judgment, 2026-10-13: both presented outputs useful on their own; unblinded, no relative preference expressed"},
+    {"case_id":"testing_anagram_solver","phrase":"Testing Anagram Solver","useful":true,"provenance":"Direct user judgment, 2026-10-13: both presented outputs useful on their own; unblinded, no relative preference expressed"},
+    {"case_id":"whiskey-jameson","phrase":"jameson","useful":true,"provenance":"Direct user judgment, 2026-10-14: initially personally unfamiliar; after recognizing a whiskey brand/name, thinks it useful. Unblinded standalone positive, no source-task verdict."},
+    {"case_id":"lucas-02","phrase":"indiana jones","useful":true,"provenance":"Direct user judgment, 2026-10-14: very useful as a recognizable title/proper name. Unblinded standalone positive, no source-task verdict."}
+  ],
+  "qualitative_judgments": [
+    {"case_id":"morning_train","phrase":"another mariner striving","assessment":"Tentatively plausible if letters match; independent verification confirms exact letters.","useful":null},
+    {"case_id":"morning_train","phrase":"veterinarians right norm","assessment":"Slightly middling; no binary usefulness verdict.","useful":null},
+    {"case_id":"morning_train","phrase":"norms right veterinarian","assessment":"Middling, tentatively slightly below veterinarians right norm; no firm pairwise gate.","useful":null},
+    {"case_id":"books-02","phrase":"chino bleaches","assessment":"Middling, unfamiliar word, possibly a coherent sentence; unsure.","useful":null}
+  ],
+  "qualitative_provenance":"Direct user feedback, 2026-10-14, with explicit uncertainty. Do not translate plausible/middling into hard negatives or calibrated population labels."
+}

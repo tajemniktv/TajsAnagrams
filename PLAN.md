@@ -11,7 +11,7 @@ TajsBench is the existing name; do not start a second TajsAnaBench project.
 The Rust measurement/evaluation tools exist, but a trustworthy product baseline
 does not yet exist. Phase 5 now has a concrete protocol in
 [`tests/quality/README.md`](tests/quality/README.md#next-native-baseline-protocol).
-The nineteen inspected curator cases, two actual phrase judgments on one bag,
+The initial nineteen inspected curator cases, v1's two phrase judgments on one bag,
 empty preference file and dirty working-tree snapshot are pilot evidence only.
 Echo's first public packet is now independently checked by Rust: 56 candidate
 bags from 25 families, with origin/constraints/exposure preserved locally. Report
@@ -19,6 +19,15 @@ v3 implements terminal usefulness bounds/distinct counts and correct display-slo
 accounting. A 12-family dry run and admission controls identified missing proper
 names in the selected dictionary. Broader collection, contextual human judgments,
 paired evaluation and a clean baseline freeze remain required before a quality gate.
+
+The first broad lexical comparison now uses target-independent ESDB name/
+contraction and frequency-assisted policies, sixteen exposed bags and three
+paired timing trials per cache state. Four actual standalone positives across
+three bags are versioned in `usefulness.v2.json`; four tentative/middling responses
+remain qualitative, not invented negatives. `cargo xtask review` refreshes a
+human-readable local view and preserved annotation CSVs on tests/builds. These
+are measured research/collection improvements, not a validated production corpus
+promotion or a representative judged quality gate.
 
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
@@ -287,6 +296,12 @@ Do not count a larger authored fixture file as completion of this phase.
 ### 5.2 Human preference data
 
 - [x] Two actual standalone useful labels exist; no pairwise judgments exist yet.
+- [x] Expand/version actual personal labels to four standalone positives in three
+      bags; preserve four qualitative/uncertain responses without forcing binary
+      negatives or firm preferences. No population/native-speaker calibration claimed.
+- [x] Generate a readable, automatically refreshed view of actual stored native
+      outputs/failures and a randomized variant-hidden review pool; preserve human
+      CSV cells/context hashes separately from generated Markdown.
 - [ ] First judge outputs independently: useful / not useful / unsure, accepting
       coherent titles and noun phrases as well as fluent sentences.
 - [ ] Judge a deduplicated, variant-blinded union of actual baseline/candidate
@@ -323,6 +338,11 @@ Do not count a larger authored fixture file as completion of this phase.
 ### 5.4 Ablation harness
 
 - [x] Native stage isolation and paired executable measurements exist.
+- [x] Compare broad target-independent lexical treatments with separate randomized
+      caches, unchanged requests and observed caps/failures. Measure vocabulary
+      exposure separately from semantic noise; repeat timing without competing builds.
+- [x] Extend independent exhaustive checks with frozen ambiguity domains. Counts
+      of normalized dictionary tokens/canonical bags do not prove semantic uniqueness.
 - [ ] Attribute each candidate change using controlled candidate/order pools and
       equal end-to-end budgets, including admission, generation, shortlist,
       chosen order, final display and a separately labelled required-bag control.

@@ -231,6 +231,7 @@ fn metadata(a: &Args, cases: &Cases, command: &[String]) -> Result<Value> {
         Ok(())
     };
     add("cli", Path::new(&command[0]))?;
+    add("measurement_tool", &std::env::current_exe()?)?;
     add("dictionary", Path::new(&command[2]))?;
     add("unigrams", Path::new(&command[3]))?;
     add(
@@ -531,6 +532,38 @@ fn stage_capture(
     }
     Ok(())
 }
+fn dictionary_variants(path: &str) -> Result<Vec<(String, String, String)>> {
+    let v = crate::read_json(path)?;
+    if v["schema_version"] != 1 {
+        return Err("Invalid dictionary variant schema".into());
+    }
+    let mut out = Vec::new();
+    let mut ids = BTreeSet::new();
+    let mut hashes = BTreeSet::new();
+    for r in v["variants"]
+        .as_array()
+        .ok_or("Missing dictionary variants")?
+    {
+        let id = r["id"]
+            .as_str()
+            .filter(|s| {
+                !s.is_empty()
+                    && s.chars()
+                        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+            })
+            .ok_or("Invalid dictionary variant id")?;
+        let path = fs::canonicalize(r["path"].as_str().ok_or("Missing dictionary path")?)?;
+        let hash = digest(&path)?;
+        if !ids.insert(id.to_owned()) || !hashes.insert(hash.clone()) || r["sha256"] != hash {
+            return Err("Duplicate id/dictionary or hash mismatch".into());
+        }
+        out.push((id.to_owned(), path.to_string_lossy().into_owned(), hash));
+    }
+    if out.len() < 2 {
+        return Err("Need at least two distinct dictionaries".into());
+    }
+    Ok(out)
+}
 pub fn command(args: &[String]) -> Result<()> {
     if args == ["--help"] {
         println!(
@@ -538,6 +571,9 @@ pub fn command(args: &[String]) -> Result<()> {
         );
         println!(
             "--workloads FILE uses explicit native stress requests and verifies invariants/cache roundtrips without quality labels. Use --case-ids to select workloads. Active corpus preparation remains tools/prepare-native-data.ps1."
+        );
+        println!(
+            "--dictionaries VARIANTS.json randomizes hash-pinned vocabulary treatments with separate empty/reuse caches; do not combine with --dictionary/--before/--stages."
         );
         return Ok(());
     }
@@ -550,6 +586,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "cases",
             "case-ids",
             "dictionary",
+            "dictionaries",
             "unigrams",
             "bigrams",
             "wordnet",
@@ -570,6 +607,11 @@ pub fn command(args: &[String]) -> Result<()> {
         &["shuffle-input", "stages", "deep-all"],
     )?;
     let mode = a.value("mode", "solve");
+    if a.has("dictionaries") && ["dictionary", "before", "stages"].iter().any(|k| a.has(k)) {
+        return Err(
+            "Dictionary variants cannot combine with --dictionary, --before or --stages".into(),
+        );
+    }
     if !["solve", "generate"].contains(&mode) {
         return Err("Invalid mode".into());
     }
@@ -661,8 +703,26 @@ pub fn command(args: &[String]) -> Result<()> {
         }
         cases.retain(|id, _| ids.contains(id));
     }
-    let command = cli_command(&a, mode)?;
+    let dictionaries = a
+        .get("dictionaries")
+        .map(dictionary_variants)
+        .transpose()?
+        .unwrap_or_default();
+    let mut command = cli_command(&a, mode)?;
+    if let Some((_, path, _)) = dictionaries.first() {
+        command[2] = path.clone();
+    }
     let mut manifest = metadata(&a, &cases, &command)?;
+    if !dictionaries.is_empty() {
+        manifest["dictionary_variants"] = json!(
+            dictionaries
+                .iter()
+                .map(|(id, path, hash)| json!({"id":id,"path":path,"sha256":hash}))
+                .collect::<Vec<_>>()
+        );
+        manifest["dictionary_variants_manifest_sha256"] =
+            json!(digest(a.required("dictionaries")?)?);
+    }
     let output = PathBuf::from(a.value("output", ".codex/temp/native-benchmark/runs.jsonl"));
     let parent = output
         .parent()
@@ -732,23 +792,38 @@ pub fn command(args: &[String]) -> Result<()> {
     rng.shuffle(&mut schedule);
     for (c, trial) in schedule {
         let req = &requests[&c.id];
-        let cache = cache_root
-            .path()
-            .join(format!("{}-{trial}.sqlite", hex::encode(sha_prefix(&c.id))));
-        let mut variants = if a.has("before") {
+        let mut variants = if !dictionaries.is_empty() {
+            dictionaries.iter().map(|(id, _, _)| id.as_str()).collect()
+        } else if a.has("before") {
             vec!["before", "after"]
         } else {
             vec!["native"]
         };
         rng.shuffle(&mut variants);
         for variant in variants {
+            // Separate disk state for each vocabulary treatment; earlier variants
+            // must not masquerade as an empty solver cache for later variants.
+            let cache = cache_root.path().join(format!(
+                "{}-{trial}-{}.sqlite",
+                hex::encode(sha_prefix(&c.id)),
+                hex::encode(sha_prefix(variant))
+            ));
             let mut cmd = command.clone();
-            if variant == "before" {
+            let dictionary = dictionaries.iter().find(|(id, _, _)| id == variant);
+            if let Some((_, path, _)) = dictionary {
+                cmd[2] = path.clone();
+            } else if variant == "before" {
                 cmd[0] = fs::canonicalize(a.required("before")?)?
                     .to_string_lossy()
                     .into_owned();
             }
-            let variant_id = if a.has("before") {
+            let variant_id = if let Some((id, _, hash)) = dictionary {
+                format!(
+                    "lexicon_{id}_dict-{}_binary-{}",
+                    &hash[..12],
+                    &digest(&cmd[0])?[..12]
+                )
+            } else if a.has("before") {
                 variant.into()
             } else {
                 format!(
@@ -791,6 +866,10 @@ pub fn command(args: &[String]) -> Result<()> {
                 }
                 let mut r = capture(&cmd, req, guard);
                 r.as_object_mut().unwrap().extend(json!({"case_id":c.id,"variant":variant_id,"trial":trial,"cache_state":state,"request":req,"strategy":req["generation"]["strategy"].as_str().or_else(||req["strategy"].as_str()).unwrap()}).as_object().unwrap().clone());
+                if let Some((id, _, hash)) = dictionary {
+                    r["dictionary_variant"] = json!(id);
+                    r["dictionary_sha256"] = json!(hash);
+                }
                 if r.get("error").is_none() {
                     let validation = (|| -> Result<()> {
                         crate::verify::output(req, &r["result"])?;
@@ -840,6 +919,31 @@ fn sha_prefix(s: &str) -> [u8; 8] {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn dictionary_variants_pin_hashes_and_reject_aliases() {
+        let scratch = root().join(".codex/temp/xtask/benchmark-tests");
+        fs::create_dir_all(&scratch).unwrap();
+        let dir = tempfile::tempdir_in(scratch).unwrap();
+        let a = dir.path().join("a.txt");
+        let b = dir.path().join("b.txt");
+        fs::write(&a, "a\n").unwrap();
+        fs::write(&b, "b\n").unwrap();
+        let path = dir.path().join("variants.json");
+        let manifest = json!({"schema_version":1,"variants":[{"id":"baseline","path":a,"sha256":digest(&a).unwrap()},{"id":"candidate","path":b,"sha256":digest(&b).unwrap()}]});
+        write_json(path.to_str(), &manifest).unwrap();
+        assert_eq!(
+            dictionary_variants(path.to_str().unwrap()).unwrap().len(),
+            2
+        );
+        let mut alias = manifest.clone();
+        alias["variants"][1] = alias["variants"][0].clone();
+        alias["variants"][1]["id"] = json!("duplicate-bytes");
+        write_json(path.to_str(), &alias).unwrap();
+        assert!(dictionary_variants(path.to_str().unwrap()).is_err());
+        write_json(path.to_str(), &manifest).unwrap();
+        fs::write(&b, "changed").unwrap();
+        assert!(dictionary_variants(path.to_str().unwrap()).is_err());
+    }
     #[test]
     fn desktop_defaults_do_not_drift() {
         let source = include_str!("../../apps/desktop/src-tauri/src/settings.rs");
