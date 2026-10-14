@@ -340,6 +340,74 @@ fn historical(out: &mut String) -> Result<()> {
     }
     Ok(())
 }
+fn displayed_diagnostics(
+    out: &mut String,
+    runs: &[Value],
+    case_id: &str,
+    pool: &Pool,
+) -> Result<()> {
+    let mut first = BTreeMap::<String, &Value>::new();
+    for r in runs
+        .iter()
+        .filter(|r| r["case_id"] == case_id && r["cache_state"] == "disk_cache_empty")
+    {
+        let variant = r["dictionary_variant"]
+            .as_str()
+            .ok_or("Missing dictionary variant")?
+            .to_owned();
+        if first
+            .get(&variant)
+            .is_none_or(|previous| r["trial"].as_u64() < previous["trial"].as_u64())
+        {
+            first.insert(variant, r);
+        }
+    }
+    let mut samples = first.into_iter().collect::<Vec<_>>();
+    samples.sort_by_key(|(id, _)| sha(&format!("display-diagnostics-v1-{case_id}-{id}")));
+    out.push_str("\n<details><summary>Actual displayed ranks: first empty-cache trial per treatment</summary>\n\nDiagnostic subset only; repeated observations are not independent puzzles. Treatment names/scores hidden. Rank resets within each word-count bucket. Full captures retain all trials/states; the pooled table above is not a ranked result list.\n");
+    for (i, (_, r)) in samples.iter().enumerate() {
+        out.push_str(&format!(
+            "\nObservation {} · trial {}\n\n",
+            i + 1,
+            r["trial"]
+        ));
+        if r.get("error").is_some_and(|e| !e.is_null()) {
+            out.push_str(&format!(
+                "Failed delivery: {}\n",
+                escape(&r["error"].to_string())
+            ));
+            continue;
+        }
+        let mut buckets = r["result"]["buckets"]
+            .as_object()
+            .ok_or("Missing buckets")?
+            .iter()
+            .map(|(n, rows)| Ok((n.parse::<u32>()?, rows.as_array().ok_or("Invalid bucket")?)))
+            .collect::<Result<Vec<_>>>()?;
+        buckets.sort_by_key(|(n, _)| *n);
+        out.push_str(
+            "| Words | Displayed rank | Actual phrase | Review ID |\n| --- | --- | --- | --- |\n",
+        );
+        for (n, rows) in buckets {
+            for (position, row) in rows.iter().enumerate() {
+                let phrase = quality::row_phrase(row);
+                let key = (case_id.to_owned(), quality::rendered_key(&phrase));
+                let review_id = pool
+                    .get(&key)
+                    .map(|(id, _, _)| id.as_str())
+                    .unwrap_or("outside top-ten judgment pool / blank");
+                out.push_str(&format!(
+                    "| {n} | {} | {} | {} |\n",
+                    position + 1,
+                    escape(&phrase),
+                    review_id
+                ));
+            }
+        }
+    }
+    out.push_str("\n</details>\n");
+    Ok(())
+}
 pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
     let mut out = String::from(
         "# TajsBench: human review of captured output\n\nGenerated from stored captures, not a new solver run. Refreshed by native tests/checks and normal build scripts.\nDo not edit this generated file: enter human judgments in the separate CSV; they survive refresh.\nAn exact anagram or a high model score is not proof of useful English. Sentences, coherent titles and noun phrases can all be useful.\n",
@@ -426,6 +494,7 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
             for (review_id, p, _) in entries {
                 out.push_str(&format!("| {} | {} |\n", review_id, escape(p)));
             }
+            displayed_diagnostics(&mut out, &runs, id, &pool)?;
             out.push_str("\n</details>\n");
         }
         out.push_str("\n<details><summary>Unblinded comparison: open after judgments</summary>\n\nAdded-token exposure is an observable vocabulary-change diagnostic, **not a semantic noise score**. Unknown quality labels remain unknown. Latency includes failures and capture overhead; OS pages are uncontrolled.\n\n| Variant | Cache | Cases / attempts / completed | Attempt p50 / p95 ms | Known useful-success @10 bounds | Added-token exposure | Candidate-cap attempts |\n| --- | --- | --- | --- | --- | --- | --- |\n");
@@ -451,7 +520,7 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
         out.push_str("\nNo completed local lexicon experiment registered yet. The historical panel below is still readable.\n");
     }
     historical(&mut out)?;
-    let feedback = read_json(root().join("tests/quality/usefulness.v2.json"))?;
+    let feedback = read_json(root().join("tests/quality/usefulness.v3.json"))?;
     out.push_str("\n## Recorded personal human feedback\n\nUnblinded individual judgments, not calibrated population labels. Plausible/middling/unsure feedback is not converted into a binary negative or an invented relative-preference gate.\n\n| Case | Phrase | Judgment |\n| --- | --- | --- |\n");
     for r in feedback["judgments"]
         .as_array()
@@ -543,6 +612,17 @@ fn refresh_registered(config: Option<&Value>, output: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn rank_diagnostics_preserve_slots_duplicates_and_failures() {
+        let run = json!({"case_id":"bag","trial":0,"cache_state":"disk_cache_empty","dictionary_variant":"one","result":{"buckets":{"1":[{"display_phrase":"listen","words":["listen"]},{"display_phrase":"listen","words":["listen"]},{"display_phrase":"silent","words":["silent"]}]}}});
+        let failure = json!({"case_id":"bag","trial":0,"cache_state":"disk_cache_empty","dictionary_variant":"two","error":"timed_out"});
+        let mut out = String::new();
+        displayed_diagnostics(&mut out, &[run, failure], "bag", &Pool::new()).unwrap();
+        assert!(out.contains("| 1 | 1 | listen |"));
+        assert!(out.contains("| 1 | 2 | listen |"));
+        assert!(out.contains("| 1 | 3 | silent |"));
+        assert!(out.contains("timed_out"));
+    }
     #[test]
     fn human_cells_survive_refresh_unknowns_are_not_invented_labels() {
         let scratch = root().join(".codex/temp/xtask/review-tests");

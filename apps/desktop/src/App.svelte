@@ -5,6 +5,7 @@
   import Advanced from './Advanced.svelte';
   import SettingsDialog from './SettingsDialog.svelte';
   import Results from './Results.svelte';
+  import DeveloperReview from './DeveloperReview.svelte';
   let boot = $state<Bootstrap | null>(null); let settings = $state<Settings | null>(null);
   let job = $state<Job | null>(null); let result = $state<SolveResult | null>(null);
   let error = $state(''); let toast = $state(''); let showSettings = $state(false); let busy = $state(false); let cancelling = $state(false);
@@ -12,6 +13,7 @@
   let required = $state(''); let hints = $state(''); let excluded = $state('');
   let extended = $state(false); let rebuild = $state(false);
   let generationOnly = $state(false);
+  let workspaceTab = $state<'results' | 'review'>('results');
   let active = $derived(busy || !!job?.active);
   let letters = $derived(settings?.request.generation.text.normalize('NFKD').replace(/[^a-z]/gi, '').length ?? 0);
   const words = (text: string) => text.split(/[\s,]+/).filter(Boolean);
@@ -63,7 +65,8 @@
     </aside>
     <div class="workspace">
       {#if error}<div class="error" role="alert">{error}</div>{/if}
-      <Results {result} {job} oncopy={copy} onexport={exportRows}/>
+      {#if settings?.developer_mode}<div class="actions workspace-tabs" aria-label="Workspace views"><button aria-pressed={workspaceTab === 'results'} onclick={() => workspaceTab = 'results'}>Results</button><button aria-pressed={workspaceTab === 'review'} onclick={() => workspaceTab = 'review'}>Developer review</button></div>{/if}
+      {#if settings?.developer_mode && workspaceTab === 'review'}<DeveloperReview {job}/>{:else}<Results {result} {job} oncopy={copy} onexport={exportRows}/>{/if}
     </div>
   </main>
   <footer role="status"><span>{active && cancelling ? 'Cancellation requested. Waiting for the worker to stop…' : toast || (active ? 'Solving locally' : job?.status?.state.replaceAll('_', ' ') ?? (job?.error ? 'Solve failed' : 'Ready'))}</span><span>Runs entirely on this PC · {extended ? 'extended search' : settings?.runtime.custom_limits ? 'custom execution limits' : '120 s job limit'}</span></footer>

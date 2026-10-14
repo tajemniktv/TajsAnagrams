@@ -177,8 +177,8 @@ It emits operational summaries rather than a gold-recovery report.
 `native-baseline.v1.json` records an explicitly identified native revision and its
 observed results; it is descriptive evidence, not a byte-for-byte score gate.
 Changes should be judged using intended behavior, useful answers, actual judgments
-and equal-workload performance evidence. Historical migration JSON remains under
-`tests/reference`; the old Python implementation/tests/runners are local-only
+and equal-workload performance evidence. Historical migration JSON is recoverable
+through the `tests/reference` archive index; the old Python implementation/tests/runners are local-only
 archived source, not executed by current checks.
 
 ## Next native baseline protocol
@@ -464,6 +464,27 @@ case IDs beyond v1/v2 curator datasets, so use the registered workload review fo
 that combined pool rather than feeding it to an incompatible old `--cases` file.
 Rescore baseline and candidate with the same label version. Human verdicts here
 are personal and unblinded; no judge calibration or native-speaker agreement is assumed.
+
+`usefulness.v3.json` preserves those four positives and adds the latest qualitative
+batch feedback. Conditional name readings, plausible-but-awkward grammar and
+contrived meanings remain nonbinary; the twelve shown rows come from six puzzles,
+not twelve independent observations. V2 remains unchanged as a hash-pinned input
+to the earlier lexical experiment. New human-feedback rendering uses V3; no old
+capture is silently regraded into a different historical label version.
+
+The opt-in desktop **Developer review** tab collects real native captures with
+actual per-word-count-bucket ranks, per-output verdicts/reasons/notes, separate task
+fit and randomized pairwise judgments. See [desktop review instructions](../../apps/desktop/README.md#developer-review-opt-in).
+Its local review JSON is evidence for later analysis, not an automatic quality
+gate or direct replacement for versioned fixtures. Calibration examples are
+explicitly separate. Source-family metadata is retained when matching workload
+JSON is supplied; missing families are unknown. No row-level significance claim
+or twelve-sample statistical comparison is manufactured.
+
+The Markdown view also has expandable actual-rank diagnostics for the first
+empty-cache trial of each treatment on each bag. These retain duplicate slots
+and failures, with treatment names/scores hidden. They are selected diagnostic
+observations, not all trials; the separate randomized pooled table is unranked.
 
 ### Ambiguity is a separate correctness diagnostic
 

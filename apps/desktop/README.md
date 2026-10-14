@@ -48,6 +48,45 @@ solve: desktop IPC deliberately has no mocked or browser-local fallback.
 
 ## Data and execution
 
+### Developer review (opt-in)
+
+Enable **Settings → General → Developer mode**, save, then switch to the
+**Developer review** workspace tab. Finish a ranked solve and **Add current solve**,
+or import native benchmark solve JSONL; optionally choose matching workload JSON
+first to preserve task context and source families. Importing does not run a solver
+or turn published answers into judgments. Unranked word bags are not phrases.
+
+Results stay grouped by original puzzle/input and captured observation. Ranks are
+the actual returned positions **within each word-count bucket**, including duplicate
+slots; they are not reconstructed by sorting model scores. Scores and treatment
+identity are hidden until explicitly revealed; visible ranks still mean this is
+not a completely blinded experiment.
+
+Use Useful / Unsure / Not useful independently for each phrase. A coherent title,
+noun phrase, sentence or recognizable name can qualify. Negative/uncertain reviews
+can have grouped reasons (grammar, rendering, meaning/incompleteness/anomaly,
+contrived context, unfamiliar/unverified name, task mismatch, unspecified).
+Every output supports a short note and a lookup flag; **Save note** before leaving.
+Task fit is a separate field. Pairwise preference randomizes A/B from the same
+puzzle/context across observations, allows equal usefulness/both bad/unsure, and
+does not change either phrase's individual verdict.
+
+Coverage counts definite useful/not-useful verdicts; unsure and unreviewed remain
+unresolved. Each observation reports whether any known useful row was delivered.
+Calibration prompts alternate after five saved edits and are explicitly excluded
+from metrics. One positive is your prior judgment; the negative is a curator
+language-only example, not a manufactured benchmark negative.
+
+Captures, original requests/status/corpus identities, judgments, notes and pairwise
+presentation live in `user-data/reviews.sqlite`, separate from the result cache.
+Nothing is uploaded or used for automatic training. Disabling the mode or clearing
+the solver cache does not delete evidence. Export review JSON for later analysis or
+backup; it contains puzzle text, notes and local paths, so inspect before sharing.
+Imports are bounded to 32 MiB/1,000 attempts, validate inventory and request/context
+mapping, and are atomic/idempotent. Review exports are backups, not solver JSONL.
+They are not yet automatically converted into promotion scores: statistical
+comparisons must cluster by puzzle/source family, not output rows or repeated trials.
+
 Advanced options now include Quick/Balanced/Exhaustive presets, automatic (0) or 1–32
 ranking workers (default 1), bounded order refinement and force recompute.
 Extended mode removes deployment time/candidate/deep caps; generation budget 0

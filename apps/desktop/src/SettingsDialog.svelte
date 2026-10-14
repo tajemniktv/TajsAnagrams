@@ -35,6 +35,8 @@
     <label>{label}<div class="path-field"><input aria-label={label} bind:value={draft.corpora[key]}/><button class="icon" aria-label={`Browse ${label}`} onclick={() => choose(key)}><FolderOpen size={18}/></button></div></label>
   {/each}
   <label>Appearance<select bind:value={draft.theme}><option value="dark">Dark</option><option value="light">Light</option><option value="system">Follow Windows</option></select></label>
+  <label class="check"><input type="checkbox" bind:checked={draft.developer_mode}/>Developer mode: local result review tab</label>
+  <p class="hint">Opt-in captures, judgments and notes stay in a separate reviews.sqlite file in app user-data. Nothing is uploaded or used for automatic training. Turning this off hides the tab; it does not delete evidence.</p>
   <p class="hint">Settings and bounded result cache: <span class="path">{directory}</span></p>
   <p class="hint">Phrase tables must use unique text keys. Refinement is optional in Advanced options.</p>
   <button disabled={busy} onclick={clearCache}>Clear result cache</button>

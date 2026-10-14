@@ -3787,15 +3787,19 @@ dependencies = [
  "anagram-core",
  "arboard",
  "flate2",
+ "hex",
  "reqwest",
  "rfd",
+ "rusqlite",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "tar",
  "tauri",
  "tauri-build",
  "tempfile",
  "tokio",
+ "unicode-normalization",
 ]
 
 [[package]]

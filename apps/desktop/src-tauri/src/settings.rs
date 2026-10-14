@@ -20,6 +20,8 @@ pub struct Corpora {
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     #[serde(default)]
+    pub developer_mode: bool,
+    #[serde(default)]
     pub runtime: Runtime,
     #[serde(default)]
     pub model: String,
@@ -95,6 +97,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             runtime: Runtime::default(),
+            developer_mode: false,
             model: String::new(),
             schema_version: 1,
             theme: "dark".into(),

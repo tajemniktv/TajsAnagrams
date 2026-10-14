@@ -21,6 +21,7 @@ pub struct Inner {
     pub settings: Settings,
     pub notice: Option<String>,
     pub job: Snapshot,
+    pub review_context: Value,
     pub control: Control,
     pub worker: Option<JoinHandle<()>>,
     pub closing: bool,
@@ -131,6 +132,7 @@ impl Desktop {
                 settings,
                 notice,
                 job: Snapshot::default(),
+                review_context: Value::Null,
                 experiment: Default::default(),
                 control: Control::default(),
                 worker: None,
@@ -204,6 +206,7 @@ impl Desktop {
         settings::save(&self.data, &settings)?;
         inner.settings = settings.clone();
         let id = inner.job.id + 1;
+        inner.review_context = json!({"origin":"installed desktop capture; no source family supplied", "request":settings.request,"extended":extended,"generation_only":generation_only,"limits":limits,"configured_corpora":settings.corpora,"configured_model":settings.model,"started_at_unix_ms":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_millis()});
         inner.job = Snapshot {
             id,
             active: true,

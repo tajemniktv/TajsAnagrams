@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-14",
+  "purpose": "Personal standalone judgments and qualitative diagnostic feedback. Supersedes v2 for new reviews; v2 remains the historical experiment input. No tentative reading is forced into a binary label.",
+  "judgments": [
+    {"case_id":"testing_anagram_solver","phrase":"Several Migrants Tango","useful":true,"provenance":"Direct user judgment, 2026-10-13: both presented outputs useful on their own; unblinded, no relative preference expressed"},
+    {"case_id":"testing_anagram_solver","phrase":"Testing Anagram Solver","useful":true,"provenance":"Direct user judgment, 2026-10-13: both presented outputs useful on their own; unblinded, no relative preference expressed"},
+    {"case_id":"whiskey-jameson","phrase":"jameson","useful":true,"provenance":"Direct user judgment, 2026-10-14: initially personally unfamiliar; after recognizing a whiskey brand/name, thinks it useful. Unblinded standalone positive, no source-task verdict."},
+    {"case_id":"lucas-02","phrase":"indiana jones","useful":true,"provenance":"Direct user judgment, 2026-10-14: very useful as a recognizable title/proper name. Unblinded standalone positive, no source-task verdict."}
+  ],
+  "qualitative_judgments": [
+    {"case_id":"morning_train","phrase":"another mariner striving","assessment":"Tentatively plausible if letters match; independent verification confirms exact letters.","useful":null},
+    {"case_id":"morning_train","phrase":"veterinarians right norm","assessment":"Slightly middling; no binary usefulness verdict.","useful":null},
+    {"case_id":"morning_train","phrase":"norms right veterinarian","assessment":"Middling, tentatively slightly below veterinarians right norm; no firm pairwise gate.","useful":null},
+    {"case_id":"books-02","phrase":"chino bleaches","assessment":"Middling, unfamiliar word, possibly a coherent sentence; unsure.","useful":null},
+    {"case_id":"lucas-02","phrase":"naan is joined","assessment":"Conditional plausibility if who/what naan is were established; user suggests syntactic plausibility versus incomplete meaning as distinct mechanisms. Not a firm usefulness verdict.","useful":null},
+    {"case_id":"knowledge_power","phrase":"powder is weeklong","assessment":"User can somewhat see a reading, but extremely context-specific; syntactic conventionality and semantic anomaly should be distinguished. Not a firm positive or negative.","useful":null},
+    {"case_id":"lucas-02","phrase":"joanna indies","assessment":"Maybe coherent as a name; surname identity needs verification, not an invented proper-name acceptance.","useful":null},
+    {"case_id":"knowledge_power","phrase":"drew looks weeping","assessment":"User finds it quite plausible with Drew as a name and a weeping reading; diagnostic plausibility retained without imposing a binary rubric verdict.","useful":null},
+    {"case_id":"books-02","phrase":"chobe chileans","assessment":"Maybe coherent, with strong uncertainty; no verified name interpretation or firm usefulness verdict.","useful":null},
+    {"case_id":"multigrams-02","phrase":"the living do deaf night","assessment":"Slight possible coherence, but user describes broken English; tentative mixed feedback, not a hard negative.","useful":null},
+    {"case_id":"keys_table","phrase":"eukaryotes table horney","assessment":"Conditional joking reading only if eukaryotes can table the named entity; contrived context/name interpretation remains unresolved.","useful":null},
+    {"case_id":"books-02","phrase":"each chen boils","assessment":"Grammatically conceivable but requires a contrived scenario involving people named Chen; no firm standalone usefulness verdict.","useful":null}
+  ],
+  "qualitative_provenance":"Direct user feedback, 2026-10-14, with explicit uncertainty. Do not translate plausible/middling or conditional readings into calibrated population labels.",
+  "batch_feedback": {
+    "batch_id":"review-batch-1",
+    "rows":12,
+    "puzzles":6,
+    "summary":"User generally finds the presented outputs insufficiently coherent, with several possible/conditional exceptions. This is not twelve independent puzzles or twelve unambiguous binary verdicts.",
+    "examples_discussed_as_mechanisms":["Naan is joined: syntactically plausible, semantically incomplete","Eon jams: potentially coherent if Eon is a person's name","Powder is weeklong: syntactically conventional, semantically anomalous","Joanna Indies: plausible name but surname requires verification"],
+    "source_task_judgments":[],
+    "pairwise_preferences":[]
+  }
+}

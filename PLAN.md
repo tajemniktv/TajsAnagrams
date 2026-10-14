@@ -29,6 +29,13 @@ human-readable local view and preserved annotation CSVs on tests/builds. These
 are measured research/collection improvements, not a validated production corpus
 promotion or a representative judged quality gate.
 
+Opt-in desktop Developer review now collects actual captured lists grouped by
+input and observation, with original word-count-bucket ranks, reasoned individual
+judgments, notes, separate task fit and pairwise preferences. Calibration prompts
+are excluded from metrics; unsure remains unresolved. Latest conditional batch
+feedback lives in `usefulness.v3.json`; the historical v2 label file stays frozen.
+Collection/export does not yet implement source-family-clustered promotion analysis.
+
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
 - Native authority: Python oracle/parity/legacy workflows are retired historical

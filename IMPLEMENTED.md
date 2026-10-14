@@ -13,6 +13,16 @@
 
 ## Post-snapshot completed updates
 
+2026-10-14: opt-in Developer review now preserves native solve captures in a
+separate local SQLite store, displays original bags and actual bucket ranks, and
+collects per-output Useful/Unsure/Not useful, grouped reasons, notes/lookup flags,
+separate source-task fit and randomized pairwise preferences. Calibration is
+excluded from benchmark metrics; uncertainty is not converted to a negative.
+Bounded native JSONL import can preserve matching workload contexts/families;
+atomic export retains evidence. Disabling the mode or clearing result cache does
+not delete reviews. This collects personal evidence, not population-wide quality
+or clustered promotion statistics. Desktop instructions document the workflow.
+
 Historical `tests/reference/*` paths below describe their original storage at
 Git commit `69c50d9`. On 2026-10-14 all 23 payloads were hash-verified and moved
 to local-only `.codex/archive/reference-evidence-2026-10-14/`; the current

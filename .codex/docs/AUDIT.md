@@ -235,6 +235,76 @@ Neither policy is promoted. The benchmark still needs broader representative
 collection, actual judgments and a clean freeze; vocabulary, ranking and rendering
 remain distinct bottlenecks rather than one interchangeable quality score.
 
+### Phase E continuation: developer review collection (2026-10-14)
+
+The user challenged both the shuffled twelve-row presentation and the assumption
+that all doubtful phrases fail for the same reason. The twelve rows were sampled
+from six puzzles; they were never twelve independent quality samples. Their
+conditional readings are preserved in `usefulness.v3.json`: four prior actual
+positives remain unchanged, twelve individual qualitative entries remain
+nonbinary, and the general batch response is not expanded into invented negative
+labels or pairwise preferences. V2 remains unchanged as the earlier experiment's
+hash-pinned label input. In particular, the Drew-as-a-name reading is recorded as
+plausible personal feedback, while unverified surnames and contrived scenarios
+remain uncertain. This does not establish native-speaker consensus.
+
+| Stable finding | Disposition | Evidence |
+| --- | --- | --- |
+| F-33: handwritten chat judgments lacked a durable diagnostic collection workflow | Implemented, opt-in/local | Settings now defaults Developer mode off and enables a separate review workspace tab. Explicitly add a completed native ranked solve or import solve JSONL with optional matching workload metadata. Original request/configuration/status/corpus identities, displayed positions and errors are preserved in `user-data/reviews.sqlite`; current settings cannot silently replace the captured request. Useful/Unsure/Not useful, grouped diagnostic reasons, notes/lookup flags and source-task fit are stored separately. No upload or automatic training occurs. Disabling the mode and clearing result cache retain evidence. |
+| F-34: pooled random presentation obscured useful delivery and rank diagnostics | Corrected without inventing global ranks | Desktop review groups by original puzzle/input and observation, preserves actual positions within each word-count bucket and reports known useful versus unresolved delivery. The Markdown renderer now adds a clearly selected first-empty-trial-per-treatment diagnostic panel, retaining duplicate slots and failures; its separate random pooled table is explicitly unranked. Scores/treatment identities are hidden until revealed, but visible ranks mean this is not complete experimental blinding. |
+| F-35: calibration, preference and reason labels could contaminate standalone metrics | Separated; clustered statistical analysis remains pending | Language-only calibration alternates after five saved edits, with origin/rationale disclosed and no benchmark credit. The positive is a prior personal judgment; the negative is an explicitly curator example. Pairwise A/B presentation is randomized across actual outputs of the same puzzle/context, and records left/right identities with prefer-A/prefer-B/equal/both-bad/unsure. It never rewrites individual verdicts. Unsure remains unresolved; coverage counts definite judgments only. Family metadata is preserved when supplied; unknown family remains unknown. No significance estimate treats rows or repeated trials as independent puzzles. |
+
+Reasons distinguish grammar/order, spelling/rendering, incoherent meaning,
+incomplete meaning, semantic anomaly despite plausible grammar, contrived context,
+unfamiliar vocabulary, unverified names, task mismatch and unspecified. They are
+diagnostic explanations, not automatic truth labels. Every judgeable output has
+a short note; notes require Save note and show an unsaved indicator. Source-task
+fit is separate from standalone usefulness. Empty unordered bags cannot receive
+phrase judgments. Native import checks request validity, exact inventory/word
+count, and supplied workload request/context mapping; it does not itself certify
+English vocabulary, grammar, name identity or all corpus-policy correctness.
+
+The store uses atomic, idempotent capture transactions and atomic JSON export.
+Imports are capped at 32 MiB and 1,000 attempts; notes at 2,000 bytes. Exports
+contain personal notes/puzzle text/configured local paths and must be reviewed
+before sharing. They preserve evidence for later analysis, not an automatic
+promotion score or an installed Python/reference dependency. Export-to-gate
+conversion, representative collection and family-clustered statistical evaluation
+are still future work; no production corpus/ranker was promoted.
+
+**Validation.** `cargo xtask check` passes 156 Rust pipeline tests, formatting,
+strict core/CLI/tooling Clippy, 16 contract artifacts and 19 AJV fixtures.
+Separately, all 24 desktop tests and strict desktop all-target Clippy pass. Five
+new desktop review tests cover old-settings default-off compatibility, durable
+notes/uncertainty/context identity, actual unsorted ranks, separate preferences,
+atomic invalid-import rejection, failures/blanks, workload/family mapping and
+mode-disable preservation. One explicitly ignored local-capture experiment was
+also run successfully: it validates/imports all 288 actual controlled captures,
+verifies repeat import adds zero, and exports with no manufactured judgments.
+The added renderer regression retains duplicate slots at ranks 1/2 and an
+alternative at rank 3 while retaining a failed observation.
+
+Rendered browser QA used bundled Playwright because the Browser plugin/skill was
+unavailable. URL/title, meaningful rendering, no error overlay, clean console,
+screenshots and interactions pass at 1200×900 and 650×900. The tested flow enables
+the setting, displays the actual native-imported capture fixture, saves synthetic
+uncertainty/negative/reasons/notes/positive entries, adds a separate both-bad
+preference, and disables/re-enables while retaining edits. This exposed a Svelte
+proxy-cloning error on saved-judgment remount; snapshot-before-clone fixes it and
+the same flow passes. All synthetic ratings remain in isolated QA state, not the
+installed store or human benchmark fixtures. Evidence is in
+`.codex/temp/developer-review-2026-10-14`.
+
+A policy rejection blocked the attempted isolated WebView remote-debug launch;
+the preview uses an explicit test-only transport fixture, not a production browser
+solver fallback. Native importer/storage tests and rendered interaction tests are
+separate evidence; no end-to-end installed UI/IPC claim is made. The final normal
+desktop build/type check succeeds, installs and restarts the app (PID 19304 at
+the installation checkpoint, SHA256
+`E2C9ED257BF9BA5BF4F04BF997CA049580D6591C10E7B5C75314C1E8F78290B2`).
+No existing user settings/corpora/reviews were replaced by QA data; the new mode
+stays default-off. No hosted CI or push is claimed.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose

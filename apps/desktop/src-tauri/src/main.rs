@@ -2,12 +2,100 @@
 mod experimental;
 mod jobs;
 mod management;
+mod review;
 mod settings;
 #[cfg(test)]
 mod tests;
 use jobs::{Desktop, Snapshot};
 use serde_json::Value;
 use tauri::{Manager, State};
+
+fn review_enabled(state: &Desktop) -> Result<(), String> {
+    if !state
+        .inner
+        .lock()
+        .map_err(|e| e.to_string())?
+        .settings
+        .developer_mode
+    {
+        return Err("Enable developer mode in Settings first".into());
+    }
+    Ok(())
+}
+#[tauri::command]
+fn review_state(state: State<'_, Desktop>) -> Result<Value, String> {
+    review_enabled(&state)?;
+    review::read(&state.data)
+}
+#[tauri::command]
+fn review_capture(id: u64, state: State<'_, Desktop>) -> Result<usize, String> {
+    review_enabled(&state)?;
+    let run = {
+        let inner = state.inner.lock().map_err(|e| e.to_string())?;
+        if inner.job.active || inner.job.id != id || id == 0 {
+            return Err("Wait for this solve to finish; expired results cannot be captured".into());
+        }
+        if inner.review_context["generation_only"] == true {
+            return Err("Unranked word bags are not human-readable phrases".into());
+        }
+        let mut r = inner.review_context.clone();
+        r["result"] = json_option(&inner.job.result);
+        r["error"] = serde_json::json!(inner.job.error);
+        r["status"] = serde_json::json!(inner.job.status);
+        r
+    };
+    review::store(&state.data, &[run])
+}
+fn json_option(value: &Option<Value>) -> Value {
+    value.clone().unwrap_or(Value::Null)
+}
+#[tauri::command]
+fn review_judge(judgment: review::Judgment, state: State<'_, Desktop>) -> Result<(), String> {
+    review_enabled(&state)?;
+    review::judge(&state.data, judgment)
+}
+#[tauri::command]
+fn review_prefer(preference: review::Preference, state: State<'_, Desktop>) -> Result<(), String> {
+    review_enabled(&state)?;
+    review::prefer(&state.data, preference)
+}
+#[tauri::command]
+async fn review_import(
+    path: String,
+    workloads: Option<String>,
+    state: State<'_, Desktop>,
+) -> Result<usize, String> {
+    review_enabled(&state)?;
+    let data = state.data.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        review::import(
+            &data,
+            std::path::Path::new(&path),
+            workloads.as_deref().map(std::path::Path::new),
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+#[tauri::command]
+async fn review_export(state: State<'_, Desktop>) -> Result<Option<String>, String> {
+    review_enabled(&state)?;
+    let data = state.data.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let Some(path) = rfd::FileDialog::new()
+            .set_title("Export personal review evidence (local paths and puzzle text included)")
+            .add_filter("Review JSON", &["json"])
+            .set_file_name("tajsbench-reviews.json")
+            .save_file()
+        else {
+            return Ok(None);
+        };
+        review::export(&data, &path)?;
+        Ok(Some(path.to_string_lossy().into_owned()))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
 
 #[tauri::command]
 fn manage(action: management::Action, state: State<'_, Desktop>) -> Result<(), String> {
@@ -182,6 +270,14 @@ async fn choose_path(kind: String) -> Result<Option<String>, String> {
                 .add_filter("Phrase database", &["db", "sqlite", "sqlite3"])
                 .pick_file(),
             "model" | "training" => dialog.add_filter("Ranker JSON", &["json"]).pick_file(),
+            "review" => dialog
+                .set_title("Import native ranked solve capture")
+                .add_filter("Native JSONL", &["jsonl"])
+                .pick_file(),
+            "review-workloads" => dialog
+                .set_title("Optional workload context and source families")
+                .add_filter("Workloads JSON", &["json"])
+                .pick_file(),
             _ => return Err("Unknown corpus type".into()),
         };
         Ok(path.map(|p| p.to_string_lossy().into_owned()))
@@ -291,6 +387,12 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            review_state,
+            review_capture,
+            review_judge,
+            review_prefer,
+            review_import,
+            review_export,
             bootstrap,
             clear_cache,
             train_model,
