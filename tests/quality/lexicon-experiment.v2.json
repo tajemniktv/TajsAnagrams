@@ -1,0 +1,1423 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-15",
+  "status": "Development baseline and measured Phase 6 challengers, not a representative production-promotion gate",
+  "protocol": {
+    "bags": 43,
+    "origins": {
+      "historical_curator": 19,
+      "new_synthetic_or_ambiguity": 19,
+      "public_exposed": 5
+    },
+    "deadline_ms": 10000,
+    "guard_ms": 15000,
+    "candidate_budget": 10000,
+    "strategy": "prefix",
+    "discovery_trials": 1,
+    "discovery_attempts": 258,
+    "confirmation_puzzles": 12,
+    "confirmation_trials": 3,
+    "confirmation_attempts": 216,
+    "primary_recovery": "Any intended reference in its word-count-bucket top ten; strict displayed wording, apostrophes preserved",
+    "quality_sources": "Four prior human standalone positives plus two owner-accepted 131-row LLM sets; uncertainty and reviewer sources stay separate",
+    "os_pages": "Uncontrolled",
+    "competing_compilation": "None launched during either timed capture",
+    "scope": "Constrained 10-second CLI observations, not installed GUI or default 120-second completion claims"
+  },
+  "inputs": {
+    "cases_sha256": "49ee929769b066cadec1f5c6405136a3d1fa34779998381020f6d9a9bd7134bf",
+    "models_sha256": "e56890f0dd82dff73f1b5eee5ab5989c3bf7d588f480cf7c0b6d7b3d3061fe39",
+    "raw_sha256": "54d28a8c2d15b18f9fbf119634151dc987a72ad2340c88b5642bed127da7f8fe"
+  },
+  "source_parent": "31a5c8f6f1b9ee48d204892296d39c8c04fed76d",
+  "source_dirty": true,
+  "cli": {
+    "bytes": 5554176,
+    "sha256": "4146d5c1a4b9b3d1c4ee053931fb4a71069825d01575133cd063a53e590692c5"
+  },
+  "captures": [
+    {
+      "name": "discovery",
+      "manifest_sha256": "ab373722b5da204e4fc4e3053e90cbdd22db1b67f74054dea6d9a0db21d6ef3a",
+      "raw_sha256": "696f90acfaf7f8391066173a0155e07a43c4bb04fc65d593fff2c2f96394269a",
+      "source_head": "31a5c8f6f1b9ee48d204892296d39c8c04fed76d",
+      "source_dirty": true,
+      "case_ids": [
+        "actions_words",
+        "blue_lantern",
+        "blue_stone",
+        "books-02",
+        "bright_ideas",
+        "bright_star",
+        "cats_chase_mice",
+        "fresh_bread_rises",
+        "glass_door",
+        "green_tea",
+        "hips_dont_lie",
+        "i_like_rain",
+        "keys_table",
+        "knowledge_power",
+        "listen_silent",
+        "lost_keys",
+        "lucas-02",
+        "morning_train",
+        "night_train",
+        "old_bridge",
+        "opens_door",
+        "quiet_library",
+        "quiet_machine",
+        "quiet_place",
+        "quiet_rain",
+        "rain_window",
+        "red_fox",
+        "river_lights",
+        "river_runs_deep",
+        "she_reads_books",
+        "silver_cloud",
+        "small_birds",
+        "testing_anagram_solver",
+        "testing_shit",
+        "turtles-01",
+        "voldemort_reveal",
+        "walk_home",
+        "warm_bread",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "window_opens"
+      ],
+      "timeout_ms": 10000,
+      "cli": {
+        "bytes": 5554176,
+        "sha256": "4146d5c1a4b9b3d1c4ee053931fb4a71069825d01575133cd063a53e590692c5"
+      }
+    },
+    {
+      "name": "extension",
+      "manifest_sha256": "7fb30db964eac4f08f2e9f41711a58007924278845ec8d687e6ce95b7b3c0eff",
+      "raw_sha256": "aecdf83eebf2636b02410eed3c42019312a6b2012564dc4ddc125a555bccd1d1",
+      "source_head": "31a5c8f6f1b9ee48d204892296d39c8c04fed76d",
+      "source_dirty": true,
+      "case_ids": [
+        "whiskey-jameson"
+      ],
+      "timeout_ms": 10000,
+      "cli": {
+        "bytes": 5554176,
+        "sha256": "4146d5c1a4b9b3d1c4ee053931fb4a71069825d01575133cd063a53e590692c5"
+      }
+    }
+  ],
+  "confirmation_capture": {
+    "manifest_sha256": "2db1643222f9efbd330a5a5559074fe82ab0455edd148bc2facd513cae818fd0",
+    "raw_sha256": "a5568a5757223b824e29825c70c5cf013d725f623c5e6c5908524db13c6f2e48"
+  },
+  "variants": [
+    {
+      "id": "baseline",
+      "keys": 181121,
+      "added_keys": 0,
+      "policy": "Existing native dictionary, normalized and sorted; no vocabulary additions",
+      "sha256": "19886d489b6710870d51c66ea0673000bec6c4c7fbcf5b4071d1b69d123510d4"
+    },
+    {
+      "id": "names80",
+      "keys": 198643,
+      "added_keys": 17522,
+      "policy": "Baseline union ESDB <=80 US/A variants<=1 tagged names and contractions; no target words consulted",
+      "sha256": "4932563fa91db3808ee567baafbcc345762f90350a17860a39f6114ac7b41380"
+    },
+    {
+      "id": "lexical60",
+      "keys": 212995,
+      "added_keys": 31874,
+      "policy": "names80 union literal alphabetic/apostrophe ESDB <=60 US/A variants<=1 non-abbreviations, regardless of POS/class; no benchmark words consulted; source tier retained in policy, no raw-frequency-only tokens",
+      "sha256": "36c21cfb0711ea467c5ac2cfa265af10dd3cc878e63d1d451da6296089492cb0"
+    }
+  ],
+  "discovery": [
+    {
+      "id": "baseline",
+      "state": "disk_cache_empty",
+      "attempts": 43,
+      "completed": 42,
+      "failures": [
+        "actions_words"
+      ],
+      "bucket1": 6,
+      "bucket10": 10,
+      "flat10": 8,
+      "successful_case_ids": [
+        "bright_ideas",
+        "hips_dont_lie",
+        "knowledge_power",
+        "listen_silent",
+        "quiet_rain",
+        "river_runs_deep",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "window_opens"
+      ],
+      "all_attempts_median_ms": 1113.1833,
+      "completed_only_median_ms": 1113.1833,
+      "models": [
+        {
+          "reviewer": "echo",
+          "yes": 28,
+          "no": 56,
+          "unknown": 934,
+          "coverage": 0.0825147347740668,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        },
+        {
+          "reviewer": "sol",
+          "yes": 24,
+          "no": 65,
+          "unknown": 929,
+          "coverage": 0.08742632612966601,
+          "useful_lower": 0.11627906976744186,
+          "useful_upper": 0.9767441860465116
+        }
+      ]
+    },
+    {
+      "id": "baseline",
+      "state": "disk_cache_reuse",
+      "attempts": 43,
+      "completed": 42,
+      "failures": [
+        "actions_words"
+      ],
+      "bucket1": 6,
+      "bucket10": 10,
+      "flat10": 8,
+      "successful_case_ids": [
+        "bright_ideas",
+        "hips_dont_lie",
+        "knowledge_power",
+        "listen_silent",
+        "quiet_rain",
+        "river_runs_deep",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "window_opens"
+      ],
+      "all_attempts_median_ms": 181.0729,
+      "completed_only_median_ms": 181.0729,
+      "models": [
+        {
+          "reviewer": "echo",
+          "yes": 28,
+          "no": 56,
+          "unknown": 934,
+          "coverage": 0.0825147347740668,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        },
+        {
+          "reviewer": "sol",
+          "yes": 24,
+          "no": 65,
+          "unknown": 929,
+          "coverage": 0.08742632612966601,
+          "useful_lower": 0.11627906976744186,
+          "useful_upper": 0.9767441860465116
+        }
+      ]
+    },
+    {
+      "id": "names80",
+      "state": "disk_cache_empty",
+      "attempts": 43,
+      "completed": 42,
+      "failures": [
+        "actions_words"
+      ],
+      "bucket1": 7,
+      "bucket10": 12,
+      "flat10": 9,
+      "successful_case_ids": [
+        "bright_ideas",
+        "hips_dont_lie",
+        "knowledge_power",
+        "listen_silent",
+        "lucas-02",
+        "quiet_rain",
+        "river_runs_deep",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "whiskey-jameson",
+        "window_opens"
+      ],
+      "all_attempts_median_ms": 1138.3914,
+      "completed_only_median_ms": 1138.3914,
+      "models": [
+        {
+          "reviewer": "echo",
+          "yes": 31,
+          "no": 65,
+          "unknown": 932,
+          "coverage": 0.0933852140077821,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        },
+        {
+          "reviewer": "sol",
+          "yes": 25,
+          "no": 75,
+          "unknown": 928,
+          "coverage": 0.09727626459143969,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        }
+      ]
+    },
+    {
+      "id": "names80",
+      "state": "disk_cache_reuse",
+      "attempts": 43,
+      "completed": 42,
+      "failures": [
+        "actions_words"
+      ],
+      "bucket1": 7,
+      "bucket10": 12,
+      "flat10": 9,
+      "successful_case_ids": [
+        "bright_ideas",
+        "hips_dont_lie",
+        "knowledge_power",
+        "listen_silent",
+        "lucas-02",
+        "quiet_rain",
+        "river_runs_deep",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "whiskey-jameson",
+        "window_opens"
+      ],
+      "all_attempts_median_ms": 180.5797,
+      "completed_only_median_ms": 180.5797,
+      "models": [
+        {
+          "reviewer": "echo",
+          "yes": 31,
+          "no": 65,
+          "unknown": 932,
+          "coverage": 0.0933852140077821,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        },
+        {
+          "reviewer": "sol",
+          "yes": 25,
+          "no": 75,
+          "unknown": 928,
+          "coverage": 0.09727626459143969,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        }
+      ]
+    },
+    {
+      "id": "lexical60",
+      "state": "disk_cache_empty",
+      "attempts": 43,
+      "completed": 42,
+      "failures": [
+        "actions_words"
+      ],
+      "bucket1": 7,
+      "bucket10": 11,
+      "flat10": 8,
+      "successful_case_ids": [
+        "hips_dont_lie",
+        "knowledge_power",
+        "listen_silent",
+        "lucas-02",
+        "quiet_machine",
+        "quiet_rain",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "whiskey-jameson",
+        "window_opens"
+      ],
+      "all_attempts_median_ms": 1110.2966000000001,
+      "completed_only_median_ms": 1110.2966000000001,
+      "models": [
+        {
+          "reviewer": "echo",
+          "yes": 28,
+          "no": 59,
+          "unknown": 906,
+          "coverage": 0.08761329305135952,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        },
+        {
+          "reviewer": "sol",
+          "yes": 24,
+          "no": 66,
+          "unknown": 903,
+          "coverage": 0.09063444108761329,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        }
+      ]
+    },
+    {
+      "id": "lexical60",
+      "state": "disk_cache_reuse",
+      "attempts": 43,
+      "completed": 42,
+      "failures": [
+        "actions_words"
+      ],
+      "bucket1": 7,
+      "bucket10": 11,
+      "flat10": 8,
+      "successful_case_ids": [
+        "hips_dont_lie",
+        "knowledge_power",
+        "listen_silent",
+        "lucas-02",
+        "quiet_machine",
+        "quiet_rain",
+        "warm_bread_title",
+        "we_need_sleep",
+        "welcome-housewarming",
+        "whiskey-jameson",
+        "window_opens"
+      ],
+      "all_attempts_median_ms": 180.41860000000003,
+      "completed_only_median_ms": 180.41860000000003,
+      "models": [
+        {
+          "reviewer": "echo",
+          "yes": 28,
+          "no": 59,
+          "unknown": 906,
+          "coverage": 0.08761329305135952,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        },
+        {
+          "reviewer": "sol",
+          "yes": 24,
+          "no": 66,
+          "unknown": 903,
+          "coverage": 0.09063444108761329,
+          "useful_lower": 0.13953488372093023,
+          "useful_upper": 0.9767441860465116
+        }
+      ]
+    }
+  ],
+  "paired_target_deltas": [
+    {
+      "id": "names80",
+      "gained": [
+        "lucas-02",
+        "whiskey-jameson"
+      ],
+      "lost": []
+    },
+    {
+      "id": "lexical60",
+      "gained": [
+        "lucas-02",
+        "quiet_machine",
+        "whiskey-jameson"
+      ],
+      "lost": [
+        "bright_ideas",
+        "river_runs_deep"
+      ]
+    }
+  ],
+  "confirmation": [
+    {
+      "variant": "baseline",
+      "puzzles": 12,
+      "trials_per_cache": 3,
+      "completed_attempts": 72,
+      "intended_at_10_bucket_per_trial": 4,
+      "per_case": [
+        {
+          "case_id": "books-02",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "On Chesil Beach",
+              "word_count": 3,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1164.9107999999999,
+          "reuse_cache_median_ms": 181.4523
+        },
+        {
+          "case_id": "bright_ideas",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 9,
+              "phrase": "Bright Ideas",
+              "word_count": 2,
+              "word_count_bucket_rank": 9
+            }
+          ],
+          "empty_cache_median_ms": 1726.0630999999998,
+          "reuse_cache_median_ms": 180.3385
+        },
+        {
+          "case_id": "hips_dont_lie",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 15,
+              "phrase": "Hips Don't Lie",
+              "word_count": 3,
+              "word_count_bucket_rank": 5
+            }
+          ],
+          "empty_cache_median_ms": 1099.5707,
+          "reuse_cache_median_ms": 179.1527
+        },
+        {
+          "case_id": "keys_table",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "The Keys Are On Your Table",
+              "word_count": 6,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 2474.0094,
+          "reuse_cache_median_ms": 178.54819999999998
+        },
+        {
+          "case_id": "lucas-02",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Indiana Jones",
+              "word_count": 2,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1067.3309,
+          "reuse_cache_median_ms": 180.07119999999998
+        },
+        {
+          "case_id": "quiet_machine",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "This Machine Runs Quietly",
+              "word_count": 4,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 4614.557900000001,
+          "reuse_cache_median_ms": 179.1501
+        },
+        {
+          "case_id": "river_runs_deep",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 21,
+              "phrase": "The River Runs Deep",
+              "word_count": 4,
+              "word_count_bucket_rank": 5
+            }
+          ],
+          "empty_cache_median_ms": 1120.0833,
+          "reuse_cache_median_ms": 178.4218
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Testing Anagram Solver",
+              "word_count": 3,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1249.7685999999999,
+          "reuse_cache_median_ms": 177.6174
+        },
+        {
+          "case_id": "testing_shit",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Testing Shit",
+              "word_count": 2,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 887.0848,
+          "reuse_cache_median_ms": 184.5635
+        },
+        {
+          "case_id": "voldemort_reveal",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "I Am Lord Voldemort",
+              "word_count": 4,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1252.4309,
+          "reuse_cache_median_ms": 179.2599
+        },
+        {
+          "case_id": "warm_bread_title",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 1,
+              "phrase": "Warm Bread",
+              "word_count": 2,
+              "word_count_bucket_rank": 1
+            }
+          ],
+          "empty_cache_median_ms": 852.5142,
+          "reuse_cache_median_ms": 179.6074
+        },
+        {
+          "case_id": "whiskey-jameson",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Jameson",
+              "word_count": 1,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 830.0869,
+          "reuse_cache_median_ms": 180.1437
+        }
+      ]
+    },
+    {
+      "variant": "names80",
+      "puzzles": 12,
+      "trials_per_cache": 3,
+      "completed_attempts": 72,
+      "intended_at_10_bucket_per_trial": 6,
+      "per_case": [
+        {
+          "case_id": "books-02",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "On Chesil Beach",
+              "word_count": 3,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1140.9705,
+          "reuse_cache_median_ms": 181.2858
+        },
+        {
+          "case_id": "bright_ideas",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 10,
+              "phrase": "Bright Ideas",
+              "word_count": 2,
+              "word_count_bucket_rank": 10
+            }
+          ],
+          "empty_cache_median_ms": 2007.5901,
+          "reuse_cache_median_ms": 180.6004
+        },
+        {
+          "case_id": "hips_dont_lie",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 14,
+              "phrase": "Hips Don't Lie",
+              "word_count": 3,
+              "word_count_bucket_rank": 4
+            }
+          ],
+          "empty_cache_median_ms": 1074.0153,
+          "reuse_cache_median_ms": 181.9975
+        },
+        {
+          "case_id": "keys_table",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "The Keys Are On Your Table",
+              "word_count": 6,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 2713.5045,
+          "reuse_cache_median_ms": 177.7768
+        },
+        {
+          "case_id": "lucas-02",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 2,
+              "phrase": "Indiana Jones",
+              "word_count": 2,
+              "word_count_bucket_rank": 2
+            }
+          ],
+          "empty_cache_median_ms": 1262.571,
+          "reuse_cache_median_ms": 179.57119999999998
+        },
+        {
+          "case_id": "quiet_machine",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "This Machine Runs Quietly",
+              "word_count": 4,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 3701.5225000000005,
+          "reuse_cache_median_ms": 179.6107
+        },
+        {
+          "case_id": "river_runs_deep",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 18,
+              "phrase": "The River Runs Deep",
+              "word_count": 4,
+              "word_count_bucket_rank": 2
+            }
+          ],
+          "empty_cache_median_ms": 1094.3915,
+          "reuse_cache_median_ms": 178.4181
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Testing Anagram Solver",
+              "word_count": 3,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1249.1733000000002,
+          "reuse_cache_median_ms": 174.9357
+        },
+        {
+          "case_id": "testing_shit",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Testing Shit",
+              "word_count": 2,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 895.8783999999999,
+          "reuse_cache_median_ms": 179.35119999999998
+        },
+        {
+          "case_id": "voldemort_reveal",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "I Am Lord Voldemort",
+              "word_count": 4,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1321.6319,
+          "reuse_cache_median_ms": 183.12529999999998
+        },
+        {
+          "case_id": "warm_bread_title",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 1,
+              "phrase": "Warm Bread",
+              "word_count": 2,
+              "word_count_bucket_rank": 1
+            }
+          ],
+          "empty_cache_median_ms": 857.173,
+          "reuse_cache_median_ms": 180.42600000000002
+        },
+        {
+          "case_id": "whiskey-jameson",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 1,
+              "phrase": "Jameson",
+              "word_count": 1,
+              "word_count_bucket_rank": 1
+            }
+          ],
+          "empty_cache_median_ms": 857.1320999999999,
+          "reuse_cache_median_ms": 179.58350000000002
+        }
+      ]
+    },
+    {
+      "variant": "lexical60",
+      "puzzles": 12,
+      "trials_per_cache": 3,
+      "completed_attempts": 72,
+      "intended_at_10_bucket_per_trial": 5,
+      "per_case": [
+        {
+          "case_id": "books-02",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "On Chesil Beach",
+              "word_count": 3,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1108.9501,
+          "reuse_cache_median_ms": 182.66920000000002
+        },
+        {
+          "case_id": "bright_ideas",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Bright Ideas",
+              "word_count": 2,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1098.6658,
+          "reuse_cache_median_ms": 181.1241
+        },
+        {
+          "case_id": "hips_dont_lie",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 14,
+              "phrase": "Hips Don't Lie",
+              "word_count": 3,
+              "word_count_bucket_rank": 4
+            }
+          ],
+          "empty_cache_median_ms": 1031.3951,
+          "reuse_cache_median_ms": 178.9325
+        },
+        {
+          "case_id": "keys_table",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "The Keys Are On Your Table",
+              "word_count": 6,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 2917.5177,
+          "reuse_cache_median_ms": 179.9225
+        },
+        {
+          "case_id": "lucas-02",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 2,
+              "phrase": "Indiana Jones",
+              "word_count": 2,
+              "word_count_bucket_rank": 2
+            }
+          ],
+          "empty_cache_median_ms": 1097.0932,
+          "reuse_cache_median_ms": 176.1817
+        },
+        {
+          "case_id": "quiet_machine",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 11,
+              "phrase": "This Machine Runs Quietly",
+              "word_count": 4,
+              "word_count_bucket_rank": 1
+            }
+          ],
+          "empty_cache_median_ms": 4178.344499999999,
+          "reuse_cache_median_ms": 177.7779
+        },
+        {
+          "case_id": "river_runs_deep",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "The River Runs Deep",
+              "word_count": 4,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1102.0644,
+          "reuse_cache_median_ms": 177.22299999999998
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Testing Anagram Solver",
+              "word_count": 3,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1249.3865,
+          "reuse_cache_median_ms": 180.398
+        },
+        {
+          "case_id": "testing_shit",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "Testing Shit",
+              "word_count": 2,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 965.2709000000001,
+          "reuse_cache_median_ms": 179.1489
+        },
+        {
+          "case_id": "voldemort_reveal",
+          "intended_at_10_bucket": false,
+          "targets": [
+            {
+              "global_display_rank": null,
+              "phrase": "I Am Lord Voldemort",
+              "word_count": 4,
+              "word_count_bucket_rank": null
+            }
+          ],
+          "empty_cache_median_ms": 1307.2404,
+          "reuse_cache_median_ms": 181.4785
+        },
+        {
+          "case_id": "warm_bread_title",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 1,
+              "phrase": "Warm Bread",
+              "word_count": 2,
+              "word_count_bucket_rank": 1
+            }
+          ],
+          "empty_cache_median_ms": 879.3756999999999,
+          "reuse_cache_median_ms": 179.5587
+        },
+        {
+          "case_id": "whiskey-jameson",
+          "intended_at_10_bucket": true,
+          "targets": [
+            {
+              "global_display_rank": 1,
+              "phrase": "Jameson",
+              "word_count": 1,
+              "word_count_bucket_rank": 1
+            }
+          ],
+          "empty_cache_median_ms": 861.9565,
+          "reuse_cache_median_ms": 180.4013
+        }
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "case_id": "hips_dont_lie",
+      "phase": "generation",
+      "summary": {
+        "case_id": "hips_dont_lie",
+        "generated": 10000,
+        "gold_positions": {
+          "Hips Don't Lie": 4891
+        },
+        "phase": "generation",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 436.18010000000004
+      },
+      "error": null
+    },
+    {
+      "case_id": "hips_dont_lie",
+      "phase": "shortlist",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 9814,
+        "case_id": "hips_dont_lie",
+        "deep_analyzed": 186,
+        "display_limit_projection": 10,
+        "generated": 10000,
+        "gold": [
+          {
+            "bag_bucket_rank": 4,
+            "chosen_order": "hips don't lie",
+            "chosen_order_matches_gold": true,
+            "deep_selected": true,
+            "displayed_gold_rank": 14,
+            "gold": "Hips Don't Lie",
+            "gold_bag_in_pool": true,
+            "pre_score": 77.95074603040409
+          }
+        ],
+        "phase": "shortlist",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1357.871
+      },
+      "error": null
+    },
+    {
+      "case_id": "hips_dont_lie",
+      "phase": "deep_all",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "hips_dont_lie",
+        "deep_analyzed": 10000,
+        "display_limit_projection": 10,
+        "generated": 10000,
+        "gold": [
+          {
+            "bag_bucket_rank": 4,
+            "chosen_order": "hips don't lie",
+            "chosen_order_matches_gold": true,
+            "deep_selected": true,
+            "displayed_gold_rank": 14,
+            "gold": "Hips Don't Lie",
+            "gold_bag_in_pool": true,
+            "pre_score": 77.95074603040409
+          }
+        ],
+        "phase": "deep_all",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1560.3028000000002
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_shit",
+      "phase": "generation",
+      "summary": {
+        "case_id": "testing_shit",
+        "generated": 1671,
+        "gold_positions": {
+          "Testing Shit": 15
+        },
+        "phase": "generation",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 494.4729
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_shit",
+      "phase": "shortlist",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 1384,
+        "case_id": "testing_shit",
+        "deep_analyzed": 287,
+        "display_limit_projection": 10,
+        "generated": 1671,
+        "gold": [
+          {
+            "bag_bucket_rank": 8,
+            "chosen_order": "shit testing",
+            "chosen_order_matches_gold": false,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "Testing Shit",
+            "gold_bag_in_pool": true,
+            "pre_score": 63.59267591750678
+          }
+        ],
+        "phase": "shortlist",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1012.4998999999999
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_shit",
+      "phase": "deep_all",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "testing_shit",
+        "deep_analyzed": 1671,
+        "display_limit_projection": 10,
+        "generated": 1671,
+        "gold": [
+          {
+            "bag_bucket_rank": 8,
+            "chosen_order": "shit testing",
+            "chosen_order_matches_gold": false,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "Testing Shit",
+            "gold_bag_in_pool": true,
+            "pre_score": 63.59267591750678
+          }
+        ],
+        "phase": "deep_all",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1044.9288999999999
+      },
+      "error": null
+    },
+    {
+      "case_id": "voldemort_reveal",
+      "phase": "generation",
+      "summary": {
+        "case_id": "voldemort_reveal",
+        "generated": 10000,
+        "gold_positions": {
+          "I Am Lord Voldemort": 1972
+        },
+        "phase": "generation",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 647.7439
+      },
+      "error": null
+    },
+    {
+      "case_id": "voldemort_reveal",
+      "phase": "shortlist",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 9793,
+        "case_id": "voldemort_reveal",
+        "deep_analyzed": 207,
+        "display_limit_projection": 10,
+        "generated": 10000,
+        "gold": [
+          {
+            "bag_bucket_rank": 93,
+            "chosen_order": "i am lord voldemort",
+            "chosen_order_matches_gold": true,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "I Am Lord Voldemort",
+            "gold_bag_in_pool": true,
+            "pre_score": 75.39449349035785
+          }
+        ],
+        "phase": "shortlist",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1652.096
+      },
+      "error": null
+    },
+    {
+      "case_id": "voldemort_reveal",
+      "phase": "deep_all",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "voldemort_reveal",
+        "deep_analyzed": 10000,
+        "display_limit_projection": 10,
+        "generated": 10000,
+        "gold": [
+          {
+            "bag_bucket_rank": 523,
+            "chosen_order": "i am lord voldemort",
+            "chosen_order_matches_gold": true,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "I Am Lord Voldemort",
+            "gold_bag_in_pool": true,
+            "pre_score": 75.39449349035785
+          }
+        ],
+        "phase": "deep_all",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 2323.2021
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_anagram_solver",
+      "phase": "generation",
+      "summary": {
+        "case_id": "testing_anagram_solver",
+        "generated": 10000,
+        "gold_positions": {
+          "Testing Anagram Solver": 3988
+        },
+        "phase": "generation",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 623.8075
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_anagram_solver",
+      "phase": "shortlist",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 9856,
+        "case_id": "testing_anagram_solver",
+        "deep_analyzed": 144,
+        "display_limit_projection": 10,
+        "generated": 10000,
+        "gold": [
+          {
+            "bag_bucket_rank": 2611,
+            "chosen_order": "",
+            "chosen_order_matches_gold": null,
+            "deep_selected": false,
+            "displayed_gold_rank": null,
+            "gold": "Testing Anagram Solver",
+            "gold_bag_in_pool": true,
+            "pre_score": 51.72794860010798
+          }
+        ],
+        "phase": "shortlist",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1561.7171999999998
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_anagram_solver",
+      "phase": "deep_all",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "testing_anagram_solver",
+        "deep_analyzed": 10000,
+        "display_limit_projection": 10,
+        "generated": 10000,
+        "gold": [
+          {
+            "bag_bucket_rank": 1892,
+            "chosen_order": "solver testing anagram",
+            "chosen_order_matches_gold": false,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "Testing Anagram Solver",
+            "gold_bag_in_pool": true,
+            "pre_score": 51.72794860010798
+          }
+        ],
+        "phase": "deep_all",
+        "stop": "candidate_cap",
+        "trial": 0,
+        "variant": "native_prefix_10000",
+        "wall_ms": 1801.4689
+      },
+      "error": null
+    },
+    {
+      "case_id": "hips_dont_lie",
+      "phase": "required_gold_bag",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "hips_dont_lie",
+        "deep_analyzed": 1,
+        "display_limit_projection": 10,
+        "generated": 1,
+        "gold": [
+          {
+            "bag_bucket_rank": 1,
+            "chosen_order": "hips don't lie",
+            "chosen_order_matches_gold": true,
+            "deep_selected": true,
+            "displayed_gold_rank": 1,
+            "gold": "Hips Don't Lie",
+            "gold_bag_in_pool": true,
+            "pre_score": 82.2367460304041
+          }
+        ],
+        "phase": "required_gold_bag",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_required_bag",
+        "wall_ms": 650.2112
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_anagram_solver",
+      "phase": "required_gold_bag",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "testing_anagram_solver",
+        "deep_analyzed": 1,
+        "display_limit_projection": 10,
+        "generated": 1,
+        "gold": [
+          {
+            "bag_bucket_rank": 1,
+            "chosen_order": "solver testing anagram",
+            "chosen_order_matches_gold": false,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "Testing Anagram Solver",
+            "gold_bag_in_pool": true,
+            "pre_score": 67.88994860010799
+          }
+        ],
+        "phase": "required_gold_bag",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_required_bag",
+        "wall_ms": 638.27
+      },
+      "error": null
+    },
+    {
+      "case_id": "testing_shit",
+      "phase": "required_gold_bag",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "testing_shit",
+        "deep_analyzed": 1,
+        "display_limit_projection": 10,
+        "generated": 1,
+        "gold": [
+          {
+            "bag_bucket_rank": 1,
+            "chosen_order": "shit testing",
+            "chosen_order_matches_gold": false,
+            "deep_selected": true,
+            "displayed_gold_rank": null,
+            "gold": "Testing Shit",
+            "gold_bag_in_pool": true,
+            "pre_score": 71.41267591750679
+          }
+        ],
+        "phase": "required_gold_bag",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_required_bag",
+        "wall_ms": 637.37
+      },
+      "error": null
+    },
+    {
+      "case_id": "voldemort_reveal",
+      "phase": "required_gold_bag",
+      "summary": {
+        "all_rows_available": true,
+        "blank_display_rows": 0,
+        "case_id": "voldemort_reveal",
+        "deep_analyzed": 1,
+        "display_limit_projection": 10,
+        "generated": 1,
+        "gold": [
+          {
+            "bag_bucket_rank": 1,
+            "chosen_order": "i am lord voldemort",
+            "chosen_order_matches_gold": true,
+            "deep_selected": true,
+            "displayed_gold_rank": 1,
+            "gold": "I Am Lord Voldemort",
+            "gold_bag_in_pool": true,
+            "pre_score": 76.03849349035785
+          }
+        ],
+        "phase": "required_gold_bag",
+        "stop": "exhausted",
+        "trial": 0,
+        "variant": "native_required_bag",
+        "wall_ms": 669.4626999999999
+      },
+      "error": null
+    }
+  ],
+  "independent_validation": {
+    "displayed_rows_checked": 6078,
+    "failed_attempts": 6,
+    "exact_inventories": true,
+    "strict_target_bucket_and_flattened_ranks": true,
+    "discovery_case_snapshot_matches_manifest": true,
+    "confirmation_target_ranks_stable_across_trials": true
+  },
+  "limits": [
+    "One 42-bag discovery capture plus a six-call Jameson extension added to retain existing human-label compatibility; original 42-case snapshot preserved unchanged",
+    "All cases development-exposed; historical split tags are not untouched holdout",
+    "12 confirmation puzzles selected after discovery for diagnosis, not independent validation",
+    "Model definite coverage is below ten percent of visible output positions: no overall semantic-noise winner",
+    "Requested-bag and deep-all interventions are diagnostics, not natural end-to-end quality gains",
+    "No production corpus, ranker weights, generation/ordering behavior or human labels changed; request-provenance comparison was fixed after capture"
+  ]
+}

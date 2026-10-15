@@ -46,6 +46,22 @@ pub struct Request {
     #[schemars(range(min = 1, max = 9007199254740991_u64))]
     pub result_limit_per_group: usize,
 }
+
+/// Compare engine request semantics, not a JSON serializer's numeric spelling.
+/// Strict deserialization still rejects unknown fields and invalid field types;
+/// defaults are filled exactly as they are for a real solve. Neither input is
+/// rewritten, so historical capture identities and judgments stay untouched.
+pub fn same_request(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+    let canonical = |value: &serde_json::Value| {
+        serde_json::from_value::<Request>(value.clone())
+            .ok()
+            .and_then(|request| serde_json::to_value(request).ok())
+    };
+    match (canonical(left), canonical(right)) {
+        (Some(left), Some(right)) => left == right,
+        _ => false,
+    }
+}
 #[derive(Serialize, schemars::JsonSchema)]
 pub struct Timings {
     /// Current solve invocation, excluding adapter JSON input/output transport.

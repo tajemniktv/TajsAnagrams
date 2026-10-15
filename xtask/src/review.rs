@@ -73,7 +73,7 @@ fn pool(runs: &[Value], workloads: &BTreeMap<String, Value>) -> Result<Pool> {
     for r in quality::latest(runs)? {
         let id = r["case_id"].as_str().ok_or("Missing case id")?;
         let w = workloads.get(id).ok_or("Unknown captured case")?;
-        if r["request"] != w["request"] {
+        if !anagram_core::solve::same_request(&r["request"], &w["request"]) {
             return Err("Captured request differs from workload".into());
         }
         if r.get("error").is_some_and(|e| !e.is_null()) {
@@ -415,7 +415,14 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
     if let Some(mut config) = config.cloned() {
         // Unit tests run from the crate directory; resolve registered paths
         // against the workspace without changing global process cwd.
-        for key in ["runs", "workloads", "dictionaries", "judgments", "summary"] {
+        for key in [
+            "runs",
+            "workloads",
+            "dictionaries",
+            "judgments",
+            "summary",
+            "model-judgments",
+        ] {
             if let Some(s) = config[key].as_str()
                 && Path::new(s).is_relative()
             {
@@ -476,7 +483,18 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
                 labels.push(l.clone());
             }
         }
-        let summary = summary(&runs, &workloads, &dictionaries, &labels)?;
+        let mut summary = summary(&runs, &workloads, &dictionaries, &labels)?;
+        if let Some(path) = config["model-judgments"].as_str() {
+            let cases = workloads
+                .values()
+                .map(reference_case)
+                .map(|c| c.map(|c| (c.id.clone(), c)))
+                .collect::<Result<quality::Cases>>()?;
+            let mut product = quality::report(&runs, &cases, &["desktop"], &[], Some(&labels))?;
+            product["model_standalone_usefulness"] =
+                quality::accepted_model_reviews(path, &runs, &cases, &["desktop"])?;
+            summary["accepted_development_evidence"] = product;
+        }
         write_json(config["summary"].as_str(), &summary)?;
         out.push_str(&format!("\n## Current variant-blind judgment pool\n\nCapture SHA256: `{}`. {} bags, {} unique rendered case/phrase pairs. All development-exposed; this is personal, not population-wide validation.\n\nJudgment CSV: `{}`. Fill `standalone` and optionally `source_task` with `useful`, `not_useful` or `unsure`; blank stays unknown. Preserve IDs, phrases and context hashes.\nSource-task fit and standalone usefulness are separate. Do not inspect the comparison panel before judging if you want variant-blind presentation.\n",digest(runs_path)?,workloads.len(),pool.len(),csv.display()));
         for (id, w) in &workloads {
@@ -515,6 +533,9 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
                 g["candidate_cap_attempts"]
             ));
         }
+        if let Some(product) = summary.get("accepted_development_evidence") {
+            accepted_development(&mut out, product)?;
+        }
         out.push_str(&format!("\nFull diagnostic JSON: `{}`. No adequately judged quality/noise winner is established by automatic metrics.\n\n</details>\n",config["summary"].as_str().unwrap_or("")));
     } else {
         out.push_str("\nNo completed local lexicon experiment registered yet. The historical panel below is still readable.\n");
@@ -545,13 +566,86 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
     }
     write_changed(output, &out)
 }
+fn accepted_development(out: &mut String, report: &Value) -> Result<()> {
+    let name = |v: &Value| {
+        escape(
+            v.as_str()
+                .unwrap_or("")
+                .split("_dict-")
+                .next()
+                .unwrap_or("")
+                .trim_start_matches("lexicon_"),
+        )
+    };
+    out.push_str("\n### Intended-answer recovery: top ten is sufficient\n\nTargets are curator reconstruction references, not the only useful answers. Bucket rank matches the app's separate word-count groups; flattened rank is a different diagnostic. Failures remain in denominators. Repeated trials are not independent puzzles.\n\n| Variant | Cache | Attempts | Intended at bucket #1 | Intended within bucket top 10 | Intended in flattened top 10 |\n| --- | --- | ---: | ---: | ---: | ---: |\n");
+    for p in report["intended_answer_recovery"]
+        .as_array()
+        .ok_or("Missing reconstruction panel")?
+    {
+        out.push_str(&format!(
+            "| {} | {} | {} | {} | {} | {} |\n",
+            name(&p["variant"]),
+            escape(p["cache_state"].as_str().unwrap_or("")),
+            p["attempts"],
+            p["intended_at_1_bucket"],
+            p["intended_at_10_bucket"],
+            p["intended_at_10_flattened"]
+        ));
+    }
+    out.push_str("\n### Accepted model judgments, separate from human judgments\n\nOwner-accepted for development evaluation. Maybe and unseen outputs remain unknown; a lookup flag does not silently change a verdict. These sources are not independent human truth: identities are reported, and Sol discloses prior label exposure. Counts below cover the first ten of **each word-count group**, not a flattened prefix. Low coverage prevents an overall noise conclusion.\n\n| Judge | Variant | Cache | Useful slots | Not useful slots | Unknown slots | Definite coverage |\n| --- | --- | --- | ---: | ---: | ---: | ---: |\n");
+    for source in report["model_standalone_usefulness"]
+        .as_array()
+        .ok_or("Missing model panels")?
+    {
+        for p in source["panels"]
+            .as_array()
+            .ok_or("Missing model scopes")?
+            .iter()
+            .filter(|p| p["top_n"] == 10 && p["display_scope"] == "each_word_count_bucket")
+        {
+            out.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} | {} |\n",
+                escape(source["reviewer"].as_str().unwrap_or("")),
+                name(&p["variant"]),
+                escape(p["cache_state"].as_str().unwrap_or("")),
+                p["useful_rows"],
+                p["not_useful_rows"],
+                p["unreviewed_rows"],
+                p["judgment_coverage"]
+            ));
+        }
+    }
+    out.push_str("\n<details><summary>Intended answers and actual displayed ranks by input</summary>\n\n| Case | Variant | Cache | Intended reference | Bucket rank | Flattened rank |\n| --- | --- | --- | --- | ---: | ---: |\n");
+    for p in report["intended_answer_recovery"].as_array().unwrap() {
+        for r in p["per_attempt"].as_array().unwrap() {
+            for t in r["targets"].as_array().unwrap() {
+                let rank = |v: &Value| {
+                    v.as_u64()
+                        .map(|n| n.to_string())
+                        .unwrap_or_else(|| "not displayed".into())
+                };
+                out.push_str(&format!(
+                    "| {} | {} | {} | {} | {} | {} |\n",
+                    escape(r["case_id"].as_str().unwrap_or("")),
+                    name(&p["variant"]),
+                    escape(p["cache_state"].as_str().unwrap_or("")),
+                    escape(t["phrase"].as_str().unwrap_or("")),
+                    rank(&t["word_count_bucket_rank"]),
+                    rank(&t["global_display_rank"])
+                ));
+            }
+        }
+    }
+    out.push_str("\n</details>\n");
+    Ok(())
+}
 pub fn command(args: &[String]) -> Result<()> {
     if args.first().is_some_and(|a| a == "models") {
         return crate::review_models::command(&args[1..]);
     }
     if args == ["--help"] {
         println!(
-            "review [--runs FILE --workloads FILE --dictionaries FILE --judgments CSV --summary FILE --output FILE]\nNo arguments refresh .codex/docs/TAJSBENCH.md from pilot and registered local captures; never reruns solver or overwrites human judgments."
+            "review [--runs FILE --workloads FILE --dictionaries FILE --judgments CSV --summary FILE --output FILE --model-judgments FILE]\nNo arguments refresh .codex/docs/TAJSBENCH.md from pilot and registered local captures; never reruns solver or overwrites human judgments."
         );
         println!(
             "review models --manifest FILE --output JSON --readable MARKDOWN\nValidate separate model proposals against the frozen packet and human export; never relabels human evidence."
@@ -567,6 +661,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "judgments",
             "summary",
             "output",
+            "model-judgments",
         ],
         &[],
     )?;
@@ -574,7 +669,7 @@ pub fn command(args: &[String]) -> Result<()> {
     let config = if a.has("runs") {
         Some(
             json!({"runs":a.required("runs")?,"workloads":a.required("workloads")?,"dictionaries":a.required("dictionaries")?,
-            "judgments":a.value("judgments",".codex/temp/tajsbench-judgments.csv"),"summary":a.value("summary",".codex/temp/tajsbench-review-summary.json")}),
+            "judgments":a.value("judgments",".codex/temp/tajsbench-judgments.csv"),"summary":a.value("summary",".codex/temp/tajsbench-review-summary.json"),"model-judgments":a.get("model-judgments")}),
         )
     } else if path.exists() {
         Some(read_json(&path)?)
@@ -618,6 +713,30 @@ fn refresh_registered(config: Option<&Value>, output: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn accepted_models_render_as_separate_diagnostics_not_human_truth() {
+        let cases = quality::load_cases(root().join("tests/quality/cases.v3.json")).unwrap();
+        let runs = vec![
+            json!({"case_id":"testing_anagram_solver","variant":"lexicon_baseline_dict-test","cache_state":"uncached","wall_ms":1,"rows":[{"phrase":"Several Migrants Tango"}]}),
+        ];
+        let mut report = quality::report(&runs, &cases, &["desktop"], &[], None).unwrap();
+        report["model_standalone_usefulness"] = quality::accepted_model_reviews(
+            root()
+                .join("tests/quality/model-judgments.v1.json")
+                .to_str()
+                .unwrap(),
+            &runs,
+            &cases,
+            &["desktop"],
+        )
+        .unwrap();
+        let mut text = String::new();
+        accepted_development(&mut text, &report).unwrap();
+        assert!(text.contains("top ten is sufficient"));
+        assert!(text.contains("Maybe and unseen outputs remain unknown"));
+        assert!(text.contains("| echo | baseline | uncached | 1 | 0 | 0 |"));
+        assert!(text.contains("Testing Anagram Solver | not displayed | not displayed"));
+    }
     #[test]
     fn rank_diagnostics_preserve_slots_duplicates_and_failures() {
         let run = json!({"case_id":"bag","trial":0,"cache_state":"disk_cache_empty","dictionary_variant":"one","result":{"buckets":{"1":[{"display_phrase":"listen","words":["listen"]},{"display_phrase":"listen","words":["listen"]},{"display_phrase":"silent","words":["silent"]}]}}});

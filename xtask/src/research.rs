@@ -326,7 +326,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "research lexicon --db ESDB.sqlite [--current DICTIONARY --cases FILE --output FILE]\nresearch ngram --arpa FILE --groups FILE [--output FILE]\nresearch tubelex --tubelex FILE.tsv[.xz] [--unigrams FILE --cases FILE --max-bytes N --output FILE]\nresearch puzzles --packet DIR [--cases FILE --output FILE --case-ids ID,ID --workloads-output FILE --runs FILE]\nOffline reports only; no data/model/quality-label promotion. ESDB database creation is upstream work, not a dependency on its Python builder."
         );
         println!(
-            "lexicon --variant-dir DIR exports answer-independent baseline/names80/frequency3 dictionaries using --db, --current and --unigrams; never changes production data."
+            "lexicon --variant-dir DIR exports answer-independent baseline/names80/frequency3/lexical60 dictionaries using --db, --current and --unigrams; never changes production data."
         );
         return Ok(());
     }

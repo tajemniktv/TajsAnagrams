@@ -474,6 +474,38 @@ pub(crate) fn usefulness_panel(
     state_name: &str,
     n: usize,
 ) -> Result<Value> {
+    usefulness_scope(group, labels, ranking, variant, state_name, n, false)
+}
+fn word_count(row: &Value) -> usize {
+    row["words"]
+        .as_array()
+        .map_or_else(|| row_phrase(row).split_whitespace().count(), Vec::len)
+}
+fn visible_rows(run: &Value, ranking: &str, n: usize, per_bucket: bool) -> Result<Vec<Value>> {
+    let mut counts = BTreeMap::new();
+    Ok(rows(run, ranking)?
+        .into_iter()
+        .enumerate()
+        .filter_map(|(i, row)| {
+            let count = counts.entry(word_count(&row)).or_insert(0usize);
+            *count += 1;
+            if (if per_bucket { *count } else { i + 1 }) <= n {
+                Some(row)
+            } else {
+                None
+            }
+        })
+        .collect())
+}
+fn usefulness_scope(
+    group: &[&Value],
+    labels: &[Value],
+    ranking: &str,
+    variant: &str,
+    state_name: &str,
+    n: usize,
+    per_bucket: bool,
+) -> Result<Value> {
     let mut judgments = BTreeMap::new();
     for l in labels {
         let k = (
@@ -498,7 +530,7 @@ pub(crate) fn usefulness_panel(
         let mut useful_set = BTreeSet::new();
         let mut unreviewed = 0;
         if success(r) {
-            for row in rows(r, ranking)?.iter().take(n) {
+            for row in &visible_rows(r, ranking, n, per_bucket)? {
                 let p = rendered_key(&row_phrase(row));
                 // A blank shallow bag is not a delivered phrase to judge.
                 if p.is_empty() {
@@ -540,6 +572,7 @@ pub(crate) fn usefulness_panel(
     };
     Ok(
         json!({"variant":variant,"cache_state":state_name,"ranking":ranking,"top_n":n,
+        "display_scope":if per_bucket {"each_word_count_bucket"} else {"flattened_display_prefix"},
         "judgment_matching":"case-insensitive whitespace-folded rendering; punctuation and accents preserved; case_id fixes context",
         "attempts":group.len(),"completed":group.iter().filter(|r|success(r)).count(),
         "unique_phrase_judgments":judgments.len(),
@@ -552,6 +585,136 @@ pub(crate) fn usefulness_panel(
         "known_useful_coverage":fraction(covered,known),"known_useful_denominator":known,
         "per_attempt":attempt_rows}),
     )
+}
+fn intended_recovery(
+    group: &[&Value],
+    cases: &Cases,
+    ranking: &str,
+    variant: &str,
+    cache: &str,
+) -> Result<Value> {
+    let mut attempts = Vec::new();
+    for run in group {
+        let c = case(cases, run)?;
+        let mut first = BTreeMap::new();
+        let mut buckets = BTreeMap::new();
+        if success(run) {
+            for (i, row) in rows(run, ranking)?.iter().enumerate() {
+                let n = word_count(row);
+                let rank = buckets.entry(n).or_insert(0usize);
+                *rank += 1;
+                first
+                    .entry(rendered_key(&row_phrase(row)))
+                    .or_insert((i + 1, *rank, n));
+            }
+        }
+        let targets:Vec<_>=c.relevance.keys().map(|p| {
+            let rank=first.get(&rendered_key(p));
+            json!({"phrase":p,"global_display_rank":rank.map(|r|r.0),"word_count_bucket_rank":rank.map(|r|r.1),"word_count":p.split_whitespace().count()})
+        }).collect();
+        let hit = |key: &str, n: u64| {
+            targets
+                .iter()
+                .any(|p| p[key].as_u64().is_some_and(|r| r <= n))
+        };
+        attempts.push(json!({"case_id":c.id,"trial":run.get("trial").cloned().unwrap_or(json!(0)),"completed":success(run),"targets":targets,
+            "intended_at_1_bucket":hit("word_count_bucket_rank",1),"intended_at_10_bucket":hit("word_count_bucket_rank",10),
+            "intended_at_10_flattened":hit("global_display_rank",10)}));
+    }
+    let hits = |k: &str| attempts.iter().filter(|a| a[k] == true).count();
+    Ok(
+        json!({"variant":variant,"cache_state":cache,"ranking":ranking,"attempts":attempts.len(),
+        "matching":"Exact displayed wording after case/whitespace folding; punctuation preserved. Any intended reference suffices, not every useful alternative must be named.",
+        "primary_acceptance":"Intended reference within first ten of its displayed word-count bucket; rank one is diagnostic, not required.",
+        "intended_at_1_bucket":hits("intended_at_1_bucket"),"intended_at_10_bucket":hits("intended_at_10_bucket"),"intended_at_10_flattened":hits("intended_at_10_flattened"),"per_attempt":attempts}),
+    )
+}
+pub(crate) fn accepted_model_reviews(
+    path: &str,
+    runs: &[Value],
+    cases: &Cases,
+    rankings: &[&str],
+) -> Result<Value> {
+    let source = read_json(path)?;
+    if source["schema_version"] != 1
+        || source["acceptance"]["status"] != "accepted_for_development_evaluation"
+    {
+        return Err("Model labels must have explicit development acceptance".into());
+    }
+    let attempts = latest(runs)?;
+    let mut ids = BTreeSet::new();
+    let mut reports = Vec::new();
+    for reviewer in source["reviewers"].as_array().ok_or("Missing reviewers")? {
+        let id = text(reviewer, "id")?;
+        if !ids.insert(id)
+            || reviewer["reviewer_source"] != "llm"
+            || reviewer["rubric_version"] != "standalone-usefulness-v1"
+        {
+            return Err("Invalid/duplicate model provenance".into());
+        }
+        let mut labels = Vec::new();
+        let mut seen = BTreeSet::new();
+        let mut unsure = 0;
+        for j in reviewer["judgments"]
+            .as_array()
+            .ok_or("Missing model judgments")?
+        {
+            let c = case(cases, j)?;
+            let p = text(j, "phrase")?;
+            if signature(p) != signature(&c.source)
+                || !seen.insert((c.id.clone(), rendered_key(p)))
+                || !j["verification_needed"].is_boolean()
+                || text(j, "explanation")?.is_empty()
+                || !j["reasons"].as_array().is_some_and(|rs| {
+                    rs.iter().all(|r| {
+                        r.as_str()
+                            .is_some_and(|r| crate::review_models::REASONS.contains(&r))
+                    })
+                })
+            {
+                return Err("Invalid/duplicate model judgment".into());
+            }
+            let useful = match text(j, "verdict")? {
+                "useful" => true,
+                "not_useful" => false,
+                "unsure" => {
+                    unsure += 1;
+                    continue;
+                }
+                _ => return Err("Unknown model verdict".into()),
+            };
+            labels.push(json!({"case_id":c.id,"phrase":p,"useful":useful}));
+        }
+        if seen.is_empty() {
+            return Err("Empty accepted model judgments".into());
+        }
+        let strata = attempts
+            .iter()
+            .map(|r| Ok((text(r, "variant")?, state(r)?)))
+            .collect::<Result<BTreeSet<_>>>()?;
+        let mut panels = Vec::new();
+        for ranking in rankings {
+            for (variant, cache) in &strata {
+                let group = attempts
+                    .iter()
+                    .copied()
+                    .filter(|r| r["variant"] == *variant && state(r).unwrap() == *cache)
+                    .collect::<Vec<_>>();
+                for n in [1, 5, 10] {
+                    for per_bucket in [false, true] {
+                        panels.push(usefulness_scope(
+                            &group, &labels, ranking, variant, cache, n, per_bucket,
+                        )?);
+                    }
+                }
+            }
+        }
+        reports.push(json!({"reviewer":id,"reviewer_source":"llm","acceptance":source["acceptance"],"provenance":reviewer["provenance"],"judgment_set_sha256":crate::digest(path)?,"reviewed_judgments":seen.len(),"definite_judgments":labels.len(),"uncertain_judgments":unsure,"panels":panels}));
+    }
+    if reports.is_empty() {
+        return Err("Empty model reviewer set".into());
+    }
+    Ok(json!(reports))
 }
 pub fn report(
     runs: &[Value],
@@ -602,6 +765,7 @@ pub fn report(
     let mut budget_rows = Vec::new();
     let mut prefs = Vec::new();
     let mut useful = Vec::new();
+    let mut intended = Vec::new();
     for ranking in rankings {
         group_rows.extend(groups(runs, cases, ranking)?);
         budget_rows.extend(budgets(runs, cases, ranking)?);
@@ -612,6 +776,9 @@ pub fn report(
                 .copied()
                 .collect::<Vec<_>>();
             let (mut correct, mut total) = (0, 0);
+            intended.push(intended_recovery(
+                &group, cases, ranking, variant, state_name,
+            )?);
             for p in preferences {
                 for r in group
                     .iter()
@@ -651,6 +818,7 @@ pub fn report(
         }
     }
     let mut out = json!({"schema_version":3,"cases":cases.len(),"snapshots":runs.len(),"attempts":attempts.len(),"failures":failures,"unattempted_cases":unattempted,"groups":group_rows,"quality_at_budgets":budget_rows,"pairwise_preference":prefs});
+    out["intended_answer_recovery"] = json!(intended);
     if usefulness.is_some() {
         out["standalone_usefulness"] = json!(useful);
     }
@@ -659,7 +827,7 @@ pub fn report(
 pub fn command(args: &[String]) -> Result<()> {
     if args == ["--help"] {
         println!(
-            "quality --runs FILE [--cases FILE --ranking desktop|final_score|both --preferences FILE --usefulness FILE --output FILE]\nquality --stages FILE [--cases FILE --output FILE] regrades recorded native stage captures"
+            "quality --runs FILE [--cases FILE --ranking desktop|final_score|both --preferences FILE --usefulness FILE --model-judgments FILE --output FILE]\nquality --stages FILE [--cases FILE --output FILE] regrades recorded native stage captures"
         );
         return Ok(());
     }
@@ -671,6 +839,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "ranking",
             "preferences",
             "usefulness",
+            "model-judgments",
             "output",
             "stages",
         ],
@@ -702,10 +871,12 @@ pub fn command(args: &[String]) -> Result<()> {
         .get("usefulness")
         .map(|p| labels(Some(p), "judgments", &cases))
         .transpose()?;
-    write_json(
-        a.get("output"),
-        &report(&runs, &cases, &rankings, &prefs, useful.as_deref())?,
-    )
+    let mut out = report(&runs, &cases, &rankings, &prefs, useful.as_deref())?;
+    if let Some(path) = a.get("model-judgments") {
+        out["model_standalone_usefulness"] =
+            accepted_model_reviews(path, &runs, &cases, &rankings)?;
+    }
+    write_json(a.get("output"), &out)
 }
 
 #[cfg(test)]
@@ -998,6 +1169,121 @@ mod tests {
                 .provenance
                 .contains("not a user judgment")
         );
+    }
+    #[test]
+    fn expanded_development_suite_preserves_older_cases_and_requested_examples() {
+        let root = crate::root().join("tests/quality");
+        let old = read_json(root.join("cases.v2.json")).unwrap();
+        let new = read_json(root.join("cases.v3.json")).unwrap();
+        assert_eq!(
+            new["cases"].as_array().unwrap()[..19],
+            old["cases"].as_array().unwrap()[..]
+        );
+        let cases = load_cases(root.join("cases.v3.json")).unwrap();
+        assert_eq!(cases.len(), 43);
+        assert!(
+            cases["hips_dont_lie"]
+                .relevance
+                .contains_key("Hips Don't Lie")
+        );
+        assert!(cases["testing_shit"].relevance.contains_key("Testing Shit"));
+        assert!(cases.contains_key("voldemort_reveal"));
+        assert_eq!(cases["listen_silent"].relevance.len(), 2);
+    }
+    #[test]
+    fn intended_top_ten_accepts_tenth_not_eleventh_and_keeps_global_rank_separate() {
+        let c = cases();
+        let mut rows = vec![json!({"phrase":"testinganagram solver"}); 5];
+        rows.extend(vec![json!({"phrase":"solver testing anagram"}); 9]);
+        rows.push(json!({"phrase":"Testing Anagram Solver"}));
+        let mut r = run("", 1.);
+        r["rows"] = json!(rows);
+        let v = intended_recovery(&[&r], &c, "desktop", "v", "uncached").unwrap();
+        assert_eq!(v["intended_at_10_bucket"], 1);
+        assert_eq!(v["intended_at_1_bucket"], 0);
+        assert_eq!(v["intended_at_10_flattened"], 0);
+        assert_eq!(
+            v["per_attempt"][0]["targets"][0]["word_count_bucket_rank"],
+            10
+        );
+        assert_eq!(v["per_attempt"][0]["targets"][0]["global_display_rank"], 15);
+        rows.insert(0, json!({"phrase":"solver testing anagram"}));
+        r["rows"] = json!(rows);
+        assert_eq!(
+            intended_recovery(&[&r], &c, "desktop", "v", "uncached").unwrap()["intended_at_10_bucket"],
+            0
+        );
+        let mut failed = r.clone();
+        failed["error"] = json!({"code":"timeout"});
+        let v = intended_recovery(&[&r, &failed], &c, "desktop", "v", "uncached").unwrap();
+        assert_eq!(v["attempts"], 2);
+    }
+    #[test]
+    fn intended_recovery_preserves_apostrophes_and_usefulness_is_not_target_recovery() {
+        let c = load_cases(crate::root().join("tests/quality/cases.v3.json")).unwrap();
+        let r = json!({"case_id":"hips_dont_lie","variant":"v","wall_ms":1,"rows":[{"phrase":"Hips Dont Lie"}]});
+        assert_eq!(
+            intended_recovery(&[&r], &c, "desktop", "v", "uncached").unwrap()["intended_at_10_bucket"],
+            0
+        );
+        let r = run("Several Migrants Tango", 1.);
+        assert_eq!(
+            intended_recovery(&[&r], &c, "desktop", "v", "uncached").unwrap()["intended_at_10_bucket"],
+            0
+        );
+        let labels = vec![
+            json!({"case_id":"testing_anagram_solver","phrase":"Several Migrants Tango","useful":true}),
+        ];
+        assert_eq!(
+            usefulness_scope(&[&r], &labels, "desktop", "v", "uncached", 10, true).unwrap()["known_useful_successes"],
+            1
+        );
+    }
+    #[test]
+    fn accepted_models_keep_uncertainty_and_reviewer_layers_separate() {
+        let root = crate::root().join("tests/quality");
+        let c = load_cases(root.join("cases.v3.json")).unwrap();
+        let r = run("Several Migrants Tango", 1.);
+        let labels = accepted_model_reviews(
+            root.join("model-judgments.v1.json").to_str().unwrap(),
+            &[r],
+            &c,
+            &["desktop"],
+        )
+        .unwrap();
+        assert_eq!(labels.as_array().unwrap().len(), 2);
+        assert_eq!(labels[0]["reviewer"], "echo");
+        assert_eq!(labels[0]["definite_judgments"], 100);
+        assert_eq!(labels[0]["uncertain_judgments"], 31);
+        assert_eq!(labels[1]["reviewer"], "sol");
+        assert_eq!(labels[1]["definite_judgments"], 105);
+        assert_eq!(labels[1]["uncertain_judgments"], 26);
+        assert_eq!(labels[0]["panels"][0]["known_useful_successes"], 1);
+        assert_eq!(
+            labels[0]["panels"][1]["display_scope"],
+            "each_word_count_bucket"
+        );
+    }
+    #[test]
+    fn accepted_models_require_explicit_acceptance_and_exact_nonduplicated_labels() {
+        let root = crate::root();
+        let c = load_cases(root.join("tests/quality/cases.v3.json")).unwrap();
+        let mut data = read_json(root.join("tests/quality/model-judgments.v1.json")).unwrap();
+        let scratch = root.join(".codex/temp/xtask/quality-tests");
+        fs::create_dir_all(&scratch).unwrap();
+        let temp = tempfile::tempdir_in(scratch).unwrap();
+        let file = temp.path().join("model.json");
+        data["acceptance"]["status"] = json!("proposed");
+        fs::write(&file, data.to_string()).unwrap();
+        assert!(accepted_model_reviews(file.to_str().unwrap(), &[], &c, &["desktop"]).is_err());
+        data["acceptance"]["status"] = json!("accepted_for_development_evaluation");
+        let duplicate = data["reviewers"][0]["judgments"][0].clone();
+        data["reviewers"][0]["judgments"]
+            .as_array_mut()
+            .unwrap()
+            .push(duplicate);
+        fs::write(&file, data.to_string()).unwrap();
+        assert!(accepted_model_reviews(file.to_str().unwrap(), &[], &c, &["desktop"]).is_err());
     }
     #[test]
     fn malformed_or_leaking_cases_and_judgments_fail() {

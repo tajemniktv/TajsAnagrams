@@ -15,6 +15,51 @@ or an untouched held-out sample. Nineteen cases are still not a comprehensive
 quality gate. Specify `--cases tests/quality/cases.v2.json` for the expanded set;
 the default v1 keeps historical reports directly re-evaluable.
 
+`cases.v3.json` is the active **development** reconstruction suite (43 bags): all
+19 v2 cases unchanged, 19 additional synthetic/ambiguity controls and five already
+exposed public reference bags needed for the accepted model reviews. It retains
+Voldemort and the product sanity phrase and adds Hips Don't Lie, Testing Shit,
+ordinary clauses and noun phrases. The two single-word references Listen/Silent
+explicitly exercise ambiguity. New synthetic inputs normally use sorted letters;
+TestingShit retains the user's input. Authored targets are legitimate reconstruction
+checks, not observations of actual user satisfaction. Cohorts preserve origin,
+category, template/source family and development exposure. Old inherited `test`
+tags do not magically create a holdout. V1/v2 and their historical captures remain.
+
+For this suite, recovering **any intended reference within the first ten of its
+displayed word-count group** is a reconstruction success; first place is not
+required. The app has separate groups, so `intended_answer_recovery` records each
+reference's bucket rank and flattened display rank separately. It preserves
+punctuation and failed-attempt denominators. Traditional target Recall/MRR/NDCG
+remain available as diagnostics, not the sole product-success definition. Another
+coherent exact result can be useful whether or not the named target appears.
+
+The owner explicitly accepted the two returned model reviews for development
+evaluation on 2026-10-15. `model-judgments.v1.json` freezes both 131-row verdict
+sets, explanations/lookup flags, source hashes and reported provenance, without
+publishing private library identifiers or human notes. Use:
+
+```text
+cargo xtask quality --runs FILE --cases tests/quality/cases.v3.json --usefulness tests/quality/usefulness.v3.json --model-judgments tests/quality/model-judgments.v1.json --output FILE
+```
+
+`model_standalone_usefulness` reports each reviewer separately, both at a flattened
+prefix and within each word-count bucket. Maybe remains unreviewed for binary
+success/noise bounds; it is also counted explicitly as uncertain in each source's
+judgment totals. A lookup flag does not silently overrule an accepted verdict.
+Human fixtures are unchanged. Conflicting human/model and model/model verdicts
+stay separate rather than majority-voted into fabricated consensus truth. Acceptance
+lets development move forward without another mandatory adjudication round; it
+does not authenticate identities, erase Sol's disclosed label exposure or establish
+representative population quality. Freeze a new judgment-set version when labels
+change and rescore every compared treatment against the same version.
+
+`lexicon-experiment.v2.json` records the first 43-case development measurement and
+a selected twelve-case, three-trial confirmation, with input/executable/capture
+hashes, strict target ranks, separate accepted-model coverage and stage evidence.
+It is a measured baseline, not a claim that the current results are outstanding
+or a generalization gate. The historical v1 experiment remains unchanged.
+
 Run `cargo xtask check` to validate native correctness, datasets and metric
 semantics. Evaluate recorded solver snapshots with:
 
@@ -418,7 +463,7 @@ names just to make this exposed sample score better.
 ### Broad lexical policies and human-readable review
 
 `cargo xtask research lexicon --db DB --variant-dir .codex/temp/LEXICONS` exports
-three answer-independent interventions: the unchanged normalized baseline;
+the original three answer-independent interventions: the unchanged normalized baseline;
 baseline union ESDB US/A size <=80, variants <=1, tagged names and contractions;
 and that union plus literal alphabetic/apostrophe unigram tokens at Zipf >=3.
 The last is deliberately a frequency-assisted noise challenge, not a validated
@@ -426,6 +471,13 @@ English dictionary. No puzzle/answer file enters the export function. ESDB tags
 are incomplete; compounds/abbreviations and uncertain name classes are excluded.
 All treatments retain baseline keys and inherit the same runtime admission,
 candidate, ordering, corpus, output and timeout policies. None is auto-installed.
+
+The follow-up `lexical60` treatment unions names80 with **all** literal ASCII
+alphabetic/apostrophe ESDB US/A size <=60, variants <=1, non-abbreviation entries,
+without restricting POS/class. This tests whether a common-word source closes
+admission gaps without the unsupported raw-frequency-only expansion. It neither
+reads benchmark targets nor special-cases profanity/fictional names. ESDB tier
+and policy remain recorded; per-lexeme tier-aware ranking is still future work.
 
 `cargo xtask benchmark --workloads FILE --dictionaries VARIANTS.json --repeats 3`
 randomizes native vocabulary treatments within each case/trial, pins file hashes
@@ -448,6 +500,14 @@ Register a completed capture with:
 ```text
 cargo xtask review --runs FILE --workloads FILE --dictionaries VARIANTS.json --judgments .codex/temp/judgments.csv --summary .codex/temp/report.json
 ```
+
+Add `--model-judgments tests/quality/model-judgments.v1.json` for a compatible
+development pool to retain accepted model diagnostics in the registered review.
+Normal checks/builds then refresh the intended-reference rank table and separate
+model coverage panels automatically, inside the unblinded diagnostics section.
+They never fill or overwrite human CSV cells. Request comparison uses the strict
+native request schema rather than JSON numeric spelling (`6` versus `6.0`);
+unknown fields, different constraints and genuinely different options still fail.
 
 Do not edit the generated Markdown. Edit the separate CSV (`standalone` and optional
 `source_task`: useful/not_useful/unsure). Blank/unsure stay unknown; context hashes

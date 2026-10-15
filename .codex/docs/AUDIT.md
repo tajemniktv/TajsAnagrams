@@ -480,6 +480,125 @@ human-export hash is unchanged. This is tooling-only: no production solver, data
 desktop binary or installed review database was changed; no new GUI acceptance,
 hosted CI, model service call or push is claimed.
 
+### Phase E to Phase 6: accepted development evidence (2026-10-15)
+
+The owner explicitly accepted the returned model responses as valid for current
+work and authorized synthetic intended-answer cases and further phases. This
+supersedes treating another human adjudication round as a prerequisite to
+development experiments. It does not turn model ratings into personal human
+ratings, erase uncertainty or establish authenticated model identities.
+
+| Stable finding | Disposition | Implementation/evidence boundary |
+| --- | --- | --- |
+| F-44: authored intended answers might be excluded, or exact rank one demanded | Expanded development suite and explicit top-ten acceptance | `cases.v3.json` retains all nineteen v2 records verbatim and adds nineteen synthetic/ambiguity controls plus five exposed public references, 43 distinct bags total. Hips Don't Lie, Testing Shit and I Am Lord Voldemort are retained; ordinary sentences/titles and Listen/Silent cover multiple plausible answers. Existing versioned files/captures remain unchanged. New synthetic targets are curator reconstruction references, not invented human observations or untouched holdout evidence. |
+| F-45: accepting model judgments could require overwriting humans or inventing consensus | Accepted separate versioned sources | `model-judgments.v1.json` freezes all 131 Echo and 131 Sol verdicts, including Maybe, explanations, lookup flags, hashes and disclosed conditions. The owner acceptance is recorded explicitly. `cargo xtask quality --model-judgments ...` evaluates each source separately, at flattened prefixes and per-word-count-bucket positions. No lookup flag silently changes a verdict, no majority vote manufactures a human label, and existing human fixtures are untouched. |
+| F-46: a flattened top-ten metric can disagree with what the app actually displays | Separate bucket and flattened recovery | The app presents separate word-count groups. `intended_answer_recovery` now records strict displayed target matching, each reference's bucket rank and flattened rank, any-reference recovery at bucket top ten, and rank-one diagnostics. A test accepts a target at bucket rank ten/global rank fifteen, rejects rank eleven and preserves apostrophes. Useful exact alternatives remain a separate success axis, not automatic failures for missing the target. |
+| F-47: missing common lexemes might require benchmark-answer insertions or raw-frequency vocabulary | Answer-independent Phase 6 challenger | `lexical60` unions names80 with literal alphabetic/apostrophe ESDB US/A size <=60, variants <=1, non-abbreviation entries regardless of POS/class. Source queries show `shit` at size40 and `Voldemort` at size50 (`name?`), both excluded by the earlier name-only extension but present in this general source policy. The exporter reads no case/answer files. It retains baseline coverage and source hashes/policy; no production corpus is silently replaced. |
+| F-48: semantically identical JSON numbers could lose review provenance | Fixed in shared typed request comparison | A real generated workload containing `phrase_bonus_max: 6` is rejected against a captured `6.0` by raw `serde_json::Value` equality, despite both being the same native f64 request. `solve::same_request` strictly deserializes both requests and compares canonical typed values, including engine defaults. Review rendering, model provenance enrichment and automatic/explicit desktop workload matching share it. Unknown fields, invalid types and changed constraints/options remain distinct. Original capture hashes/IDs and prior human votes are not rewritten; regression tests prove a retained uncertain judgment survives non-forking reimport. |
+| F-49: recovering dictionary admission would necessarily recover the intended displayed phrase | Disproved by stage isolation | Four input probes distinguish generation, shortlist, order, final diagnostic rank and forced-bag controls. Testing Shit is generated and deeply analyzed, but `shit testing` wins its bag's ordering. Voldemort is generated and correctly ordered but lies below display ten. The product sanity target is generated but not shortlisted; exhaustive deep analysis still chooses a different order. Increasing only vocabulary/search/deep work is therefore not a demonstrated solution. |
+
+The expanded suite remains entirely development-exposed. Its cohort metadata
+distinguishes inherited curator cases, new authored template families and public
+source families. The original 120-bag representative collection design is not
+claimed complete merely because the authoring suite is larger. It is now valid
+to advance controlled Phase 6 experiments with these accepted development
+judgments, while reserving broader independent generalization claims for later
+collection. The frozen Python source remains archival, not a required oracle.
+
+#### Measured development baseline and Phase 6 decision
+
+`tests/quality/lexicon-experiment.v2.json` retains the measured summary, input and
+executable hashes, separate model panels, per-case three-trial confirmation and
+stage evidence. Raw outputs/manifests stay under
+`.codex/temp/native-product-2026-10-15/`. The discovery covers 43 bags, three
+vocabularies, one trial and separate empty/reuse caches: **258 attempts**. It
+began with 42 bags; Jameson was added to keep the existing human-positive fixture
+compatible, with six explicit supplemental calls rather than replacing the first
+capture. The exact 42-case input snapshot and both manifests remain preserved.
+Both captures use the same CLI SHA256
+`4146d5c1a4b9b3d1c4ee053931fb4a71069825d01575133cd063a53e590692c5`.
+The source parent is signed `31a5c8f`, with pending tooling/data edits explicitly
+marked dirty, not a falsely clean source freeze. Requests use desktop-equivalent
+settings with prefix/10,000 candidates and a deliberately recorded **10-second**
+deadline; these do not claim the default 120-second outcome or installed-GUI
+latency. No compilation was launched during either timed capture; OS pages and
+background applications remain uncontrolled.
+
+| Vocabulary | Keys | Completed per 43 attempts/cache | Intended bucket #1 | Intended bucket top 10 | Intended flattened top 10 | Empty-cache attempt median |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| baseline | 181,121 | 42 | 6 | 10 | 8 | 1,113 ms |
+| names80 | 198,643 | 42 | 7 | 12 | 9 | 1,138 ms |
+| lexical60 | 212,995 | 42 | 7 | 11 | 8 | 1,110 ms |
+
+Empty/reuse quality results agree. `actions_words` exceeds the ten-second deadline
+for every treatment/cache state; all six failures remain in operational
+denominators. Names80 gains Indiana Jones and Jameson with no lost intended hit in
+this exposed suite. Lexical60 gains those two and the quiet-machine target but
+loses Bright Ideas and The River Runs Deep. Those are observed tradeoffs, not a
+reason to special-case their words or score bonuses. Median numbers from this
+single discovery trial do not establish a performance winner.
+
+Twelve post-discovery diagnostic cases were rerun for three randomized timing
+trials per vocabulary/cache (**216 further attempts, all completed**). Intended
+target ranks are stable across those repeats: baseline 4/12 hits per trial,
+names80 6/12, lexical60 5/12. These are twelve selected puzzles, not 216 independent
+quality samples or held-out confirmation. Per-case timing medians are recorded,
+without invented row-level confidence intervals.
+
+For all visible per-bucket top-ten slots in the first empty-cache trial, the
+accepted Echo labels match useful/not-useful/unknown counts **28/56/934** for
+baseline, **31/65/932** for names80 and **28/59/906** for lexical60. Sol gives
+**24/65/929**, **25/75/928**, **24/66/903** respectively. Definite model coverage
+is only **8.3–9.7%** of those displayed positions: new synthetic outputs mostly
+have no accepted judgment yet. Unknown/Maybe is not a negative, so these selective
+counts cannot establish overall semantic noise, precision or a corpus winner.
+The stored target references do have complete reconstruction expectations, but
+target absence still does not prove the visible alternative is useless.
+
+#### What the requested examples diagnose
+
+| Input/reference | Actual observation under lexical60 | Supported explanation |
+| --- | --- | --- |
+| Hips Don't Lie | Generated at position 4,891; deeply selected; correctly displayed at bucket rank 4 / flattened rank 14 | Already succeeds under the accepted per-group top-ten criterion. Baseline is bucket 5 / flattened 15; demanding a global top-ten would misdescribe this UI. |
+| Testing Shit | Generation exhausts 1,671 admitted bags; target bag is position 15, deeply selected; chosen order is `shit testing`, bucket rank 8 in the full diagnostic export | Admission is repaired by the general source policy, but exact intended-wording recovery fails at ordering. Whether this displayed alternative is useful remains unjudged; it is not automatically No. Deep-all retains the same winner. |
+| I Am Lord Voldemort | Target bag appears within the 10,000 cap (position 1,972), is deeply selected and correctly ordered; rank 93 in the full diagnostic bucket, outside ten | Final ranking is now a separate problem. Deep-all moves it to rank 523, not into the displayed ten. These are full diagnostic-pool ranks, not claims of an actual GUI showing hundreds of rows. |
+| Testing Anagram Solver | Target bag appears at position 3,988 but is not selected for deep ordering; deep-all chooses `solver testing anagram` instead | Both shortlist and order limitations exist. `Several Migrants Tango` is still displayed first and already accepted as useful by the user and both model sets: intended recovery failure and product usefulness are different facts. |
+
+Required-bag interventions can produce Voldemort at #1, but bypass admission,
+generation competition and clue pre-scores. They are diagnostic controls, never
+counted as natural quality improvements. The comparison deliberately does not
+promote lexical60 given its existing target regressions and sparse semantic
+coverage. Names80 remains a measured candidate, not an automatic general-quality
+winner. Phase 7 should now test order-language evidence on retained/native pools
+and end-to-end runs rather than adding more desired answers to a dictionary.
+`tests/quality/DATA_RESEARCH.md` records a newly inspected EWT candidate's separate
+annotation/database versus underlying-text rights; no new corpus/model was
+downloaded, trained, packaged or selected merely to claim phase completion.
+
+The existing automatically refreshed `.codex/docs/TAJSBENCH.md` is registered to
+the new captures: 43 bags and 528 pooled flattened-prefix rendered outputs,
+with actual per-bucket rank diagnostics and collapsible intended-reference/model
+panels. The model panels do not fill personal CSV cells. The older registration,
+old CSVs and raw captures are preserved; prior user review data remains intact.
+
+Validation: 170 native pipeline tests pass, including the strict request-identity
+and new dataset/model/metric/rendering checks; formatting, all-target core/CLI/
+tooling Clippy, 16 contracts and 19 AJV fixtures pass. All 27 ordinary desktop
+tests and desktop all-target Clippy pass; the explicit local experiment separately
+imports **258 real observations**, checks idempotence and exports without inventing
+human labels. A separate JavaScript inventory/rank check verifies all **6,078**
+displayed rows and strict intended-reference positions in the capture. Source
+v1/v2 fixtures and the original 131-entry human export are unchanged.
+
+The cached desktop build/type check succeeds and automatically installs/restarts
+the provenance fix at `%LOCALAPPDATA%/Programs/TajemnikTV/TajsAnagrams` (PID 55040;
+installed SHA256
+`0559E3EA7BBE05B90372B84EC2A394ABC8533D9CCEA4ADEC6D847E0C69CFDF23`).
+This is native storage/logic and a responsive-process dogfood check, not fresh
+visual/physical-key acceptance or a claim that solver language quality changed.
+No production lexicon/ranker or human judgments were replaced. No push or hosted
+CI result is claimed.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose

@@ -252,7 +252,7 @@ pub fn import(data: &Path, path: &Path, workloads: Option<&Path>) -> Result<usiz
                 .iter()
                 .find(|w| w["id"] == r["case_id"])
                 .ok_or("Capture case missing from workloads")?;
-            if w["request"] != r["request"] {
+            if !anagram_core::solve::same_request(&w["request"], &r["request"]) {
                 return Err("Workload/capture request mismatch".into());
             }
             r["source_context"] = w["source_context"].clone();
@@ -263,8 +263,10 @@ pub fn import(data: &Path, path: &Path, workloads: Option<&Path>) -> Result<usiz
             .filter(|_| !explicit_context)
             .and_then(|m| m["workloads"].as_array())
             .and_then(|ws| {
-                ws.iter()
-                    .find(|w| w["id"] == r["case_id"] && w["request"] == r["request"])
+                ws.iter().find(|w| {
+                    w["id"] == r["case_id"]
+                        && anagram_core::solve::same_request(&w["request"], &r["request"])
+                })
             })
         {
             r["source_context"] = w["source_context"].clone();
@@ -530,6 +532,40 @@ mod tests {
                 .len(),
             1
         );
+    }
+    #[test]
+    fn workload_numbers_from_other_json_serializers_keep_context_and_existing_votes() {
+        let temp = scratch();
+        let input = temp.path().join("runs.jsonl");
+        let context = temp.path().join("workloads.json");
+        let mut source = run();
+        source.as_object_mut().unwrap().remove("source_family");
+        source["request"]["phrase_bonus_max"] = json!(6.0);
+        fs::write(&input, source.to_string()).unwrap();
+        let target = temp.path().join("store");
+        import(&target, &input, None).unwrap();
+        let row = read(&target).unwrap()["captures"][0]["rows"][0]["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        judge(&target, judgment(&row, Some("unsure"))).unwrap();
+        let mut equivalent = source["request"].clone();
+        equivalent["phrase_bonus_max"] = json!(6);
+        let metadata = json!({"schema_version":1,"workloads":[{"id":"six-letters","request":equivalent,"source_evidence":{"family_id":"number-format-family"}}]});
+        fs::write(&context, metadata.to_string()).unwrap();
+        let fresh = temp.path().join("fresh");
+        import(&fresh, &input, None).unwrap();
+        assert_eq!(
+            read(&fresh).unwrap()["captures"][0]["source_family"],
+            "number-format-family"
+        );
+        import(&target, &input, None).unwrap();
+        let state = read(&target).unwrap();
+        assert_eq!(state["captures"].as_array().unwrap().len(), 1);
+        assert_eq!(state["judgments"][0]["id"], row);
+        assert_eq!(state["judgments"][0]["verdict"], "unsure");
+        let explicit = temp.path().join("explicit");
+        assert!(import(&explicit, &input, Some(&context)).is_ok());
     }
     #[test]
     fn automatic_workload_context_matches_exactly_without_blocking_quick_import() {

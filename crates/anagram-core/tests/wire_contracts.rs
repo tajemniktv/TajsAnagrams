@@ -2,6 +2,40 @@ use anagram_core::{contracts::JobStatus, request::GenerateRequest, solve::Reques
 use serde_json::Value;
 
 #[test]
+fn request_identity_normalizes_numeric_spelling_without_weakening_the_schema() {
+    let fixtures: Vec<Value> =
+        serde_json::from_str(include_str!("../../../contracts/fixtures.json")).unwrap();
+    let mut a = fixtures
+        .iter()
+        .find(|f| f["schema"] == "SolveRequest" && f["valid"] == true)
+        .unwrap()["value"]
+        .clone();
+    a["phrase_bonus_max"] = serde_json::json!(6.0);
+    let mut b = a.clone();
+    b["phrase_bonus_max"] = serde_json::json!(6);
+    assert_ne!(a, b);
+    assert!(anagram_core::solve::same_request(&a, &b));
+    b["workers"] = serde_json::json!(1);
+    b["refine"] = serde_json::json!(false);
+    assert!(anagram_core::solve::same_request(&a, &b));
+    for (key, value) in [
+        ("phrase_bonus_max", serde_json::json!(5)),
+        ("workers", serde_json::json!(2)),
+        ("unknown", serde_json::json!(1)),
+    ] {
+        let mut bad = b.clone();
+        bad[key] = value;
+        assert!(!anagram_core::solve::same_request(&a, &bad), "{key}");
+    }
+    b["generation"]["text"] = serde_json::json!("changed");
+    assert!(!anagram_core::solve::same_request(&a, &b));
+    assert!(!anagram_core::solve::same_request(
+        &serde_json::json!({}),
+        &serde_json::json!({})
+    ));
+}
+
+#[test]
 fn shared_request_and_progress_fixtures_match_rust_deserialization() {
     let fixtures: Vec<Value> =
         serde_json::from_str(include_str!("../../../contracts/fixtures.json")).unwrap();

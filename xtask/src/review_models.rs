@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use std::{collections::BTreeMap, fs, path::Path};
 
 const RUBRIC: &str = "standalone-usefulness-v1";
-const REASONS: &[&str] = &[
+pub(crate) const REASONS: &[&str] = &[
     "grammar",
     "meaning",
     "incomplete_meaning",
@@ -191,8 +191,10 @@ fn load_items(
         let enriched = workloads
             .and_then(|w| w["workloads"].as_array())
             .and_then(|ws| {
-                ws.iter()
-                    .find(|w| w["id"] == *case && w["request"] == c["request"])
+                ws.iter().find(|w| {
+                    w["id"] == *case
+                        && anagram_core::solve::same_request(&w["request"], &c["request"])
+                })
             })
             .and_then(|w| w["source_evidence"]["family_id"].as_str());
         let family = c["source_family"].as_str().or(enriched).map(String::from);
@@ -636,9 +638,12 @@ mod tests {
     fn human_mapping_requires_real_rows_and_exact_request_family_enrichment() {
         let packet = "## Puzzle 1\n| item_a | valid phrase |";
         let mapping = json!({"mapping":[{"item_id":"item_a","row_id":"row","case_id":"case"}]});
-        let human = json!({"schema_version":1,"judgments":[{"id":"row","verdict":"unsure"}],
+        let mut human = json!({"schema_version":1,"judgments":[{"id":"row","verdict":"unsure"}],
             "captures":[{"case_id":"case","request":{"text":"letters"},"rows":[{"id":"row","phrase":"valid phrase"}]}]});
         let mut workloads = json!({"workloads":[{"id":"case","request":{"text":"different"},"source_evidence":{"family_id":"family"}}]});
+        human["captures"][0]["request"] = crate::benchmark::desktop_request("letters", 10000);
+        workloads["workloads"][0]["request"] =
+            crate::benchmark::desktop_request("different", 10000);
         let unknown = load_items(packet, &mapping, &human, Some(&workloads)).unwrap();
         assert!(unknown["item_a"].source_family.is_none());
         assert_eq!(unknown["item_a"].human, Verdict::Unsure);

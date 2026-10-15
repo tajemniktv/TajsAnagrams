@@ -5,7 +5,7 @@ already implemented. The completed migration, parity work, performance evidence,
 desktop acceptance and historical milestones have moved to
 [`IMPLEMENTED.md`](IMPLEMENTED.md). This file is deliberately forward-looking.
 
-### Current next step — Phase 5 native baseline collection
+### Current next step — Phase 5 development suite and Phase 6 experiments
 
 TajsBench is the existing name; do not start a second TajsAnaBench project.
 The Rust measurement/evaluation tools exist, but a trustworthy product baseline
@@ -44,8 +44,33 @@ agreement is diagnostic, not independent calibration or a reason to replace huma
 labels. Prioritize a small disagreement/lookup queue and clarify the boundary
 between coherent unusual titles and contrived readings. Then freeze the rubric
 and collect a fresh family-separated, properly blinded calibration batch before
-using models to reduce routine review. Phase 5 remains open; no model or corpus
-promotion follows from this first exposed sample.
+using models as a general independent calibration gate. On 2026-10-15 the owner
+explicitly accepted both model verdict sets for current development evaluation:
+they now live separately in `model-judgments.v1.json`, retaining uncertainty,
+conflicts and provenance rather than becoming human labels. This acceptance
+removes adjudication as a prerequisite to further research, not the need to report
+limits honestly.
+
+`cases.v3.json` expands development coverage to 43 bags: all 19 older cases intact,
+19 synthetic/ambiguity controls (including Hips Don't Lie and Testing Shit), and
+five exposed public reference bags. Intended-answer recovery within each displayed
+word-count group's top ten is accepted; top one is diagnostic only. Useful exact
+alternatives remain a separate success axis. This engineering/development suite
+does not pretend to be the original 120-bag representative collection target.
+Phase 6 can proceed with controlled data experiments while that broader collection
+continues. The `lexical60` challenger extends names80 with source-common ESDB words
+regardless of POS/class, not benchmark-specific insertions or raw frequency alone.
+
+The first measured development baseline is recorded in
+`tests/quality/lexicon-experiment.v2.json`: 258 discovery attempts on 43 bags and
+216 timing/consistency follow-ups on twelve selected bags. Intended bucket-top-ten
+recovery is baseline 10/43, names80 12/43, lexical60 11/43; repeated target ranks
+are stable. The larger common-word challenger loses two existing intended hits,
+and accepted-model coverage is under ten percent of displayed slots, so it stays
+experimental. Four stage probes now distinguish admission, shortlist, order and
+final rank failures. The next quality experiment should address order-language
+evidence and shortlisting, not add more desired answers to a dictionary. Phase 7
+source/footprint review remains open; no corpus/ranker was silently promoted.
 
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
@@ -290,6 +315,9 @@ Do not count a larger authored fixture file as completion of this phase.
 ### 5.1 Benchmark dataset
 
 - [x] Versioned cases exist: seven familiar targets plus twelve authored targets.
+- [x] Preserve those nineteen verbatim in a 43-bag development suite with synthetic
+      clauses/titles, the requested familiar examples, ambiguity and exposed
+      public reconstruction references. Do not call authored growth a holdout.
 - [x] Design an initial **120-independent-bag collection target**, not a power
       guarantee: 80 development (including all nineteen already inspected),
       20 validation and 20 locked pilot holdout. Existing `test` tags do not make
@@ -330,6 +358,9 @@ Do not count a larger authored fixture file as completion of this phase.
       and disagreement; current preference schema must be extended before use.
 - [ ] Freeze the rubric and labels before final candidate scoring. New labels
       change the judgment-set version and require rescoring both revisions.
+- [x] Accept/version both returned model verdict sets for current development
+      scoring at the owner's direction, without relabeling human evidence or
+      collapsing uncertainty/conflicts. General independent calibration stays open.
 
 ### 5.3 Metrics
 
@@ -348,6 +379,8 @@ Do not count a larger authored fixture file as completion of this phase.
 - [ ] Report exact-target recovery separately, plus name/title/sentence,
       source-origin, puzzle-length and constraint cohorts; avoid a composite
       score with arbitrary weights. Small slices remain descriptive.
+- [x] Separate strict intended-reference recovery at per-word-count-bucket top ten
+      from rank one, flattened rank and standalone useful alternatives.
 - [ ] Separate actual anytime delivery from terminal CLI observations; a final
       result cannot establish intermediate 50/200 ms quality or first-result time.
 - [ ] Report sampled RSS as sampled, persistence sizes as observed, and raw
@@ -431,7 +464,11 @@ branching factor and the probability that a technically valid monstrosity displa
 the phrase a human wanted.
 
 - [x] Build an ESDB ingestion prototype (offline tier/coverage comparison only).
-- [ ] Compare practical vocabulary coverage against the current `normal_user_v2`.
+- [x] Compare practical vocabulary coverage against `normal_user_v2` with names80,
+      frequency3 and the common-source lexical60 challenger; record which missing
+      words are admitted separately from end-to-end target delivery.
+- [x] Measure intended top-ten recovery and matched accepted-model judgments on
+      43 exposed development bags, with a selected twelve-bag three-trial follow-up.
 - [ ] Quantify false-positive/obscure-word behavior on TajsBench.
 - [ ] Review exact redistribution/attribution requirements before packaging.
 - [ ] Preserve source tier/commonness as a feature rather than discarding it after

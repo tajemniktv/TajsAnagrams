@@ -94,6 +94,26 @@ fn frequency(path: &str) -> Result<BTreeSet<String>> {
         .map(|(k, _)| k)
         .collect())
 }
+fn common_source(db: &str) -> Result<BTreeSet<String>> {
+    let con = Connection::open_with_flags(db, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    con.pragma_update(None, "query_only", true)?;
+    let mut stmt=con.prepare("select distinct word from scowl_v0 where size <= 60 and variant_level <= 1 and spelling in ('A','_') and region in ('','US') and pos != 'abbr' order by word")?;
+    let mut words = BTreeSet::new();
+    for display in stmt.query_map([], |r| r.get::<_, String>(0))? {
+        let display = display?;
+        if !display
+            .chars()
+            .all(|c| c.is_ascii_alphabetic() || c == '\'')
+        {
+            continue;
+        }
+        let key = quality::key(&display);
+        if (3..=24).contains(&key.len()) {
+            words.insert(key);
+        }
+    }
+    Ok(words)
+}
 pub(crate) fn single_word_diagnostics(path: &str) -> Result<Value> {
     let words = tokens(path)?;
     let mut signatures = BTreeMap::<String, Vec<String>>::new();
@@ -133,6 +153,10 @@ pub fn export(db: &str, current: &str, unigrams: &str, directory: &str) -> Resul
     let frequent = frequency(unigrams)?;
     let named = base.union(&names).cloned().collect::<BTreeSet<_>>();
     let broad = named.union(&frequent).cloned().collect::<BTreeSet<_>>();
+    let lexical = named
+        .union(&common_source(db)?)
+        .cloned()
+        .collect::<BTreeSet<_>>();
     let mut variants = Vec::new();
     for (id, words, policy) in [
         (
@@ -149,6 +173,11 @@ pub fn export(db: &str, current: &str, unigrams: &str, directory: &str) -> Resul
             "frequency3",
             broad,
             "names80 union literal alphabetic/apostrophe unigrams at normalized Zipf >=3; frequency is not lexical validity",
+        ),
+        (
+            "lexical60",
+            lexical,
+            "names80 union literal alphabetic/apostrophe ESDB <=60 US/A variants<=1 non-abbreviations, regardless of POS/class; no benchmark words consulted; source tier retained in policy, no raw-frequency-only tokens",
         ),
     ] {
         let path = dir.join(format!("{id}.txt"));
@@ -198,6 +227,11 @@ mod tests {
         assert_eq!(report["variants"][1]["added_keys"], 2);
         let named = fs::read_to_string(report["variants"][1]["path"].as_str().unwrap()).unwrap();
         assert_eq!(named, "alex\ncat\nwere\n");
+        let common = fs::read_to_string(report["variants"][3]["path"].as_str().unwrap()).unwrap();
+        assert_eq!(report["variants"][3]["id"], "lexical60");
+        assert_eq!(common, "alex\ncat\nwere\nwrong\n");
+        assert!(!common.contains("other")); // Frequency-only additions stay out.
+        assert!(!common.contains("toorare")); // No punctuation/rare-tier normalization loophole.
         assert!(
             !frequency(unigram.to_str().unwrap())
                 .unwrap()

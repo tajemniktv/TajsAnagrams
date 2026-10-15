@@ -20,3 +20,27 @@ OEWN parser smoke data: `testing`, `anagram`, `solver`, `shakira`, `voldemort`,
 `books`, and `running` had the same sampled recognized/POS/frame outcomes across
 Princeton 3.1, OEWN 2025 and 2025+. This only proves the legacy parser can
 load those WNDB exports, not corpus/ranking parity or name handling.
+
+## Phase 6–7 follow-up (2026-10-15)
+
+The pinned ESDB snapshot now supplies a fourth answer-independent treatment,
+`lexical60`: names80 plus literal US/A non-abbreviation source words at size <=60.
+`tests/quality/lexicon-experiment.v2.json` records 43 development bags and three
+timing repeats on twelve selected follow-up bags. It closes admission gaps but
+does not consistently improve intended-answer delivery: source coverage,
+ordering and final ranking are separate stages. No derived corpus is packaged.
+
+The stage evidence prioritizes a real order-language-model experiment rather
+than another target-specific dictionary patch. The existing Rust ARPA research
+scorer remains usable with a separately reviewed plain-text model; no historically
+flagged TUBELEX archive was restored or executed.
+
+One inspected candidate is [UD English EWT](https://universaldependencies.org/treebanks/en_ewt/),
+whose web/email/review genres are relevant to informal English. Its
+[publisher README](https://github.com/UniversalDependencies/UD_English-EWT/blob/master/README.md)
+licenses annotations/database rights under CC BY-SA 4.0 but separately identifies
+underlying text copyright holders. Consequently its headline license is not
+treated here as blanket redistribution clearance for the raw texts or a derived
+shipped model. It was considered, not downloaded, trained or approved for
+packaging. This source/footprint review remains distinct from testing the scorer
+or demonstrating an anagram-quality improvement.

@@ -1,0 +1,2943 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-15",
+  "acceptance": {
+    "status": "accepted_for_development_evaluation",
+    "authority": "Direct project-owner instruction, 2026-10-15: for now accept models responses as valid.",
+    "policy": "Preserve each reviewer separately, including uncertain verdicts, reasons, lookup flags and disclosed exposure. Acceptance is not conversion to human evidence or permission to repair/overrule a verdict."
+  },
+  "packet_sha256": "b614c732fec658ddb4e66b1cee68e4e4e7f6fd36111d3b11c3678fbcb8d10c1e",
+  "reviewers": [
+    {
+      "id": "echo",
+      "reviewer_source": "llm",
+      "rubric_version": "standalone-usefulness-v1",
+      "provenance": {
+        "reported_model": "GPT-6 Astra (alleged by user; file leaves model/version null)",
+        "reported_reasoning_effort": null,
+        "file_model": null,
+        "file_model_version": null,
+        "file_identity_note": "The exact serving model/version is not exposed reliably in this session; no identity is inferred from filenames or assistant name.",
+        "blinding_disclosure": {
+          "arithmetic_rechecked": false,
+          "confidence_calibrated": false,
+          "external_lookups": false,
+          "human_labels_read": false,
+          "notes": "Independent judgments of the displayed phrases. Other review filenames were visible in the folder listing, but their contents and the human labels were not opened. No target answer, rank, treatment or model score was used. This is an LLM review, not human authority or a benchmark score.",
+          "other_review_contents_read": false,
+          "other_review_filenames_seen": true
+        },
+        "methods": "Text-only; no external lookups; independence self-reported.",
+        "date": "2026-10-15"
+      },
+      "source_sha256": "ca1a8cc875e54cb7a57919d21f71a465b33dcb503865dcefa620aad8b4461977",
+      "judgments": [
+        {
+          "case_id": "testing_shit",
+          "phrase": "test in sight",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A concise title or headline indicating that a test is approaching or visible.",
+          "verification_needed": false,
+          "item_id": "item_00f67bd357a776b0"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "keynote hearsay trouble",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "It could be a compact title about hearsay-related trouble involving a keynote, but the noun relationships are ambiguous.",
+          "verification_needed": false,
+          "item_id": "item_0359743edb9f3bf5"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "test is night",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Bare singular test is problematic, and identifying a test with night does not supply a clear reading.",
+          "verification_needed": false,
+          "item_id": "item_04bcb7f819de900b"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "cash be choline",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "The ordinary declarative needs a finite copula, and cash equated with choline has no clear reading.",
+          "verification_needed": false,
+          "item_id": "item_06369b3845a33129"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its net sight",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The possessive structure is possible, but net sight has no clear ordinary meaning to me.",
+          "verification_needed": false,
+          "item_id": "item_0787a72b5c6def00"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "hobs lie chance",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "Chance does not fit after the clause hobs lie, and a coherent alternative parse is not apparent.",
+          "verification_needed": false,
+          "item_id": "item_096d3e5d4a849172"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "aids join anne",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Aids as a plural noun is possible, but the aids joining Anne do not supply a clear ordinary standalone reading.",
+          "verification_needed": false,
+          "item_id": "item_09e91c67741c34a2"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "setting hits",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The words permit several readings, but neither a clear activity nor a conventional noun phrase is evident without context.",
+          "verification_needed": false,
+          "item_id": "item_0a010186a41b1a3a"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "enough is warm",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A grammatical assertion that a sufficient amount is warm; enough can stand as a pronoun.",
+          "verification_needed": false,
+          "item_id": "item_0b62127376bea93d"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herd a pearl",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Herd normally describes gathering or directing a group of animals or people, not one pearl; the intended action is unclear.",
+          "verification_needed": false,
+          "item_id": "item_0ca12b18eb825a0f"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "helicon beachs",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering"
+          ],
+          "explanation": "Beachs cannot be silently repaired to beaches; knowing helicon would not fix this rendering.",
+          "verification_needed": false,
+          "item_id": "item_0e27ade93200880e"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "governing states alarm",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Governing states could be a subject, but alarm leaves an unclear predicate unless a suitable intransitive reading is intended.",
+          "verification_needed": false,
+          "item_id": "item_0e3ecc974919dacf"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "arranging moves latest",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "incomplete_meaning"
+          ],
+          "explanation": "Latest lacks a clear grammatical role completing arranging moves.",
+          "verification_needed": false,
+          "item_id": "item_0f26413f8ad7a9c5"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "each ben is loch",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Loch needs a determiner as a count-noun predicate, and the asserted identity is unclear.",
+          "verification_needed": false,
+          "item_id": "item_13e65f64d844131c"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "no chiles beach",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "No chiles beach does not establish whether beach is a verb or a noun, or a coherent relationship.",
+          "verification_needed": false,
+          "item_id": "item_14485baaea7080a9"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "boils chance he",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The final he cannot serve as the object of boils or chance in this order.",
+          "verification_needed": false,
+          "item_id": "item_166d2ff492af93e4"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the tune layers yearbook",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "The bare singular object yearbook is problematic, and a tune layering it is not independently intelligible.",
+          "verification_needed": false,
+          "item_id": "item_18d4299fb1e7d40c"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "a harper led",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A clear sentence saying a harp player led; an explicit object is not required.",
+          "verification_needed": false,
+          "item_id": "item_18de25e7b68e2cb3"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "no beach is lech",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Lech as an ordinary singular count noun needs a determiner; treating it as a name would invent an unsupported referent.",
+          "verification_needed": false,
+          "item_id": "item_1b940e1f73be7359"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "rough am wines",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Am lacks an I subject, and rough and wines do not complete the structure.",
+          "verification_needed": false,
+          "item_id": "item_1e3cf2c23e21fe32"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "who measuring",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The apparent question lacks the auxiliary needed with measuring.",
+          "verification_needed": false,
+          "item_id": "item_1f1dca013dbbaa2c"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "naiad enjoins",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "incomplete_meaning"
+          ],
+          "explanation": "The ordinary singular naiad lacks a determiner, and enjoins leaves its object or injunction unexpressed.",
+          "verification_needed": false,
+          "item_id": "item_23880fe32bf98712"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey easterly breakout",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The relationship among honey, easterly and breakout is not intelligible without constructing a special scenario.",
+          "verification_needed": false,
+          "item_id": "item_25310e06df8a8ac1"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "chisel can be oh",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Bare singular chisel and the predicate oh do not form a coherent ordinary assertion.",
+          "verification_needed": false,
+          "item_id": "item_260f7674ed5719b6"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "indiana jones",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A recognizable fictional character's name, with ordinary capitalization.",
+          "verification_needed": false,
+          "item_id": "item_294662e15c6d6bb3"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "shogun weimar",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name",
+            "meaning"
+          ],
+          "explanation": "The title and place/name do not identify a recognized entity or clear relationship without verification.",
+          "verification_needed": true,
+          "item_id": "item_2a39227ccb644412"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "bach is echelon",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Echelon as a count noun lacks a determiner, and its equation with Bach is not independently intelligible.",
+          "verification_needed": false,
+          "item_id": "item_2afd875d238a1f15"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "mine was rough",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A grammatical sentence describing something belonging to the speaker as rough; a pronoun can be meaningful without a named referent.",
+          "verification_needed": false,
+          "item_id": "item_2e37bf69833e0857"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "this testing",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A normal demonstrative noun phrase referring to a particular testing process.",
+          "verification_needed": false,
+          "item_id": "item_2ed0b8532323ff5d"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "her para led",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "With para in its established paratrooper sense, the sentence says her paratrooper led; led can be intransitive.",
+          "verification_needed": false,
+          "item_id": "item_2effad42a2efd262"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "yearbook threatens yule",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning",
+            "semantic_anomaly"
+          ],
+          "explanation": "The clause suggests a yearbook endangering Yule, but I am unsure whether that is an intelligible standalone title or an arbitrary juxtaposition.",
+          "verification_needed": false,
+          "item_id": "item_306c22f82e23dce5"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "each chen boils",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Chen is a familiar surname and the syntax is possible, but whether boils conveys a clear standalone action or emotion here is borderline.",
+          "verification_needed": false,
+          "item_id": "item_30dcb4fd04b60150"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "each belch is on",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The syntax is intact, but what being on means for each belch is unclear without a special context.",
+          "verification_needed": false,
+          "item_id": "item_33055f597458123b"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "region was hum",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "Bare singular region lacks a determiner, and was hum does not form a clear predicate.",
+          "verification_needed": false,
+          "item_id": "item_347dc426fe8b4b97"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "only eukaryote breathes",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Singular count noun eukaryote lacks the determiner needed in this ordinary subject construction.",
+          "verification_needed": false,
+          "item_id": "item_39b26c1c58f1a4c0"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "pearl heard",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Pearl is a familiar given name and heard can be used without an expressed object.",
+          "verification_needed": false,
+          "item_id": "item_3a92febdc9cbf441"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "testing hits",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent gerund phrase for testing hits, such as recorded matches or successful results.",
+          "verification_needed": false,
+          "item_id": "item_3aa98a98dfc6c0ce"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "this tin gets",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "This tin gets leaves the recipient or acquired property/object unfinished.",
+          "verification_needed": false,
+          "item_id": "item_3c53c07f6953fa68"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "eukaryotes halter ebony",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The verb halter normally takes an animal; eukaryotes haltering ebony does not yield a clear meaning without substantial invention.",
+          "verification_needed": false,
+          "item_id": "item_3cd44bdb0be34cbe"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "grass moving alternate",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "Alternate does not complete grass moving in a clear grammatical or semantic role.",
+          "verification_needed": false,
+          "item_id": "item_3e850737d911e521"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "a parer held",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A compact noun phrase describing a paring implement being held; a reduced passive modifier is possible.",
+          "verification_needed": false,
+          "item_id": "item_3ee0e5de191ca4ec"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "lead harper",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent noun phrase for the principal harp player; harper is a word for a harpist.",
+          "verification_needed": false,
+          "item_id": "item_420b3375f0d8eb71"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "adjoin insane",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Insane is an adjective without a noun or determiner to make an ordinary object of adjoin.",
+          "verification_needed": false,
+          "item_id": "item_42b6ee83633a5dc0"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "joannes india",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering",
+            "meaning"
+          ],
+          "explanation": "The natural possessive reading would require an apostrophe; a plural-name reading does not clarify India.",
+          "verification_needed": false,
+          "item_id": "item_447fd154271abde1"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "nichole beachs",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering"
+          ],
+          "explanation": "Beachs is not the standard verb or plural form; a hypothetical surname is not grounds for acceptance.",
+          "verification_needed": false,
+          "item_id": "item_466623a586ec2136"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the year keynotes labour",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Keynotes can be a verb meaning sets the central theme, but a year keynoting labour is a strained abstract reading.",
+          "verification_needed": false,
+          "item_id": "item_467eb50f924a0786"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herald pear",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name",
+            "meaning"
+          ],
+          "explanation": "Could denote a named pear variety or another compound, but I do not recognize or verify that use.",
+          "verification_needed": true,
+          "item_id": "item_4824d7f3f758bc4f"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "indonesia jan",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name",
+            "incomplete_meaning"
+          ],
+          "explanation": "This could be a name or a location-and-month label, but neither is established by the displayed text.",
+          "verification_needed": true,
+          "item_id": "item_487a6c04bbaa2354"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "whore am using",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Am lacks its required I subject; whore cannot serve that role.",
+          "verification_needed": false,
+          "item_id": "item_4eb6b31cc618ed9c"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "read her lap",
+          "verdict": "unsure",
+          "reasons": [
+            "semantic_anomaly",
+            "meaning"
+          ],
+          "explanation": "Read usually takes readable content; her lap may be a metonym or specialised measurement, but that reading is not clear.",
+          "verification_needed": false,
+          "item_id": "item_4fd9807ce24f350d"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its get hints",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Possessive its cannot be the subject of get in this construction.",
+          "verification_needed": false,
+          "item_id": "item_518cd28910a7bfa6"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its gets thin",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Possessive its cannot serve as the subject of gets.",
+          "verification_needed": false,
+          "item_id": "item_52a395b05918d403"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "her real pad",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A normal possessive noun phrase referring to her actual pad or dwelling.",
+          "verification_needed": false,
+          "item_id": "item_53b6c952b0d44306"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "house warming",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A comprehensible open compound for warming a house; the familiar event word is normally written housewarming.",
+          "verification_needed": false,
+          "item_id": "item_564a925deb8afeef"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "choline beachs",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering"
+          ],
+          "explanation": "Beachs is not the ordinary plural or third-person verb form of beach; it cannot silently become beaches.",
+          "verification_needed": false,
+          "item_id": "item_5b65ca637e74b6ed"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "nine jason aid",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "Nine does not combine naturally with singular Jason and aid in this order.",
+          "verification_needed": false,
+          "item_id": "item_5f66b6fbadb92a32"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "tightness it",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "incomplete_meaning"
+          ],
+          "explanation": "The trailing it has no grammatical role completing tightness.",
+          "verification_needed": false,
+          "item_id": "item_611707dae029a5f9"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "anguish mower",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Anguish modifying mower does not establish a clear ordinary type of object or agent.",
+          "verification_needed": false,
+          "item_id": "item_62515e7b996673ae"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "geraniums who",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Who opens a relative clause or question but nothing completes it.",
+          "verification_needed": false,
+          "item_id": "item_6521d8b68711f9ec"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "rue am showing",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Am showing lacks its I subject; rue does not supply one.",
+          "verification_needed": false,
+          "item_id": "item_6b60807fdedde003"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the years keynote labour",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The grammar permits years setting labour as a central theme, but that abstract use is strained enough to leave unresolved.",
+          "verification_needed": false,
+          "item_id": "item_73a9bdd6a9b2290a"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "whom are using",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Whom cannot be the subject of are using in the apparent question, and no other subject is supplied.",
+          "verification_needed": false,
+          "item_id": "item_74de77f6a808bebc"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "aid one ninjas",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "One conflicts with plural ninjas in the object phrase.",
+          "verification_needed": false,
+          "item_id": "item_779df9476c8a0571"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "geranium whos",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering",
+            "incomplete_meaning"
+          ],
+          "explanation": "Whos is not ordinary who is or whose, and neither possible repair would complete this string unaided.",
+          "verification_needed": false,
+          "item_id": "item_793af09f89a9e91c"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "arp are held",
+          "verdict": "unsure",
+          "reasons": [
+            "unfamiliar",
+            "grammar"
+          ],
+          "explanation": "ARP may be an abbreviation, but its intended referent and plural agreement are not established.",
+          "verification_needed": true,
+          "item_id": "item_7b087ad935a27c61"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "annie adjoins",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning",
+            "incomplete_meaning"
+          ],
+          "explanation": "Adjoins can describe proximity, but its application to Annie without a complement is unclear.",
+          "verification_needed": false,
+          "item_id": "item_7c08c15925cafac3"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "alpha erred",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A clear sentence saying that an alpha entity or designated Alpha made an error.",
+          "verification_needed": false,
+          "item_id": "item_7e8aea3b56dce6f3"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "hungers miaow",
+          "verdict": "unsure",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The syntax permits a poetic personification of hungers meowing, but its standalone usefulness is borderline.",
+          "verification_needed": false,
+          "item_id": "item_7ef4907236c5c3e0"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "aid joins anne",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning",
+            "semantic_anomaly"
+          ],
+          "explanation": "The syntax is possible with aid as a mass noun, but aid joining Anne is an unclear personification or shorthand.",
+          "verification_needed": false,
+          "item_id": "item_823ed665dc3f43eb"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "i bleach chosen",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "incomplete_meaning"
+          ],
+          "explanation": "Chosen has no expressed head noun or ordinary standalone object role after bleach.",
+          "verification_needed": false,
+          "item_id": "item_8555f70513a98ef0"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "only eukaryotes breathe",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A clear, grammatical biological assertion; judging language usefulness does not establish its factual truth.",
+          "verification_needed": false,
+          "item_id": "item_855ea74ec3e1f592"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its gets hint",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Possessive its cannot serve as the subject of gets here; changing it to it would alter the output.",
+          "verification_needed": false,
+          "item_id": "item_85e0da33fd05e0eb"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the tunes layer yearbook",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Bare singular yearbook is problematic, and tunes layering it has no clear standalone interpretation.",
+          "verification_needed": false,
+          "item_id": "item_873bcd6c9a5ccca2"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "a raper held",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A noun phrase or terse headline about a rapist being held; the uncommon/offensive word does not itself invalidate the meaning.",
+          "verification_needed": false,
+          "item_id": "item_8f0f71efbd7ef3f9"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "annas joined i",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "After joined, I is the wrong pronoun case; inventing punctuation or a continuation would change the output.",
+          "verification_needed": false,
+          "item_id": "item_8fcebe6caa0889d7"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "governing alarms state",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Neither governing alarms nor alarms state establishes a clear complete reading in this order.",
+          "verification_needed": false,
+          "item_id": "item_9208b1ab2c54782f"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "hale draper",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Hale can modify draper to describe a healthy cloth merchant; no invented proper name is needed.",
+          "verification_needed": false,
+          "item_id": "item_9531dfe47663f5e9"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "migrants are galveston",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The syntax is possible, but equating migrants with the place Galveston needs an unsupported metaphor or slogan.",
+          "verification_needed": false,
+          "item_id": "item_95ba5ec57d0040ba"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "hitting sets",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Could describe sets involving hitting, but the intended activity or compound is not sufficiently clear.",
+          "verification_needed": false,
+          "item_id": "item_97b0c1e736de9d27"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the eyes nuke laboratory",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Laboratory is a bare singular count-noun object; a missing article cannot be supplied.",
+          "verification_needed": false,
+          "item_id": "item_981fc9281b7421d4"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herald rape",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent imperative to announce or foreshadow rape; disturbing content is distinct from linguistic usefulness.",
+          "verification_needed": false,
+          "item_id": "item_9820f5d0b38c454e"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herald a rep",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A grammatical imperative to announce or signal the arrival of a representative.",
+          "verification_needed": false,
+          "item_id": "item_991ff60c50285c7b"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "housewarming",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A standard word for the celebration associated with moving into a home.",
+          "verification_needed": false,
+          "item_id": "item_99627746ced90699"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "several organs matting",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The relation of organs to matting is unclear; merely treating it as a caption does not establish meaning.",
+          "verification_needed": false,
+          "item_id": "item_9d994e208bfc745f"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "test insight",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent imperative to test insight, with insight used as a mass noun.",
+          "verification_needed": false,
+          "item_id": "item_a20d0e4504a101c7"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "this setting",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A normal demonstrative noun phrase referring to a particular setting.",
+          "verification_needed": false,
+          "item_id": "item_a26a21178fe065e3"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "show geranium",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Singular geranium as the ordinary object of show needs a determiner.",
+          "verification_needed": false,
+          "item_id": "item_a338974e803034b6"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "things test i",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The final I does not fit the preceding subject and verb, and object me would require changing a word.",
+          "verification_needed": false,
+          "item_id": "item_a680fa7520c022e9"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "diana enjoins",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Diana is a valid subject, but enjoins leaves whom or what she enjoins unspecified.",
+          "verification_needed": false,
+          "item_id": "item_a75c4afd0807c09d"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "deal harper",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Harper is a familiar name, but deal Harper leaves the intended transaction or card-dealing construction unclear.",
+          "verification_needed": false,
+          "item_id": "item_a7fa9bcadaeef393"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "harp led are",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The final are does not combine with harp led into a grammatical phrase.",
+          "verification_needed": false,
+          "item_id": "item_a87775ca7220c44f"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "hard repeal",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent noun phrase for a repeal that is difficult to achieve.",
+          "verification_needed": false,
+          "item_id": "item_aafd453b9a2da5df"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "beech nicholas",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name"
+          ],
+          "explanation": "It looks potentially name-like, but I do not recognize the exact name and cannot validate it merely from two name-capable words.",
+          "verification_needed": true,
+          "item_id": "item_ab85ad6827c088d7"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "melanogaster starving",
+          "verdict": "unsure",
+          "reasons": [
+            "unfamiliar",
+            "meaning"
+          ],
+          "explanation": "Melanogaster is familiar as part of a species name, but whether this abbreviated standalone subject is acceptable needs domain/context verification.",
+          "verification_needed": true,
+          "item_id": "item_b16e5f41aa7d7fc3"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "starting loves manager",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "The gerund starting as subject does not make loves manager coherent, and singular manager lacks a determiner.",
+          "verification_needed": false,
+          "item_id": "item_b1ad0308c3b528e1"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "settings hit",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Could be a terse clause about settings taking effect or striking something, but neither reading is clear on its own.",
+          "verification_needed": false,
+          "item_id": "item_b3b271498f7d0606"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "leader harp",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "This may be a specialised compound, but the role of leader as a modifier of harp is not clear enough to affirm.",
+          "verification_needed": false,
+          "item_id": "item_b3d1d438ac3dbebe"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey turkey elaborates",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning",
+            "semantic_anomaly"
+          ],
+          "explanation": "The sentence structure is possible, but honey turkey is unclear and elaborates requires an unsupported anthropomorphic reading.",
+          "verification_needed": false,
+          "item_id": "item_b42b70752e24eb21"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the eye nukes laboratory",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Laboratory is a bare singular count-noun object in an otherwise recognizable clause.",
+          "verification_needed": false,
+          "item_id": "item_b5e85a4e11b8ed42"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey easterly outbreak",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Honey, easterly and outbreak do not combine into a clear standalone event description.",
+          "verification_needed": false,
+          "item_id": "item_bca47bc505a80c22"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "hew ignoramus",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Ignoramus as an ordinary singular count-noun object needs a determiner, irrespective of the violent meaning of hew.",
+          "verification_needed": false,
+          "item_id": "item_be01040dd100d7ae"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "rhenium was go",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "Go after was does not supply a normal complement describing rhenium.",
+          "verification_needed": false,
+          "item_id": "item_c0c9aabe30adb9fd"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "inside joanna",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent title or prepositional phrase about Joanna's interior or inner life; no particular real Joanna must be invented.",
+          "verification_needed": false,
+          "item_id": "item_c0cc953c0b0048fc"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "the sittings",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent noun phrase for sessions or sittings.",
+          "verification_needed": false,
+          "item_id": "item_c23ec29e8c0b0852"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "you any better lakeshore",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "incomplete_meaning"
+          ],
+          "explanation": "The sequence lacks a coherent predicate and does not form an intelligible noun phrase.",
+          "verification_needed": false,
+          "item_id": "item_c3c089f76d56f866"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "one aids ninja",
+          "verdict": "unsure",
+          "reasons": [
+            "grammar",
+            "unfamiliar"
+          ],
+          "explanation": "If ninja is accepted here as a zero-marked plural, the sentence means one person helps ninja; that lexical convention needs verification.",
+          "verification_needed": true,
+          "item_id": "item_c75cca52bd15f517"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honeys elaborate turkey",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Honeys as a plural subject and elaborate as a verb leave an unclear relationship with turkey.",
+          "verification_needed": false,
+          "item_id": "item_c8681aa73229a16e"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "thing is test",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Ordinary count-noun readings of thing and test need determiners in this clause.",
+          "verification_needed": false,
+          "item_id": "item_d0a4d3df871302b6"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "engraving rates almost",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Almost is stranded, whether engraving rates is read as a noun phrase or engraving as the subject of rates.",
+          "verification_needed": false,
+          "item_id": "item_d12df62564cd48c5"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the year keynote labours",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The year keynote is not a clear subject, and labours does not make the combination independently intelligible.",
+          "verification_needed": false,
+          "item_id": "item_d4ac186ade47001d"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "amusing whore",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A coherent adjective-plus-noun phrase; its derogatory wording is not a grammar or meaning defect.",
+          "verification_needed": false,
+          "item_id": "item_d7ec0b3eb119939d"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "several migrants tango",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A straightforward grammatical sentence: several migrants dance the tango.",
+          "verification_needed": false,
+          "item_id": "item_d9a8af7fe23cdcc5"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "anode is ninja",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Bare count nouns anode and ninja make the clause malformed; their asserted identity is also unclear.",
+          "verification_needed": false,
+          "item_id": "item_df94261e9d21913a"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "game given translators",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A compact noun phrase for a game given to translators; give permits the recipient construction without an explicit to.",
+          "verification_needed": false,
+          "item_id": "item_dfb9fa14b772e5b5"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "reap herald",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Herald as an ordinary count-noun object needs a determiner, and reap does not establish a clear relation to it.",
+          "verification_needed": false,
+          "item_id": "item_e046e576957443cc"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "chisel no beach",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "The displayed words do not form a clear instruction or noun phrase without added punctuation or words.",
+          "verification_needed": false,
+          "item_id": "item_e30527f2c6f780ff"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey turkeys elaborate",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning",
+            "semantic_anomaly"
+          ],
+          "explanation": "The subject-verb structure is possible, but honey turkeys is unclear and elaborating turkeys require a figurative reading.",
+          "verification_needed": false,
+          "item_id": "item_e50ffdb27d8d6490"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "ninja said one",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Ordinary singular ninja lacks a determiner; assuming Ninja is a person's name would be an unsupported rescue.",
+          "verification_needed": false,
+          "item_id": "item_e57ccdbb0e1833a2"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "test sign hit",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A stack of three nouns or verbs with no clear standalone relationship.",
+          "verification_needed": false,
+          "item_id": "item_e5d0c81bb43efacd"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the tunes relay yearbook",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "Bare singular yearbook is problematic as the object, and tunes relaying it is not a clear ordinary meaning.",
+          "verification_needed": false,
+          "item_id": "item_e94010796f8c000e"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "anna is joined",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A grammatical passive statement that Anna is joined or accompanied; the joining participant can remain unspecified.",
+          "verification_needed": false,
+          "item_id": "item_ef8df85be6383533"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "adjoin sienna",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Sienna could denote a person or colour, but adjoin does not establish a clear ordinary instruction with that object.",
+          "verification_needed": false,
+          "item_id": "item_f10c252a563b80fa"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "lies chance hob",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "The word order does not form a clear clause or noun phrase.",
+          "verification_needed": false,
+          "item_id": "item_f1de8c47bfd467a4"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "chino bleaches",
+          "verdict": "unsure",
+          "reasons": [
+            "unfamiliar",
+            "meaning"
+          ],
+          "explanation": "A textile or garment reading of chino may make bleaches meaningful, but the exact lexical/count-noun usage needs checking.",
+          "verification_needed": true,
+          "item_id": "item_f42f6327e362f99c"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "holes can be chi",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The modal clause is grammatical, but equating holes with chi has no clear ordinary interpretation.",
+          "verification_needed": false,
+          "item_id": "item_f483f7f087782d76"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "naan is joined",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A grammatical passive statement that naan has been attached or connected; unusual subject matter alone does not invalidate it.",
+          "verification_needed": false,
+          "item_id": "item_f49fb1cbf88db9a5"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "stings tithe",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The two words do not establish a clear relationship; reading stings as a verb leaves tithe without a normal determiner.",
+          "verification_needed": false,
+          "item_id": "item_f60be8c36b607f02"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "wires go human",
+          "verdict": "unsure",
+          "reasons": [
+            "semantic_anomaly",
+            "meaning"
+          ],
+          "explanation": "The syntax suggests wires becoming human, but the figurative or speculative meaning is borderline without further context.",
+          "verification_needed": false,
+          "item_id": "item_f7234a353f16e270"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "joanna indies",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name",
+            "meaning"
+          ],
+          "explanation": "Could be a name-like string or a label involving independent productions, but neither reading is established.",
+          "verification_needed": true,
+          "item_id": "item_fa60a557bf66047b"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "you rate herbal keynotes",
+          "verdict": "useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A grammatical statement about evaluating keynote presentations concerning herbs or herbal subjects.",
+          "verification_needed": false,
+          "item_id": "item_fb42ddd84ac0f280"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "bin holes cache",
+          "verdict": "unsure",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "A cache related to bin holes is a possible technical compound, but the relationship is too unclear to endorse without context.",
+          "verification_needed": false,
+          "item_id": "item_fb80b20663faa632"
+        }
+      ]
+    },
+    {
+      "id": "sol",
+      "reviewer_source": "llm",
+      "rubric_version": "standalone-usefulness-v1",
+      "provenance": {
+        "reported_model": "GPT-6 Sol (user report; file says generic GPT-6, exact build unknown)",
+        "reported_reasoning_effort": "xhigh (user report)",
+        "file_model": "GPT-6",
+        "file_model_version": "GPT-6 (exact internal build unknown)",
+        "file_identity_note": null,
+        "blinding_disclosure": "Packet itself omits labels/scores/target answers. However, a handful of human labels for overlapping phrases were exposed in preceding conversation turns; this is not a fully independent blinded evaluation.",
+        "methods": "Text-only subjective linguistic assessment, no external lookup and no solver scores or current user-label exports used",
+        "date": "2026-10-15"
+      },
+      "source_sha256": "36e5068059dcaacb997a20a68721d728cd25d00e87e9f9be29b5a20e55c1e2a6",
+      "judgments": [
+        {
+          "case_id": "testing_shit",
+          "phrase": "test in sight",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A concise headline-like phrase meaning a test is visible or approaching.",
+          "verification_needed": false,
+          "item_id": "item_00f67bd357a776b0"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "keynote hearsay trouble",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "This noun sequence does not express a clear standalone relationship.",
+          "verification_needed": false,
+          "item_id": "item_0359743edb9f3bf5"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "test is night",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A test is not straightforwardly a night; no ordinary intended relationship is conveyed.",
+          "verification_needed": false,
+          "item_id": "item_04bcb7f819de900b"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "cash be choline",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "The word order is not standard English and cash cannot straightforwardly be choline.",
+          "verification_needed": false,
+          "item_id": "item_06369b3845a33129"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its net sight",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The combination 'net sight' has no clear relation to the possessive 'its' in ordinary usage.",
+          "verification_needed": false,
+          "item_id": "item_0787a72b5c6def00"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "hobs lie chance",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "No intelligible syntactic relationship links the three words.",
+          "verification_needed": false,
+          "item_id": "item_096d3e5d4a849172"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "aids join anne",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Aids as tools or assistance do not naturally 'join Anne'; reading them as human aides changes the word.",
+          "verification_needed": false,
+          "item_id": "item_09e91c67741c34a2"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "setting hits",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Neither an identifiable action nor a coherent standalone noun phrase without specifying what is being set or hit.",
+          "verification_needed": false,
+          "item_id": "item_0a010186a41b1a3a"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "enough is warm",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Could refer to a sufficient amount of something that is warm, but the referent is not recoverable.",
+          "verification_needed": false,
+          "item_id": "item_0b62127376bea93d"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herd a pearl",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Herding a pearl treats a small object as livestock without any straightforward meaning.",
+          "verification_needed": false,
+          "item_id": "item_0ca12b18eb825a0f"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "helicon beachs",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering",
+            "meaning"
+          ],
+          "explanation": "The displayed 'beachs' is nonstandard; the pair does not otherwise convey a clear idea.",
+          "verification_needed": false,
+          "item_id": "item_0e27ade93200880e"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "governing states alarm",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Potential subject and verb, but 'alarm' requires an affected party or a clearer headline context.",
+          "verification_needed": false,
+          "item_id": "item_0e3ecc974919dacf"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "arranging moves latest",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The adjective/adverb 'latest' has no natural syntactic role in this ordering.",
+          "verification_needed": false,
+          "item_id": "item_0f26413f8ad7a9c5"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "each ben is loch",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A 'ben' (hill) and a 'loch' (lake) denote different things, with no clear meaningful assertion here.",
+          "verification_needed": false,
+          "item_id": "item_13e65f64d844131c"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "no chiles beach",
+          "verdict": "not_useful",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "Would require inventing a beach name or unusual missing context; 'chiles beach' is not a clear noun phrase.",
+          "verification_needed": false,
+          "item_id": "item_14485baaea7080a9"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "boils chance he",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The arrangement lacks a workable subject-verb-complement structure.",
+          "verification_needed": false,
+          "item_id": "item_166d2ff492af93e4"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the tune layers yearbook",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A tune layering a yearbook has no clear standalone interpretation.",
+          "verification_needed": false,
+          "item_id": "item_18d4299fb1e7d40c"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "a harper led",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "An understandable statement or headline that a harp player took the lead; 'led' may be intransitive.",
+          "verification_needed": false,
+          "item_id": "item_18de25e7b68e2cb3"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "no beach is lech",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A beach is not a lecherous person; the sentence has no straightforward coherent predication.",
+          "verification_needed": false,
+          "item_id": "item_1b940e1f73be7359"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "rough am wines",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "First-person 'am' has no compatible subject or construction.",
+          "verification_needed": false,
+          "item_id": "item_1e3cf2c23e21fe32"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "who measuring",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Missing an auxiliary verb or another grammatical connection.",
+          "verification_needed": false,
+          "item_id": "item_1f1dca013dbbaa2c"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "naiad enjoins",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "A mythological nymph can issue an injunction, but 'enjoins' normally needs a target or commanded act.",
+          "verification_needed": false,
+          "item_id": "item_23880fe32bf98712"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey easterly breakout",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The modifier chain gives no straightforward referent for this purported outbreak.",
+          "verification_needed": false,
+          "item_id": "item_25310e06df8a8ac1"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "chisel can be oh",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Equating a chisel with the interjection 'oh' is not a coherent ordinary statement.",
+          "verification_needed": false,
+          "item_id": "item_260f7674ed5719b6"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "indiana jones",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A recognizable fictional character name.",
+          "verification_needed": false,
+          "item_id": "item_294662e15c6d6bb3"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "shogun weimar",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Two recognizable concepts, but no intelligible relation between the Japanese title and the German place/history.",
+          "verification_needed": false,
+          "item_id": "item_2a39227ccb644412"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "bach is echelon",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The musician's name and the noun 'echelon' do not form a meaningful identity claim.",
+          "verification_needed": false,
+          "item_id": "item_2afd875d238a1f15"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "mine was rough",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "Coherent clause about a mine or something belonging to the speaker having been rough.",
+          "verification_needed": false,
+          "item_id": "item_2e37bf69833e0857"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "this testing",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A conventional demonstrative noun phrase referring to testing under discussion.",
+          "verification_needed": false,
+          "item_id": "item_2ed0b8532323ff5d"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "her para led",
+          "verdict": "unsure",
+          "reasons": [
+            "unfamiliar",
+            "incomplete_meaning"
+          ],
+          "explanation": "'Para' can be shorthand for a person such as a paratrooper or aide, but the clause still lacks ordinary context.",
+          "verification_needed": false,
+          "item_id": "item_2effad42a2efd262"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "yearbook threatens yule",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "An odd but comprehensible headline or fiction title: a yearbook threatens Christmas festivities.",
+          "verification_needed": false,
+          "item_id": "item_306c22f82e23dce5"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "each chen boils",
+          "verdict": "unsure",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "It is grammatically possible if 'Chen' means members of a named family and 'boils' is figurative, but that is a strained reading.",
+          "verification_needed": false,
+          "item_id": "item_30dcb4fd04b60150"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "each belch is on",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "The copular structure parses but 'a belch is on' is not an ordinary intelligible predicate.",
+          "verification_needed": false,
+          "item_id": "item_33055f597458123b"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "region was hum",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The singular count noun 'hum' ordinarily needs an article, and the predication is unclear.",
+          "verification_needed": false,
+          "item_id": "item_347dc426fe8b4b97"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "only eukaryote breathes",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The singular count noun 'eukaryote' needs a determiner; the plural version would be a repair.",
+          "verification_needed": false,
+          "item_id": "item_39b26c1c58f1a4c0"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "pearl heard",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning",
+            "unverified_name"
+          ],
+          "explanation": "Possibly a fragment about a person named Pearl hearing something, or a personal name; standalone intent is unclear.",
+          "verification_needed": true,
+          "item_id": "item_3a92febdc9cbf441"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "testing hits",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "Can describe testing hit events or counts in a software or sports context; a coherent activity phrase.",
+          "verification_needed": false,
+          "item_id": "item_3aa98a98dfc6c0ce"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "this tin gets",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "The verb 'gets' leaves the statement unfinished without a recoverable complement.",
+          "verification_needed": false,
+          "item_id": "item_3c53c07f6953fa68"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "eukaryotes halter ebony",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "There is no natural relation between organisms haltering ebony wood.",
+          "verification_needed": false,
+          "item_id": "item_3cd44bdb0be34cbe"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "grass moving alternate",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The word order is a disconnected fragment, not a meaningful title or clause.",
+          "verification_needed": false,
+          "item_id": "item_3e850737d911e521"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "a parer held",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning",
+            "unfamiliar"
+          ],
+          "explanation": "Could be an elliptical headline saying a paring tool was held, but 'parer' and this use of 'held' are unusual.",
+          "verification_needed": false,
+          "item_id": "item_3ee0e5de191ca4ec"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "lead harper",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A coherent role phrase meaning a principal harp player, though specialized and uncommon.",
+          "verification_needed": false,
+          "item_id": "item_420b3375f0d8eb71"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "adjoin insane",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The adjective 'insane' cannot naturally be the direct noun object of 'adjoin'.",
+          "verification_needed": false,
+          "item_id": "item_42b6ee83633a5dc0"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "joannes india",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name"
+          ],
+          "explanation": "Looks potentially like a name plus place or surname, but no recognizable individual or phrase is apparent.",
+          "verification_needed": true,
+          "item_id": "item_447fd154271abde1"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "nichole beachs",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name",
+            "spelling_rendering"
+          ],
+          "explanation": "Potential personal name, but 'Beachs' is unusual and no specific recognizable person is established.",
+          "verification_needed": true,
+          "item_id": "item_466623a586ec2136"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the year keynotes labour",
+          "verdict": "unsure",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Could metaphorically mean a year foregrounds labour, but 'year keynotes' is highly unusual.",
+          "verification_needed": false,
+          "item_id": "item_467eb50f924a0786"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herald pear",
+          "verdict": "not_useful",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "Announcing a pear is grammatically possible but requires a contrived context to count as useful.",
+          "verification_needed": false,
+          "item_id": "item_4824d7f3f758bc4f"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "indonesia jan",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "A place and a possible month abbreviation lack a clear grammatical relationship.",
+          "verification_needed": false,
+          "item_id": "item_487a6c04bbaa2354"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "whore am using",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "A third-person nominal subject is paired with first-person 'am'.",
+          "verification_needed": false,
+          "item_id": "item_4eb6b31cc618ed9c"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "read her lap",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A lap is not ordinarily something that can be read; the command needs an invented scenario.",
+          "verification_needed": false,
+          "item_id": "item_4fd9807ce24f350d"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its get hints",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Possessive 'its' is not a subject, and 'get hints' has no grammatical subject as displayed.",
+          "verification_needed": false,
+          "item_id": "item_518cd28910a7bfa6"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its gets thin",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The written 'its' is possessive, not 'it'; silently inserting or replacing punctuation would be a repair.",
+          "verification_needed": false,
+          "item_id": "item_52a395b05918d403"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "her real pad",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A normal possessive noun phrase referring to her actual home, pad, or notepad.",
+          "verification_needed": false,
+          "item_id": "item_53b6c952b0d44306"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "house warming",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A recognizable open compound for a housewarming or the activity of warming a house.",
+          "verification_needed": false,
+          "item_id": "item_564a925deb8afeef"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "choline beachs",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering",
+            "meaning"
+          ],
+          "explanation": "The displayed 'beachs' is nonstandard, and the combination with choline has no clear interpretation.",
+          "verification_needed": false,
+          "item_id": "item_5b65ca637e74b6ed"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "nine jason aid",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The numeral, name and noun/verb have no standard English construction.",
+          "verification_needed": false,
+          "item_id": "item_5f66b6fbadb92a32"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "tightness it",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "No natural grammatical connection exists between the noun and pronoun.",
+          "verification_needed": false,
+          "item_id": "item_611707dae029a5f9"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "anguish mower",
+          "verdict": "not_useful",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "A mower that cuts anguish is possible only as an invented metaphor, not a self-explanatory noun phrase.",
+          "verification_needed": false,
+          "item_id": "item_62515e7b996673ae"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "geraniums who",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "A relative pronoun is stranded with no predicate or meaningful modification.",
+          "verification_needed": false,
+          "item_id": "item_6521d8b68711f9ec"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "rue am showing",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The first-person verb 'am' does not agree with the apparent subject 'rue'.",
+          "verification_needed": false,
+          "item_id": "item_6b60807fdedde003"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the years keynote labour",
+          "verdict": "unsure",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A figurative title about years emphasizing labour is possible but not an immediately natural use of 'keynote'.",
+          "verification_needed": false,
+          "item_id": "item_73a9bdd6a9b2290a"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "whom are using",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The object pronoun 'whom' is incorrectly used as the subject of 'are using'.",
+          "verification_needed": false,
+          "item_id": "item_74de77f6a808bebc"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "aid one ninjas",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Neither an imperative plus object nor a simple clause is grammatical as displayed.",
+          "verification_needed": false,
+          "item_id": "item_779df9476c8a0571"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "geranium whos",
+          "verdict": "not_useful",
+          "reasons": [
+            "spelling_rendering",
+            "grammar"
+          ],
+          "explanation": "The displayed 'whos' cannot be silently rewritten as 'who's' and does not supply a grammatical continuation.",
+          "verification_needed": false,
+          "item_id": "item_793af09f89a9e91c"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "arp are held",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The singular-looking 'arp' clashes with 'are' without an established plural or acronym reading.",
+          "verification_needed": false,
+          "item_id": "item_7b087ad935a27c61"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "annie adjoins",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "The verb 'adjoins' lacks a natural neighboring place or thing, though the construction is superficially possible.",
+          "verification_needed": false,
+          "item_id": "item_7c08c15925cafac3"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "alpha erred",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "Simple coherent clause if Alpha is a person, rank, or named alpha release: Alpha made a mistake.",
+          "verification_needed": false,
+          "item_id": "item_7e8aea3b56dce6f3"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "hungers miaow",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "The verb and animal-sound word have no workable subject or object relationship.",
+          "verification_needed": false,
+          "item_id": "item_7ef4907236c5c3e0"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "aid joins anne",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Abstract assistance does not naturally join a person; an intended personal-name reading is unsupported.",
+          "verification_needed": false,
+          "item_id": "item_823ed665dc3f43eb"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "i bleach chosen",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The adjective/substantive 'chosen' needs an appropriate noun phrase or determiner as the object.",
+          "verification_needed": false,
+          "item_id": "item_8555f70513a98ef0"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "only eukaryotes breathe",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A complete, intelligible assertion about which organisms breathe, whether or not it is scientifically true.",
+          "verification_needed": false,
+          "item_id": "item_855ea74ec3e1f592"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "its gets hint",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Possessive 'its' cannot serve as the subject here, and 'gets hint' is missing the expected determiner.",
+          "verification_needed": false,
+          "item_id": "item_85e0da33fd05e0eb"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the tunes layer yearbook",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Layering a yearbook with tunes is not clearly expressed or plausible as displayed.",
+          "verification_needed": false,
+          "item_id": "item_873bcd6c9a5ccca2"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "a raper held",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "Headline-style elliptical passive saying a sexual offender has been detained; rare wording is not automatically incoherent.",
+          "verification_needed": false,
+          "item_id": "item_8f0f71efbd7ef3f9"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "annas joined i",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The object pronoun 'I' is not grammatical after 'joined'.",
+          "verification_needed": false,
+          "item_id": "item_8fcebe6caa0889d7"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "governing alarms state",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "If 'alarms' is the subject, 'state' lacks its object; the modifiers otherwise do not cohere.",
+          "verification_needed": false,
+          "item_id": "item_9208b1ab2c54782f"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "hale draper",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A grammatical adjective-noun phrase for a healthy or vigorous cloth seller.",
+          "verification_needed": false,
+          "item_id": "item_9531dfe47663f5e9"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "migrants are galveston",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "People are not a city; no natural identity statement follows from these words.",
+          "verification_needed": false,
+          "item_id": "item_95ba5ec57d0040ba"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "hitting sets",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A comprehensible sports or training phrase for doing sets of hits; terse but coherent.",
+          "verification_needed": false,
+          "item_id": "item_97b0c1e736de9d27"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the eyes nuke laboratory",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "The count noun 'laboratory' is missing a determiner, with an implausible literal relationship.",
+          "verification_needed": false,
+          "item_id": "item_981fc9281b7421d4"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herald rape",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A coherent albeit disturbing imperative meaning to announce or foreshadow sexual violence; offensiveness is separate.",
+          "verification_needed": false,
+          "item_id": "item_9820f5d0b38c454e"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "herald a rep",
+          "verdict": "unsure",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "Can mean announcing a representative's arrival or a repetition, but the object and situation are awkwardly underdetermined.",
+          "verification_needed": false,
+          "item_id": "item_991ff60c50285c7b"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "housewarming",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "Ordinary English word for a celebration of moving into a new home.",
+          "verification_needed": false,
+          "item_id": "item_99627746ced90699"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "several organs matting",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Literal human organs do not naturally 'mat' in the ordinary sense; no clear activity is expressed.",
+          "verification_needed": false,
+          "item_id": "item_9d994e208bfc745f"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "test insight",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A reasonable terse imperative to test an insight, or a heading about insights from tests.",
+          "verification_needed": false,
+          "item_id": "item_a20d0e4504a101c7"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "this setting",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A natural demonstrative noun phrase referring to a setting or configuration.",
+          "verification_needed": false,
+          "item_id": "item_a26a21178fe065e3"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "show geranium",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Could be a terse plant-display command or a horticultural compound, but singular 'geranium' lacks a normal determiner.",
+          "verification_needed": false,
+          "item_id": "item_a338974e803034b6"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "things test i",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The object pronoun should not be 'I' after 'test'; the displayed order does not form standard English.",
+          "verification_needed": false,
+          "item_id": "item_a680fa7520c022e9"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "diana enjoins",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Diana could give an injunction, but the verb's expected addressee or prohibited action is absent.",
+          "verification_needed": false,
+          "item_id": "item_a75c4afd0807c09d"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "deal harper",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Neither the command nor the noun compound clearly relates dealing to a harper.",
+          "verification_needed": false,
+          "item_id": "item_a7fa9bcadaeef393"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "harp led are",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "No valid English clause emerges from this word order.",
+          "verification_needed": false,
+          "item_id": "item_a87775ca7220c44f"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "hard repeal",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "An understandable political/legal noun phrase for a tough or uncompromising repeal.",
+          "verification_needed": false,
+          "item_id": "item_aafd453b9a2da5df"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "beech nicholas",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name"
+          ],
+          "explanation": "Could be a person's name, but it is not a recognizable referent from the words alone; not crediting an invented identity.",
+          "verification_needed": true,
+          "item_id": "item_ab85ad6827c088d7"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "melanogaster starving",
+          "verdict": "unsure",
+          "reasons": [
+            "unfamiliar",
+            "incomplete_meaning"
+          ],
+          "explanation": "'Melanogaster' is commonly a species epithet; without its genus or fuller context the reference is unclear.",
+          "verification_needed": true,
+          "item_id": "item_b16e5f41aa7d7fc3"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "starting loves manager",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The participle, verb and noun do not form a workable ordinary clause.",
+          "verification_needed": false,
+          "item_id": "item_b1ad0308c3b528e1"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "settings hit",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Could be technical log shorthand or an elliptical headline, but the meaning is not sufficiently clear on its own.",
+          "verification_needed": false,
+          "item_id": "item_b3b271498f7d0606"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "leader harp",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Could name a principal harp in an ensemble, but the compound relationship is unclear.",
+          "verification_needed": false,
+          "item_id": "item_b3d1d438ac3dbebe"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey turkey elaborates",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A 'honey turkey' giving an elaboration requires an invented personification.",
+          "verification_needed": false,
+          "item_id": "item_b42b70752e24eb21"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the eye nukes laboratory",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "The singular count noun 'laboratory' lacks a determiner, and an eye destroying a lab is semantically strained.",
+          "verification_needed": false,
+          "item_id": "item_b5e85a4e11b8ed42"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey easterly outbreak",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "The adjective sequence does not specify an intelligible kind of outbreak.",
+          "verification_needed": false,
+          "item_id": "item_bca47bc505a80c22"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "hew ignoramus",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The singular count noun 'ignoramus' normally needs an article as the object of 'hew'.",
+          "verification_needed": false,
+          "item_id": "item_be01040dd100d7ae"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "rhenium was go",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "The sequence 'was go' is not grammatical English here.",
+          "verification_needed": false,
+          "item_id": "item_c0c9aabe30adb9fd"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "inside joanna",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A recognizable title-like phrase referring to Joanna's inner life or an interior perspective on Joanna.",
+          "verification_needed": false,
+          "item_id": "item_c0cc953c0b0048fc"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "the sittings",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A coherent plural noun phrase for sessions, for example of a court or legislature.",
+          "verification_needed": false,
+          "item_id": "item_c23ec29e8c0b0852"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "you any better lakeshore",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "Missing syntactic connections or a verb; not a meaningful clause or title as written.",
+          "verification_needed": false,
+          "item_id": "item_c3c089f76d56f866"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "one aids ninja",
+          "verdict": "unsure",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "The missing article before 'ninja' would be resolved if Ninja were used as a specific person's stage name; otherwise it reads as broken English.",
+          "verification_needed": false,
+          "item_id": "item_c75cca52bd15f517"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honeys elaborate turkey",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The subject and verb are possible words, but elaborating a turkey is not a straightforward action.",
+          "verification_needed": false,
+          "item_id": "item_c8681aa73229a16e"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "thing is test",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar"
+          ],
+          "explanation": "A singular count noun ordinarily needs a determiner here; this does not read as a normal standalone statement.",
+          "verification_needed": false,
+          "item_id": "item_d0a4d3df871302b6"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "engraving rates almost",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "The adverb 'almost' leaves the alleged comparison or action unfinished.",
+          "verification_needed": false,
+          "item_id": "item_d12df62564cd48c5"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the year keynote labours",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "incomplete_meaning"
+          ],
+          "explanation": "The possible nominal subject 'year keynote' has no clear meaning or sensible action in 'labours'.",
+          "verification_needed": false,
+          "item_id": "item_d4ac186ade47001d"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "amusing whore",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "An adjective-noun phrase with an immediate meaning; its offensiveness is a separate consideration.",
+          "verification_needed": false,
+          "item_id": "item_d7ec0b3eb119939d"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "several migrants tango",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "Complete, straightforward sentence: several migrants dance the tango.",
+          "verification_needed": false,
+          "item_id": "item_d9a8af7fe23cdcc5"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "anode is ninja",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "semantic_anomaly"
+          ],
+          "explanation": "The count noun 'ninja' lacks an article or name context, and the identity claim is incoherent.",
+          "verification_needed": false,
+          "item_id": "item_df94261e9d21913a"
+        },
+        {
+          "case_id": "testing_anagram_solver",
+          "phrase": "game given translators",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A terse but intelligible headline saying a game has been assigned translators for localization.",
+          "verification_needed": false,
+          "item_id": "item_dfb9fa14b772e5b5"
+        },
+        {
+          "case_id": "turtles-01",
+          "phrase": "reap herald",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Harvesting a herald is not a straightforward action or recognized expression.",
+          "verification_needed": false,
+          "item_id": "item_e046e576957443cc"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "chisel no beach",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The imperative is syntactically conceivable, but chiselling a beach has no straightforward practical meaning.",
+          "verification_needed": false,
+          "item_id": "item_e30527f2c6f780ff"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "honey turkeys elaborate",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The supposed honey turkeys 'elaborating' requires inventing creatures and circumstances.",
+          "verification_needed": false,
+          "item_id": "item_e50ffdb27d8d6490"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "ninja said one",
+          "verdict": "unsure",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "Interpretable if 'Ninja' is a person's name and 'one' is what they said, but that is not the immediate ordinary reading.",
+          "verification_needed": false,
+          "item_id": "item_e57ccdbb0e1833a2"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "test sign hit",
+          "verdict": "not_useful",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Looks like isolated event-log keywords rather than a clear clause or noun phrase.",
+          "verification_needed": false,
+          "item_id": "item_e5d0c81bb43efacd"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "the tunes relay yearbook",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Tunes relaying a yearbook does not offer a straightforward coherent meaning.",
+          "verification_needed": false,
+          "item_id": "item_e94010796f8c000e"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "anna is joined",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "A grammatical passive clause, but it leaves unclear what Anna has joined or been joined to.",
+          "verification_needed": false,
+          "item_id": "item_ef8df85be6383533"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "adjoin sienna",
+          "verdict": "unsure",
+          "reasons": [
+            "contrived_context"
+          ],
+          "explanation": "An imperative to become adjacent to a person or place named Sienna is conceivable but not a natural standalone instruction.",
+          "verification_needed": false,
+          "item_id": "item_f10c252a563b80fa"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "lies chance hob",
+          "verdict": "not_useful",
+          "reasons": [
+            "grammar",
+            "meaning"
+          ],
+          "explanation": "The three words do not make a coherent English construction.",
+          "verification_needed": false,
+          "item_id": "item_f1de8c47bfd467a4"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "chino bleaches",
+          "verdict": "unsure",
+          "reasons": [
+            "unfamiliar",
+            "incomplete_meaning"
+          ],
+          "explanation": "Could refer to chino cloth fading or being bleached, but singular 'chino' and this usage need lexical/contextual confirmation.",
+          "verification_needed": true,
+          "item_id": "item_f42f6327e362f99c"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "holes can be chi",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "Holes being 'chi' does not express a straightforward relation even though chi is a word.",
+          "verification_needed": false,
+          "item_id": "item_f483f7f087782d76"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "naan is joined",
+          "verdict": "unsure",
+          "reasons": [
+            "incomplete_meaning"
+          ],
+          "explanation": "Grammatical passive wording, but it does not clarify what the bread is joined to or why.",
+          "verification_needed": false,
+          "item_id": "item_f49fb1cbf88db9a5"
+        },
+        {
+          "case_id": "testing_shit",
+          "phrase": "stings tithe",
+          "verdict": "not_useful",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "The words can be parsed separately, but there is no straightforward relationship between stinging and a tithe.",
+          "verification_needed": false,
+          "item_id": "item_f60be8c36b607f02"
+        },
+        {
+          "case_id": "welcome-housewarming",
+          "phrase": "wires go human",
+          "verdict": "useful",
+          "reasons": [],
+          "explanation": "A comprehensible science-fiction or technology headline implying wires or technology take on human qualities.",
+          "verification_needed": false,
+          "item_id": "item_f7234a353f16e270"
+        },
+        {
+          "case_id": "lucas-02",
+          "phrase": "joanna indies",
+          "verdict": "unsure",
+          "reasons": [
+            "unverified_name"
+          ],
+          "explanation": "May be a name or media shorthand, but no recognizable referent or clear noun phrase is established.",
+          "verification_needed": true,
+          "item_id": "item_fa60a557bf66047b"
+        },
+        {
+          "case_id": "keys_table",
+          "phrase": "you rate herbal keynotes",
+          "verdict": "unsure",
+          "reasons": [
+            "semantic_anomaly"
+          ],
+          "explanation": "A grammatical sentence, but 'herbal keynotes' does not have an immediately clear conventional referent.",
+          "verification_needed": false,
+          "item_id": "item_fb42ddd84ac0f280"
+        },
+        {
+          "case_id": "books-02",
+          "phrase": "bin holes cache",
+          "verdict": "not_useful",
+          "reasons": [
+            "meaning"
+          ],
+          "explanation": "Three technical-looking nouns lack a clear semantic or syntactic relationship.",
+          "verification_needed": false,
+          "item_id": "item_fb80b20663faa632"
+        }
+      ]
+    }
+  ]
+}
