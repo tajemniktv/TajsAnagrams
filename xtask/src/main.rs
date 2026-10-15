@@ -5,6 +5,7 @@ mod puzzles;
 mod quality;
 mod research;
 mod review;
+mod review_models;
 mod stages;
 mod verify;
 
@@ -210,6 +211,7 @@ fn main_inner() -> Result<()> {
             println!(
                 "cargo xtask review [--runs FILE --workloads FILE --dictionaries FILE --judgments CSV --summary FILE --output FILE]"
             );
+            println!("cargo xtask review models --manifest FILE --output JSON --readable MARKDOWN");
             println!(
                 "cargo xtask check\ncargo xtask contracts [--check]\ncargo xtask quality --runs FILE [--cases FILE --ranking desktop|final_score|both --output FILE]\ncargo xtask benchmark [--cli PATH --before PATH --mode solve|generate --stages --output FILE]\ncargo xtask research lexicon --db FILE [--current FILE]\ncargo xtask research ngram --arpa FILE --groups FILE\ncargo xtask research tubelex --tubelex FILE [--unigrams FILE]\ncargo xtask research puzzles --packet DIR [--runs FILE]\nUse --help after quality, benchmark or a research command for options."
             );

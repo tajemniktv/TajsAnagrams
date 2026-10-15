@@ -36,6 +36,17 @@ are excluded from metrics; unsure remains unresolved. Latest conditional batch
 feedback lives in `usefulness.v3.json`; the historical v2 label file stays frozen.
 Collection/export does not yet implement source-family-clustered promotion analysis.
 
+The first returned LLM batch covers 131 sampled outputs on seven puzzles.
+`cargo xtask review models` validates and compares separate proposals against the
+frozen human export, preserving uncertainty and reported provenance. Echo claims
+blinding; Sol discloses prior exposure to overlapping human labels. Their
+agreement is diagnostic, not independent calibration or a reason to replace human
+labels. Prioritize a small disagreement/lookup queue and clarify the boundary
+between coherent unusual titles and contrived readings. Then freeze the rubric
+and collect a fresh family-separated, properly blinded calibration batch before
+using models to reduce routine review. Phase 5 remains open; no model or corpus
+promotion follows from this first exposed sample.
+
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
 - Native authority: Python oracle/parity/legacy workflows are retired historical

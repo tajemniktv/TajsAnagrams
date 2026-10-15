@@ -493,6 +493,34 @@ human-uncertain cases. No 131-row sample is 131 independent puzzles, and no gene
 LLM judging result establishes anagram-specific calibration. Keep exact arithmetic
 and rank validation in deterministic tools; an LLM's explanation is not that proof.
 
+Returned model reviews can be compared offline without modifying human labels:
+
+```text
+cargo xtask review models --manifest .codex/temp/review-inputs.json --output .codex/temp/model-comparison.json --readable .codex/temp/model-comparison.md
+```
+
+The manifest contains `packet` (the frozen Markdown packet), `mapping` (its private
+item-to-human-row mapping with `export_sha256`), `human_export`, optional
+`workloads`, and a `reviewers` array. Each reviewer has `id`, `path`,
+`reported_model`, optional `reported_reasoning_effort`, and `provenance_note`.
+Input paths resolve relative to the manifest; output directories must already
+exist. Model JSON can put provenance at the root or under `metadata`; judgments
+use the packet's item IDs, three-way verdict/reason schema, explanations and
+verification flags. Preserve original metadata, including null identities and
+any disclosed prior label exposure. Reported model/effort is not authentication.
+
+The Rust command verifies the human-export hash, exact packet/mapping/capture
+links, unique complete model coverage, optional phrase/puzzle/hash claims and
+summary counts before reporting. JSON retains all proposals and three-way
+matrices; Markdown shows grouped phrases, puzzle counts, abstention coverage and
+an adjudication queue. Family enrichment requires an exact case/request match;
+unknown families stay unknown. Output paths cannot replace evidence inputs.
+This is language-review intake, not another exact-letter validator or English
+oracle. Human uncertainty, model uncertainty and definite disagreement remain
+distinct. Model consensus does not relabel a human record, establish independent
+agreement or promote a corpus/ranker. No model network calls or production
+dependencies are introduced. Test fixtures are synthetic and not real judgments.
+
 The Markdown view also has expandable actual-rank diagnostics for the first
 empty-cache trial of each treatment on each bag. These retain duplicate slots
 and failures, with treatment names/scores hidden. They are selected diagnostic

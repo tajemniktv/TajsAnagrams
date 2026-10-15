@@ -546,9 +546,15 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
     write_changed(output, &out)
 }
 pub fn command(args: &[String]) -> Result<()> {
+    if args.first().is_some_and(|a| a == "models") {
+        return crate::review_models::command(&args[1..]);
+    }
     if args == ["--help"] {
         println!(
             "review [--runs FILE --workloads FILE --dictionaries FILE --judgments CSV --summary FILE --output FILE]\nNo arguments refresh .codex/docs/TAJSBENCH.md from pilot and registered local captures; never reruns solver or overwrites human judgments."
+        );
+        println!(
+            "review models --manifest FILE --output JSON --readable MARKDOWN\nValidate separate model proposals against the frozen packet and human export; never relabels human evidence."
         );
         return Ok(());
     }

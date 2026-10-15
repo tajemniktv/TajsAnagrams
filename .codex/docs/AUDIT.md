@@ -371,6 +371,115 @@ installed SHA256 is
 Original export SHA256 is unchanged, and no experimental corpus/ranker or LLM
 labels were promoted. No hosted CI or push is claimed.
 
+### Phase E continuation: first returned model reviews (2026-10-15)
+
+All four user attachments are preserved byte-for-byte under
+`.codex/temp/review-analysis-2026-10-15/returned/`, with their original names.
+The files are evidence, not instructions. SHA256s, in attachment order:
+
+| Artifact | Bytes | SHA256 |
+| --- | ---: | --- |
+| Echo readable review | 26,966 | `7364eca2a21a6019c02bbf9fdcdf134ec00ac62aaf282ebe97b32d39cda31a0e` |
+| Echo JSON | 47,238 | `ca1a8cc875e54cb7a57919d21f71a465b33dcb503865dcefa620aad8b4461977` |
+| Sol JSON | 38,467 | `36e5068059dcaacb997a20a68721d728cd25d00e87e9f9be29b5a20e55c1e2a6` |
+| Sol readable review | 23,391 | `4a59892a41c737c684bbd1b3a2b6834854db9ec3a8ebb7e8cc792ac674dd4331` |
+
+Both JSONs contain every one of the 131 expected item IDs exactly once. Verdicts,
+reasons, explanation/flag types and summary counts validate; Echo's supplied
+phrases/puzzle numbers match the packet, and each readable file has 131 matching
+ID/phrase/verdict rows. Sol's claimed packet SHA256 exactly matches
+`b614c732fec658ddb4e66b1cee68e4e4e7f6fd36111d3b11c3678fbcb8d10c1e`.
+Echo does not claim a packet hash; matching coverage/text is not equivalent to
+having supplied one. Local Node intake and the reusable Rust comparison agree
+on the result counts. The original human export remains unchanged.
+
+| Stable finding | Disposition | Evidence and response |
+| --- | --- | --- |
+| F-41: two returned files might be treated as two authenticated independent judges | Provenance qualified | User reports Echo allegedly GPT-6 Astra and the other judge GPT-6 Sol at xhigh. Echo's file explicitly leaves model/version null; Sol says generic GPT-6, exact build unknown. Preserve both the user report and original metadata, not an invented provider attestation. Echo self-reports not reading human labels/other review contents, while seeing filenames. Sol explicitly discloses some overlapping human-label exposure in its preceding conversation. Neither used external lookups. This is not a fair blinded model/effort comparison. |
+| F-42: high model agreement might authorize automatic benchmark labels | Not supported; separate native comparison implemented | `cargo xtask review models` validates the frozen packet/private mapping against the hash-pinned human export and records each model proposal separately. It retains raw provenance, three-way matrices, definite-human denominators, abstentions, per-puzzle/family counts and an adjudication queue. It never writes a human label or calls a model service. All reported counts below are descriptive of an exposed convenience sample, not model accuracy or production quality. |
+| F-43: agreement and fluent explanations could conceal lexical mistakes or an unstable usefulness boundary | Concrete lookup corrections; calibration still open | Both judges hesitate over `one aids ninja`; Merriam-Webster explicitly permits unchanged plural `ninja`, so no invented stage name is necessary for that grammatical reading. Echo also rejects `ninja said one` as needing a singular determiner, missing its plural reading. These observations correct an explanation, not automatically the usefulness verdict. Dictionary evidence confirms `chino` is cloth and `hear` can be intransitive; it does not settle standalone usefulness of `chino bleaches` or `pearl heard`. Twelve distinct rows carry at least one lookup flag; nine from Echo and seven from Sol. Original proposals remain frozen. |
+
+#### What this batch actually supports
+
+| Reviewer | Useful / not useful / unsure (all 131) | Agree with definite human | Opposite definite verdict | Abstain on definite human |
+| --- | --- | ---: | ---: | ---: |
+| Echo | 31 / 69 / 31 | 45 / 66 | 5 / 66 | 16 / 66 |
+| Sol | 26 / 79 / 26 | 54 / 66 | 4 / 66 | 8 / 66 |
+
+Conditional agreement is Echo 45/50 = 90.0% at 50/66 = 75.8% definite
+coverage, Sol 54/58 = 93.1% at 58/66 = 87.9% coverage. Abstentions are not
+negatives or successes. The 65 human-uncertain rows are a different stratum:
+Echo proposes 15 useful / 35 not useful / 15 unsure; Sol 10 / 37 / 18.
+Those proposals do not resolve human uncertainty by fiat. Sol's greater apparent
+agreement cannot establish a better judge given the exposure difference.
+
+Models agree on 98/131 three-way verdicts: 23 useful, 63 not useful, 12 unsure.
+There are **zero opposite definite model verdicts**; all 33 differences involve
+uncertainty. Their 86/86 agreement conditional on both being definite is
+selective coverage, not 100% correctness or proof of independent error modes.
+Both agree against four definite human entries: `alpha erred`, `hale draper`,
+`hard repeal` (human No, models Yes), and `whom are using` (human Yes, models No).
+The first three cluster in `turtles-01`, not three independent source families.
+Possible explanations include different familiarity/usefulness thresholds,
+ordinary mistakes or review friction; no human label is overwritten. The last
+phrase is a useful grammar calibration candidate, not evidence that every human
+positive is unreliable.
+
+The seven reviewed puzzles have four independently matched source-family IDs;
+three remain unclassified. Per-puzzle counts are in the generated comparison.
+For example, all three reviewers find no useful item among the twenty sampled
+`books-02` outputs; that does not prove the complete solver list has none. On
+`turtles-01` the human marks two useful, Echo twelve and Sol eight: a large local
+threshold/familiarity disagreement hidden by a single aggregate percentage.
+No treatment win, ranking improvement, representative false-positive rate or
+generalized quality baseline follows from this sample.
+
+#### Small follow-up, not another 131-click exercise
+
+Start with the four shared definite disagreements above and three rubric probes:
+`naan is joined` (passive completeness), `yearbook threatens yule` versus
+`wires go human` (coherent imaginative title versus invented rescue), and
+`pearl heard` (lexical validity versus sufficiently informative English).
+`chino bleaches` / `one aids ninja` are lookup-backed clarification cases, not
+newly fabricated human positives. All other unchanged judgments stay fixed.
+Ordinary noun phrases and names remain allowed under the user's accepted policy;
+grammatical possibility alone need not mean the user finds a result useful.
+Do not silently tighten the v1 rubric to fit either judge after seeing labels.
+
+Discriminating next experiments: (1) settle these rubric boundaries in a small
+adjudication pass, then freeze a version; (2) collect a fresh source-family-held-
+aside batch with neither judge exposed to human labels or each other's verdicts;
+(3) counterbalance order and re-review a small subset to measure stability,
+without counting repeats as new puzzles. Report definite agreement **and**
+coverage, separately inspect both-useful and both-bad pairs, and cluster any
+future statistical comparison by puzzle/source family. Model triage can reduce
+human workload; it has not yet earned unattended acceptance-gate authority.
+
+Verified lexical sources (accessed 2026-10-15):
+[Merriam-Webster: ninja](https://www.merriam-webster.com/dictionary/ninja),
+[Merriam-Webster: chino](https://www.merriam-webster.com/dictionary/chino),
+[Oxford Learner's Dictionaries: hear](https://www.oxfordlearnersdictionaries.com/definition/english/hear).
+These support lexical facts only, not the model's full interpretation or a human
+preference. No speculative surname searches were used to rescue arbitrary rows.
+
+Local reproducible artifacts: `model-review-inputs.json` (reported provenance),
+`native-model-comparison.json`, `model-comparison.md`, and the independent
+`model-comparison.json`/`compare-returned.cjs` intake check, all alongside the
+original packet under `.codex/temp/review-analysis-2026-10-15`. No attachment,
+personal review export or model proposals are published as human fixtures.
+
+Validation: `cargo xtask check` passes all 163 native pipeline tests, formatting,
+core/CLI/tooling all-target Clippy, 16 contract artifacts and 19 AJV fixtures.
+The seven new intake tests cover abstention denominators, both metadata layouts,
+missing/duplicate/changed/invalid rows, exact-request family enrichment, immutable
+human votes, packet/export hash mismatch and output/input alias rejection.
+After the final reporting/provenance changes those seven tests and xtask Clippy
+pass again; the real 131-item-per-reviewer command runs successfully. Independent
+Node/Rust matrices agree, all four copied files match their originals, and the
+human-export hash is unchanged. This is tooling-only: no production solver, data,
+desktop binary or installed review database was changed; no new GUI acceptance,
+hosted CI, model service call or push is claimed.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose
