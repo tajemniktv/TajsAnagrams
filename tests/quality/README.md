@@ -15,7 +15,7 @@ or an untouched held-out sample. Nineteen cases are still not a comprehensive
 quality gate. Specify `--cases tests/quality/cases.v2.json` for the expanded set;
 the default v1 keeps historical reports directly re-evaluable.
 
-`cases.v3.json` is the active **development** reconstruction suite (43 bags): all
+`cases.v3.json` is the previous **development** reconstruction suite (43 bags): all
 19 v2 cases unchanged, 19 additional synthetic/ambiguity controls and five already
 exposed public reference bags needed for the accepted model reviews. It retains
 Voldemort and the product sanity phrase and adds Hips Don't Lie, Testing Shit,
@@ -25,6 +25,89 @@ TestingShit retains the user's input. Authored targets are legitimate reconstruc
 checks, not observations of actual user satisfaction. Cohorts preserve origin,
 category, template/source family and development exposure. Old inherited `test`
 tags do not magically create a holdout. V1/v2 and their historical captures remain.
+
+`cases.v4.json` is the current 50-bag development suite: v3's 43 records are
+unchanged, with seven previously exposed public bags added to cover the complete
+desktop review. Public references remain reconstruction targets, not unique valid
+answers; their source-theme constraints are not silently imposed on unconstrained
+native requests. Older datasets and captures remain frozen.
+
+`human-judgments.v1.json` preserves the owner's 532 exported standalone verdicts
+(59 useful, 237 not useful, 236 unsure), rendering, exact inventory and context
+provenance. All 131 earlier votes are unchanged. Three private notes and the one
+real pairwise preference remain in the exact local export, not fabricated into
+new public labels. This is 17 observed case contexts (16 older experiment bags
+and a desktop bag), not human coverage of all 50 cases. Compare it separately:
+
+```powershell
+cargo xtask quality --runs CAPTURE.jsonl --cases tests/quality/cases.v4.json --human-judgments tests/quality/human-judgments.v1.json --output REPORT.json
+```
+
+Standalone matching checks exact inventory plus case/whitespace-folded wording;
+apostrophes and punctuation remain meaningful. Opaque desktop IDs are not puzzle
+identities. Conflicting context votes abstain, as do Maybes; neither task fit nor
+a model majority replaces the owner. Per-word-count top-ten panels are separate
+from flattened prefixes. Registered `cargo xtask review` views can also use
+`--human-judgments FILE`; tests/builds refresh the owner and model panels without
+filling or overwriting the annotation CSV.
+
+### Phase 7 measured research, not a promoted ranker
+
+`phase7-experiment.v1.json` freezes the owner validation, real 5-gram experiment
+and randomized native shortlist comparison. The model is **not bundled**:
+
+```powershell
+cargo xtask research train-ngram --text SENTENCES.txt --arpa-output NEW.arpa --output TRAINING.json
+cargo xtask research ngram --arpa NEW.arpa --groups ORDER_GROUPS.json --output SCORES.json
+```
+
+Training is Rust-native interpolated modified Kneser-Ney, order five; lower
+orders use continuation counts, singletons become UNK, per-count discounts are
+estimated (recorded 0.75 fallback for degenerate count-of-counts), and there is
+no pruning or benchmark-answer input. The bounded input is one already-tokenized
+sentence per line. Outputs are new files, not overwritten models. ARPA scoring
+maps OOVs **before** context lookup, including history; otherwise observed UNK
+transitions are silently lost. OOV counts, BOS/EOS, worst conditional, total,
+mean, direct-hit/backoff and same-bag margin diagnostics remain explicit.
+
+Four Standard Ebooks texts supplied 281,671 training tokens / 16,902 sentences;
+the plain artifact is 35,957,972 bytes. Every tenth sentence was reserved for a
+same-book natural/reversed sanity check: 1,852 wins and three ties among 1,879.
+That is not an author/genre holdout or an anagram-quality result. Original source
+licenses, commits, hashes and extraction manifest remain local; see
+`DATA_RESEARCH.md` for the source/packaging boundary.
+
+One offline scoring batch (23,706 orders, including two ARPA scans and JSON
+output) takes 2,696 ms with a sampled process RSS peak of 100,442,112 bytes.
+This is one research-process observation with uncontrolled OS/background state,
+not per-solve runtime latency or a guaranteed peak. Production loading, caching
+and integration are not implemented or implied by that measurement.
+
+The frozen **actual** displayed/owner-reviewed bags yield 1,560 retained-order
+pools / 23,706 orders. Unjudged permutations are not new human observations.
+The probe emits native `display_phrase`, so contraction letter keys such as
+`dont` are scored/matched as displayed `don't`, not falsely treated as an OOV.
+An exploratory grammar + 0.10 mean-log-probability blend raises the mean within-
+puzzle Yes/No concordance from 0.486 to 0.560 on 15 puzzles, but selects only
+56 known-positive orders versus 58 for native ordering. Restricting the blend to
+fully in-vocabulary bags retains 58 but concordance falls to 0.486: the apparent
+gain is entangled with OOV/domain coverage. No representative/statistically
+significant quality improvement is established; these order features omit the
+production row's lexical priors, phrase corpus and corpus-rescoring stage.
+
+The distinct-family shortlist proposal was also **rejected**, not shipped:
+50 randomized pairs with the same lexical60 dictionary and 10-second deadline
+give 13/50 intended top-ten hits in both treatments (47 completed each). Known
+useful-answer delivery falls 14 to 13 puzzles; the permissively approved
+`no chile beachs` is displaced in books-02. Deep work rises 9,780 to 11,005 rows;
+attempt medians are 1,261 versus 1,300 ms, one timing observation per case and
+background/OS effects uncontrolled. Maybes/new outputs remain unknown. The
+experimental patch and binary hashes are frozen with the evidence. Production
+retains row-seeded family expansion; no intended-answer exception was added.
+
+Phase 7's production gate stays open: source/domain coverage, OOV-stratified
+comparison, phrase/cohesion ablation and end-to-end footprint/latency need evidence
+before managed model packaging or Phase 8 language-guided search is promoted.
 
 For this suite, recovering **any intended reference within the first ten of its
 displayed word-count group** is a reconstruction success; first place is not

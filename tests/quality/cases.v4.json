@@ -1,0 +1,843 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-15",
+  "purpose": "v3 unchanged plus previously captured public bags so the complete owner review can be evaluated; all development-exposed. Published task constraints are not silently applied to unconstrained requests.",
+  "acceptance": {
+    "intended_answer": "Any intended reference in the first ten of its displayed word-count bucket is a reconstruction success; top one is diagnostic, not required.",
+    "alternatives": "Judge independently; not recovering the intended reference does not make another coherent exact output useless.",
+    "exposure": "All cases are development-exposed, including inherited historical split names."
+  },
+  "cohorts": {
+    "testing_anagram_solver": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-testing_anagram_solver"
+    },
+    "knowledge_power": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-knowledge_power"
+    },
+    "actions_words": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-actions_words"
+    },
+    "voldemort_reveal": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-voldemort_reveal"
+    },
+    "small_birds": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-small_birds"
+    },
+    "keys_table": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-keys_table"
+    },
+    "quiet_machine": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-quiet_machine"
+    },
+    "river_lights": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-river_lights"
+    },
+    "red_fox": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-red_fox"
+    },
+    "rain_window": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-rain_window"
+    },
+    "warm_bread": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-warm_bread"
+    },
+    "quiet_library": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-quiet_library"
+    },
+    "blue_stone": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-blue_stone"
+    },
+    "morning_train": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-morning_train"
+    },
+    "bright_star": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-bright_star"
+    },
+    "glass_door": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-glass_door"
+    },
+    "green_tea": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-green_tea"
+    },
+    "old_bridge": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-old_bridge"
+    },
+    "silver_cloud": {
+      "origin": "historical_curator",
+      "exposure": "development_exposed",
+      "family_id": "historical-silver_cloud"
+    },
+    "testing_shit": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "hips_dont_lie": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "blue_lantern": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "quiet_rain": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "warm_bread_title": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "lost_keys": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "night_train": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "bright_ideas": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "i_like_rain": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "cats_chase_mice": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "she_reads_books": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "fresh_bread_rises": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "window_opens": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "we_need_sleep": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "river_runs_deep": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "walk_home": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "opens_door": {
+      "origin": "authored_development",
+      "category": "sentence",
+      "family_id": "authored-simple-clauses",
+      "exposure": "development_exposed"
+    },
+    "quiet_place": {
+      "origin": "authored_development",
+      "category": "noun_phrase",
+      "family_id": "authored-short-titles",
+      "exposure": "development_exposed"
+    },
+    "listen_silent": {
+      "origin": "authored_development",
+      "category": "multiple_words",
+      "family_id": "authored-single-word",
+      "exposure": "development_exposed"
+    },
+    "books-02": {
+      "origin": "public_packet_exposed",
+      "category": "title",
+      "family_id": "reddit-11qrhy8",
+      "exposure": "development_exposed",
+      "context_ref": "reddit-11qrhy8"
+    },
+    "lucas-02": {
+      "origin": "public_packet_exposed",
+      "category": "title",
+      "family_id": "pse-40286",
+      "exposure": "development_exposed",
+      "context_ref": "pse-40286"
+    },
+    "turtles-01": {
+      "origin": "public_packet_exposed",
+      "category": "name",
+      "family_id": "pse-128765",
+      "exposure": "development_exposed",
+      "context_ref": "pse-128765"
+    },
+    "welcome-housewarming": {
+      "origin": "public_packet_exposed",
+      "category": "word",
+      "family_id": "pse-132592",
+      "exposure": "development_exposed",
+      "context_ref": "pse-132592"
+    },
+    "whiskey-jameson": {
+      "origin": "public_packet_exposed",
+      "category": "name",
+      "family_id": "pse-30873",
+      "exposure": "development_exposed",
+      "context_ref": "pse-30873"
+    },
+    "wordmath-extolsrfia": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "reddit-wordmath-2021",
+      "category": "ambiguous_phrase"
+    },
+    "gish-reference": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "reddit-i29uec",
+      "category": "clause"
+    },
+    "developers-03": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "pse-40608",
+      "category": "name"
+    },
+    "multigrams-02": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "pse-47941",
+      "category": "title"
+    },
+    "disguise-strahd": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "reddit-hnv6je",
+      "category": "ambiguous_name"
+    },
+    "gaps-thirteen": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "pse-110383",
+      "category": "multi_answer_gap"
+    },
+    "countquote-boat": {
+      "origin": "public_reference",
+      "exposure": "development_exposed",
+      "family_id": "pse-22050",
+      "category": "quote"
+    }
+  },
+  "cases": [
+    {
+      "id": "testing_anagram_solver",
+      "split": "test",
+      "source": "testinganagramsolver",
+      "relevance": {
+        "Testing Anagram Solver": 3
+      },
+      "negatives": [
+        "Solver Testing Anagram",
+        "Anagram Solver Testing",
+        "A German Signs To Travel",
+        "Given Games Translator"
+      ],
+      "provenance": "Project product sanity fixture; curated, not externally derived"
+    },
+    {
+      "id": "knowledge_power",
+      "split": "test",
+      "source": "knowledgeispower",
+      "relevance": {
+        "Knowledge Is Power": 3
+      },
+      "negatives": [
+        "Power Is Knowledge",
+        "Is Power Knowledge"
+      ],
+      "provenance": "Project ordering registry: knowledge_power; familiar aphorism"
+    },
+    {
+      "id": "actions_words",
+      "split": "test",
+      "source": "actionsspeaklouderthanwords",
+      "relevance": {
+        "Actions Speak Louder Than Words": 3
+      },
+      "negatives": [
+        "Words Speak Louder Than Actions",
+        "Actions Louder Speak Than Words",
+        "The Track Downloads Persuasion"
+      ],
+      "provenance": "Project ordering registry: actions_words; familiar aphorism"
+    },
+    {
+      "id": "voldemort_reveal",
+      "split": "test",
+      "source": "iamlordvoldemort",
+      "relevance": {
+        "I Am Lord Voldemort": 3
+      },
+      "negatives": [
+        "Voldemort I Am Lord",
+        "Lord Am I Voldemort"
+      ],
+      "provenance": "Project ordering registry: voldemort_reveal; proper-name fictional title"
+    },
+    {
+      "id": "small_birds",
+      "split": "validation",
+      "source": "smallbirdssingatdawn",
+      "relevance": {
+        "Small Birds Sing At Dawn": 3
+      },
+      "negatives": [
+        "At Dawn Sing Small Birds",
+        "Small Sing Birds At Dawn"
+      ],
+      "provenance": "Project ordering registry: birds_dawn; authored ordinary clause"
+    },
+    {
+      "id": "keys_table",
+      "split": "validation",
+      "source": "thekeysareonyourtable",
+      "relevance": {
+        "The Keys Are On Your Table": 3
+      },
+      "negatives": [
+        "Your Table Are On The Keys",
+        "The Table Are On Your Keys"
+      ],
+      "provenance": "Project ordering registry: keys_table; authored ordinary clause"
+    },
+    {
+      "id": "quiet_machine",
+      "split": "train",
+      "source": "thismachinerunsquietly",
+      "relevance": {
+        "This Machine Runs Quietly": 3
+      },
+      "negatives": [
+        "Quietly Runs This Machine",
+        "Machine This Runs Quietly"
+      ],
+      "provenance": "Project ordering registry: machine_quietly; authored ordinary clause"
+    },
+    {
+      "id": "river_lights",
+      "split": "validation",
+      "source": "abeeeghhiilorrsttvv",
+      "relevance": {
+        "Lights Above The River": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "red_fox",
+      "split": "validation",
+      "source": "adeeefloprssx",
+      "relevance": {
+        "A Red Fox Sleeps": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "rain_window",
+      "split": "validation",
+      "source": "aadehiinnoprsttww",
+      "relevance": {
+        "Rain Taps The Window": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "warm_bread",
+      "split": "validation",
+      "source": "aaabbddeemnrrrttuw",
+      "relevance": {
+        "Warm Bread And Butter": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "quiet_library",
+      "split": "validation",
+      "source": "aabeiilqrrtuy",
+      "relevance": {
+        "A Quiet Library": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "blue_stone",
+      "split": "validation",
+      "source": "abdeeeglnnorstu",
+      "relevance": {
+        "Blue Stone Garden": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "morning_train",
+      "split": "validation",
+      "source": "aaeeghiiimnnnorrrrsttv",
+      "relevance": {
+        "The Morning Train Arrives": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "bright_star",
+      "split": "validation",
+      "source": "abeghinorrstt",
+      "relevance": {
+        "One Bright Star": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "glass_door",
+      "split": "validation",
+      "source": "adeeghlnoooprssst",
+      "relevance": {
+        "The Glass Door Opens": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "green_tea",
+      "split": "validation",
+      "source": "aaeeeeeglnrstv",
+      "relevance": {
+        "Green Tea Leaves": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "old_bridge",
+      "split": "validation",
+      "source": "bcddeeeghiloorrsstw",
+      "relevance": {
+        "We Cross The Old Bridge": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "silver_cloud",
+      "split": "validation",
+      "source": "acdeillorsuv",
+      "relevance": {
+        "A Silver Cloud": 3
+      },
+      "negatives": [],
+      "provenance": "Project-authored synthetic target, 2026-10-13; curator relevance, not a user judgment or untouched held-out case. Sorted source letters prevent source-order leakage."
+    },
+    {
+      "id": "testing_shit",
+      "split": "train",
+      "source": "TestingShit",
+      "relevance": {
+        "Testing Shit": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; retained at user request. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "hips_dont_lie",
+      "split": "train",
+      "source": "dehiilnopst",
+      "relevance": {
+        "Hips Don't Lie": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; retained at user request. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "blue_lantern",
+      "split": "train",
+      "source": "abeellnnrtu",
+      "relevance": {
+        "Blue Lantern": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "quiet_rain",
+      "split": "train",
+      "source": "aeiinqrtu",
+      "relevance": {
+        "Quiet Rain": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "warm_bread_title",
+      "split": "train",
+      "source": "aabdemrrw",
+      "relevance": {
+        "Warm Bread": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "lost_keys",
+      "split": "train",
+      "source": "eklossty",
+      "relevance": {
+        "Lost Keys": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "night_train",
+      "split": "train",
+      "source": "aghiinnrtt",
+      "relevance": {
+        "Night Train": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "bright_ideas",
+      "split": "train",
+      "source": "abdeghiirst",
+      "relevance": {
+        "Bright Ideas": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "i_like_rain",
+      "split": "train",
+      "source": "aeiiiklnr",
+      "relevance": {
+        "I Like Rain": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "cats_chase_mice",
+      "split": "train",
+      "source": "aaccceehimsst",
+      "relevance": {
+        "Cats Chase Mice": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "she_reads_books",
+      "split": "train",
+      "source": "abdeehkoorsss",
+      "relevance": {
+        "She Reads Books": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "fresh_bread_rises",
+      "split": "train",
+      "source": "abdeeefhirrrsss",
+      "relevance": {
+        "Fresh Bread Rises": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "window_opens",
+      "split": "train",
+      "source": "deehinnoopstww",
+      "relevance": {
+        "The Window Opens": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "we_need_sleep",
+      "split": "train",
+      "source": "deeeeelnpsw",
+      "relevance": {
+        "We Need Sleep": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "river_runs_deep",
+      "split": "train",
+      "source": "deeeehinprrrstuv",
+      "relevance": {
+        "The River Runs Deep": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "walk_home",
+      "split": "train",
+      "source": "aeeghhiklmnoottww",
+      "relevance": {
+        "We Walk Home Tonight": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "opens_door",
+      "split": "train",
+      "source": "deeehhnoooprst",
+      "relevance": {
+        "He Opens The Door": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "quiet_place",
+      "split": "train",
+      "source": "aaceeeilopqrstttu",
+      "relevance": {
+        "A Quiet Place To Rest": 3
+      },
+      "negatives": [],
+      "provenance": "Project development reconstruction target, 2026-10-15; curator-authored ordinary English. Intended top-ten recovery is separate from usefulness of other exact outputs; not human/model ratings or held-out evidence."
+    },
+    {
+      "id": "listen_silent",
+      "split": "train",
+      "source": "eilnst",
+      "relevance": {
+        "Listen": 3,
+        "Silent": 3
+      },
+      "negatives": [],
+      "provenance": "Curator ambiguity control, 2026-10-15: two ordinary single words; no unique-answer claim, human rating or holdout status."
+    },
+    {
+      "id": "books-02",
+      "split": "train",
+      "source": "LOHISEEACHBCN",
+      "relevance": {
+        "On Chesil Beach": 3
+      },
+      "negatives": [],
+      "provenance": "Previously exposed public packet reconstruction reference; https://www.reddit.com/r/puzzles/comments/11qrhy8/need_help_solving_anagrams_of_book_titles/ . A published answer is not a standalone usefulness label; source-task constraints are not reproduced by this unconstrained desktop profile."
+    },
+    {
+      "id": "lucas-02",
+      "split": "train",
+      "source": "Indonesia Jan",
+      "relevance": {
+        "Indiana Jones": 3
+      },
+      "negatives": [],
+      "provenance": "Previously exposed public packet reconstruction reference; https://puzzling.stackexchange.com/questions/40286/what-do-these-anagrams-have-in-common . A published answer is not a standalone usefulness label; source-task constraints are not reproduced by this unconstrained desktop profile."
+    },
+    {
+      "id": "turtles-01",
+      "split": "train",
+      "source": "PEAR HERALD",
+      "relevance": {
+        "RED RAPHAEL": 3
+      },
+      "negatives": [],
+      "provenance": "Previously exposed public packet reconstruction reference; https://puzzling.stackexchange.com/questions/128765/are-these-superheroes-plagiarised . A published answer is not a standalone usefulness label; source-task constraints are not reproduced by this unconstrained desktop profile."
+    },
+    {
+      "id": "welcome-housewarming",
+      "split": "train",
+      "source": "SEA WOURM HING",
+      "relevance": {
+        "HOUSEWARMING": 3
+      },
+      "negatives": [],
+      "provenance": "Previously exposed public packet reconstruction reference; https://puzzling.stackexchange.com/questions/132592/analogy-welcome . A published answer is not a standalone usefulness label; source-task constraints are not reproduced by this unconstrained desktop profile."
+    },
+    {
+      "id": "whiskey-jameson",
+      "split": "train",
+      "source": "aejmnos",
+      "relevance": {
+        "Jameson": 3
+      },
+      "negatives": [],
+      "provenance": "Previously exposed public packet reconstruction reference; https://puzzling.stackexchange.com/questions/30873/no-tea-no-coffee-no-water . A published answer is not a standalone usefulness label; source-task constraints are not reproduced by this unconstrained desktop profile."
+    },
+    {
+      "id": "wordmath-extolsrfia",
+      "split": "test",
+      "source": "EXTOLSRFIA",
+      "relevance": {
+        "EXTRA FOILS": 3,
+        "FOXES' TRAIL": 3,
+        "FRAILEST OX": 3,
+        "Its for Alex": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://www.reddit.com/r/puzzles/comments/qppk30/anagrammer/"
+    },
+    {
+      "id": "gish-reference",
+      "split": "test",
+      "source": "TUNIDONNDDERENSTARCETRETHAEF",
+      "relevance": {
+        "I don't understand that reference": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://www.reddit.com/r/puzzles/comments/i29uec/wordanagramsentence_puzzle/"
+    },
+    {
+      "id": "developers-03",
+      "split": "test",
+      "source": "Amusing Idiots",
+      "relevance": {
+        "Imangi Studios": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://puzzling.stackexchange.com/questions/40608/strange-kids-playing-in-a-nice-place"
+    },
+    {
+      "id": "multigrams-02",
+      "split": "test",
+      "source": "HIGH TOAD FEN VIGIL TEND",
+      "relevance": {
+        "Night of the Living Dead": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://puzzling.stackexchange.com/questions/47941/list-of-related-multi-grams"
+    },
+    {
+      "id": "disguise-strahd",
+      "split": "test",
+      "source": "Strahd von Zarovich",
+      "relevance": {
+        "Varchozi Harvtonds": 3,
+        "Vizard Vorant Hosch": 3,
+        "Shadzirov Van Torch": 3,
+        "Vicar Zohan Dvhorst": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://www.reddit.com/r/CurseofStrahd/comments/hnv6je/anagram_names_for_strahd_von_zarovich_running_out/"
+    },
+    {
+      "id": "gaps-thirteen",
+      "split": "test",
+      "source": "aainrst",
+      "relevance": {
+        "TIRANA'S": 3,
+        "NARITA'S": 3,
+        "A TRAIN'S": 3,
+        "RAINS AT": 3,
+        "SINATRA": 3,
+        "TRAIN AS": 3,
+        "STAR IN A": 3,
+        "IS AN ART": 3,
+        "A STRAIN": 3,
+        "RATS IN A": 3,
+        "TSARINA": 3,
+        "ARTISAN": 3,
+        "RANT IS A": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://puzzling.stackexchange.com/questions/110383/three-quotes-thirteen-anagrams"
+    },
+    {
+      "id": "countquote-boat",
+      "split": "test",
+      "source": "aaabbdeeeeggginnnooorrtuy",
+      "relevance": {
+        "You're gonna need a bigger boat.": 3
+      },
+      "negatives": [],
+      "provenance": "Previously development-exposed public reference, not unique correctness target. https://puzzling.stackexchange.com/questions/22050/well-known-quotations"
+    }
+  ]
+}

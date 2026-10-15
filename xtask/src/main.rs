@@ -1,6 +1,7 @@
 mod benchmark;
 mod contracts;
 mod lexicon;
+mod ngram_train;
 mod puzzles;
 mod quality;
 mod research;

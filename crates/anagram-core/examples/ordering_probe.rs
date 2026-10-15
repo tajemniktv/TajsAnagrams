@@ -30,6 +30,15 @@ fn main() {
         } else {
             orders
         };
+        let orders = orders
+            .into_iter()
+            .map(|order| {
+                let display = anagram_core::format_phrase(&order.order);
+                let mut value = serde_json::to_value(order).unwrap();
+                value["display_phrase"] = json!(display);
+                value
+            })
+            .collect::<Vec<_>>();
         println!("{}", json!({"orders":orders,"evaluated":evaluated}));
     }
 }

@@ -67,7 +67,7 @@ fn load_arpa(reader: impl BufRead, required: &BTreeSet<Vec<String>>) -> Result<M
             .iter()
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
-        if required.contains(&p) {
+        if order == 1 || required.contains(&p) {
             let a: f64 = f[0].parse()?;
             let b: f64 = if f.len() == order + 2 {
                 f[order + 1].parse()?
@@ -110,20 +110,55 @@ fn score(model: &Model, phrase: &str) -> Result<Value> {
     let t = std::iter::once("<s>")
         .chain(words.iter().copied())
         .chain(std::iter::once("</s>"))
-        .map(String::from)
+        .map(|w| {
+            if w == "<s>" || model.contains_key(&vec![w.to_owned()]) {
+                w.to_owned()
+            } else {
+                "<unk>".into()
+            }
+        })
         .collect::<Vec<_>>();
     let ps = (1..t.len())
         .map(|i| conditional(model, &t[i.saturating_sub(4)..=i]))
         .collect::<Result<Vec<_>>>()?;
     let total = ps.iter().map(|p| p.0).sum::<f64>();
     Ok(
-        json!({"phrase":phrase,"total_log10":total,"mean_log10_per_word":total/words.len()as f64,"worst_log10":ps.iter().map(|p|p.0).fold(f64::INFINITY,f64::min),"direct_hits":(2..=5).map(|n|(n.to_string(),json!(ps.iter().filter(|p|p.1==n).count()))).collect::<BTreeMap<_,_>>(),"backoff_steps":ps.iter().map(|p|p.2).sum::<usize>(),"bos_log10":ps[0].0,"eos_log10":ps.last().unwrap().0}),
+        json!({"phrase":phrase,"total_log10":total,"mean_log10_per_word":total/words.len()as f64,"oov_words":words.iter().filter(|w|!model.contains_key(&vec![w.to_string()])).count(),"worst_log10":ps.iter().map(|p|p.0).fold(f64::INFINITY,f64::min),"direct_hits":(2..=5).map(|n|(n.to_string(),json!(ps.iter().filter(|p|p.1==n).count()))).collect::<BTreeMap<_,_>>(),"backoff_steps":ps.iter().map(|p|p.2).sum::<usize>(),"bos_log10":ps[0].0,"eos_log10":ps.last().unwrap().0}),
     )
 }
 fn ngram(arpa: &str, groups: &str) -> Result<Value> {
     let groups = read_json(groups)?;
     let groups = groups.as_array().ok_or("Groups must be an array")?;
-    let model = load_arpa(BufReader::new(File::open(arpa)?), &contexts(groups)?)?;
+    // Map OOVs before querying contexts, not only when backing off to unigram.
+    // Otherwise observed <unk> transitions and their backoff weights disappear.
+    let vocabulary = load_arpa(BufReader::new(File::open(arpa)?), &BTreeSet::new())?;
+    let mapped = groups
+        .iter()
+        .map(|g| {
+            let orders = g["orders"]
+                .as_array()
+                .ok_or("Missing order pool")?
+                .iter()
+                .map(|p| {
+                    Ok(p.as_str()
+                        .ok_or("Non-string order")?
+                        .to_lowercase()
+                        .split_whitespace()
+                        .map(|w| {
+                            if vocabulary.contains_key(&vec![w.to_owned()]) {
+                                w
+                            } else {
+                                "<unk>"
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" "))
+                })
+                .collect::<Result<Vec<_>>>()?;
+            Ok(json!({"orders":orders}))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let model = load_arpa(BufReader::new(File::open(arpa)?), &contexts(&mapped)?)?;
     let mut out = vec![];
     for g in groups {
         let mut rows = g["orders"]
@@ -323,7 +358,7 @@ pub fn command(args: &[String]) -> Result<()> {
     };
     if args.get(1).is_some_and(|s| s == "--help") {
         println!(
-            "research lexicon --db ESDB.sqlite [--current DICTIONARY --cases FILE --output FILE]\nresearch ngram --arpa FILE --groups FILE [--output FILE]\nresearch tubelex --tubelex FILE.tsv[.xz] [--unigrams FILE --cases FILE --max-bytes N --output FILE]\nresearch puzzles --packet DIR [--cases FILE --output FILE --case-ids ID,ID --workloads-output FILE --runs FILE]\nOffline reports only; no data/model/quality-label promotion. ESDB database creation is upstream work, not a dependency on its Python builder."
+            "research lexicon --db ESDB.sqlite [--current DICTIONARY --cases FILE --output FILE]\nresearch train-ngram --text SENTENCES.txt --arpa-output NEW.arpa [--output REPORT.json]\nresearch ngram --arpa FILE --groups FILE [--output FILE]\nresearch tubelex --tubelex FILE.tsv[.xz] [--unigrams FILE --cases FILE --max-bytes N --output FILE]\nresearch puzzles --packet DIR [--cases FILE --output FILE --case-ids ID,ID --workloads-output FILE --runs FILE]\nOffline reports only; no data/model/quality-label promotion. Training expects one lowercase ASCII/apostrophe-tokenized sentence per line, at most 100 words each and 32 MiB total; never reads targets. ESDB database creation is upstream work, not a dependency on its Python builder."
         );
         println!(
             "lexicon --variant-dir DIR exports answer-independent baseline/names80/frequency3/lexical60 dictionaries using --db, --current and --unigrams; never changes production data."
@@ -347,10 +382,15 @@ pub fn command(args: &[String]) -> Result<()> {
             "workloads-output",
             "runs",
             "variant-dir",
+            "text",
+            "arpa-output",
         ],
         &[],
     )?;
     let result = match name.as_str() {
+        "train-ngram" => {
+            crate::ngram_train::command(a.required("text")?, a.required("arpa-output")?)?
+        }
         "puzzles" => crate::puzzles::intake(
             a.required("packet")?,
             &quality::load_cases(a.value("cases", "tests/quality/cases.v2.json"))?,
@@ -401,6 +441,50 @@ mod tests {
                 &required
             )
             .is_err()
+        );
+    }
+    #[test]
+    fn oov_is_mapped_in_history_before_higher_order_lookup() {
+        let arpa = "\\1-grams:\n-1 <s> -0.1\n-1 </s>\n-3 <unk> -0.2\n-1 good\n\\2-grams:\n-0.1 <s> <unk>\n-0.2 <unk> good\n-0.3 good </s>\n\\end\\\n";
+        let required = contexts(&[json!({"orders":["<unk> good"]})]).unwrap();
+        let model = load_arpa(BufReader::new(arpa.as_bytes()), &required).unwrap();
+        let s = score(&model, "unseen good").unwrap();
+        assert!((s["total_log10"].as_f64().unwrap() + 0.6).abs() < 1e-12);
+        assert_eq!(s["direct_hits"]["2"], 3);
+        assert_eq!(s["oov_words"], 1);
+    }
+    #[test]
+    fn trained_arpa_roundtrips_through_query_scorer() {
+        let scratch = root().join(".codex/temp/xtask/ngram-tests");
+        std::fs::create_dir_all(&scratch).unwrap();
+        let dir = tempfile::tempdir_in(scratch).unwrap();
+        let input = dir.path().join("sentences.txt");
+        let arpa = dir.path().join("model.arpa");
+        let groups = dir.path().join("groups.json");
+        std::fs::write(
+            &input,
+            "a cat sat\na cat sat\nthe dog slept\nthe bird flew\n",
+        )
+        .unwrap();
+        let trained =
+            crate::ngram_train::command(input.to_str().unwrap(), arpa.to_str().unwrap()).unwrap();
+        assert_eq!(trained["sentences"], 4);
+        assert!(
+            crate::ngram_train::command(input.to_str().unwrap(), arpa.to_str().unwrap()).is_err()
+        );
+        write_json(
+            groups.to_str(),
+            &json!([{"case_id":"tiny","orders":["a cat sat","sat cat a","unseen cat"]}]),
+        )
+        .unwrap();
+        let scored = ngram(arpa.to_str().unwrap(), groups.to_str().unwrap()).unwrap();
+        assert_eq!(scored[0]["orders"][0]["phrase"], "a cat sat");
+        assert!(
+            scored[0]["orders"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|o| o["total_log10"].as_f64().unwrap().is_finite())
         );
     }
     #[test]

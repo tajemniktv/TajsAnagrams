@@ -72,6 +72,38 @@ final rank failures. The next quality experiment should address order-language
 evidence and shortlisting, not add more desired answers to a dictionary. Phase 7
 source/footprint review remains open; no corpus/ranker was silently promoted.
 
+### 2026-10-15 owner review and Phase 7 experiment checkpoint
+
+The later desktop export covers all 532 old-pool outputs: 59 Yes, 237 No,
+236 Maybe, with all earlier 131 votes unchanged. `human-judgments.v1.json`
+preserves this permissive owner source separately from accepted model reviews;
+unknown/conflicting contexts abstain. `cases.v4.json` keeps all 43 v3 records and
+adds seven already exposed public bags for complete review matching (50 bags,
+not 50 independent source families or a new holdout). Registered readable
+TajsBench views now refresh owner coverage/useful delivery alongside intended
+top-ten recovery and separate LLM panels. Current direct lexical60 reconstruction
+recovery is 13/50, 47 completed under the experimental 10-second deadline; this
+is not a claim about the default corpus or 120-second production budget.
+
+Phase 7 now has an actual Rust-native order-5 interpolated modified Kneser-Ney
+training/scoring experiment, not just an ARPA scaffold. Four independently
+sourced general books (no target injection) train a 35.96 MB plain research model.
+The 1,560 frozen native bags / 23,706 retained orders show that an ungated hybrid
+improves known Yes/No pair separation but replaces known-positive orders; an
+in-vocabulary gate preserves positives but removes almost all apparent gain.
+This challenges the assumption that adding an LM automatically improves anagram
+usefulness, especially names/unusual titles. OOV mapping in the scorer is fixed
+and tested at the history boundary. Source commits/hashes and measured outcomes
+are frozen in `tests/quality/phase7-experiment.v1.json`.
+
+A randomized 50-pair native experiment also rejects changing the shortlist from
+row seeds to distinct-family seeds: intended top-ten recovery stays 13/50, known
+human useful delivery drops 14 to 13 puzzles and more deep work is performed.
+The default shortlist/ranker/data are unchanged. No answer-specific rule was
+added. Phase 7 research is active; its production gate, phrase/cohesion ablation,
+broader source/domain coverage and end-to-end LM latency remain open. Do not
+move to language-guided search by assuming this pilot model is already a winner.
+
 ### 2026-10-13 measurement checkpoint (Phase 5, still not gated)
 
 - Native authority: Python oracle/parity/legacy workflows are retired historical
@@ -145,13 +177,12 @@ source/footprint review remains open; no corpus/ranker was silently promoted.
   dictionary covers 29/30 (`voldemort` is absent). No corpus was
   switched or packaged. Broader quality, licensing/attribution, proper-name
   and performance checks remain.
-- **Phase 7 research scaffold only:** `tools/research_ngram.py` computes
-  ARPA backoff order features from a reviewed plain-text model; a synthetic
-  scorer test passes. The TUBELEX KenLM repository currently flags its English
-  and Spanish ARPA archives as unsafe. The downloaded English archive was
-  removed without opening it. Do not use or ship those flagged files absent
-  a resolved provenance/security review. No real-model ablation or production
-  packaging has happened, so the Phase 7 gate has not passed.
+- **Phase 7 native research, gate still open:** the retired Python scaffold is
+  replaced by `cargo xtask research ngram` and `research train-ngram`. The
+  2026-10-15 general-book pilot trains/scores a real five-gram model, with mixed,
+  OOV-confounded ordering evidence rather than a demonstrated product win.
+  Historically flagged TUBELEX archives remain absent and unused; do not restore
+  them without resolved provenance/security review. No runtime model is packaged.
 
 The next goal is no longer “port the Python solver”. It is:
 
@@ -561,16 +592,16 @@ ship KenLM itself if a smaller Rust-native representation is preferable.
 
 For every retained order, compute at least:
 
-- [ ] total log probability;
-- [ ] mean log probability per word;
-- [ ] minimum/worst conditional log probability;
-- [ ] 2/3/4/5-gram direct-hit or backoff statistics;
-- [ ] beginning-of-sequence plausibility;
-- [ ] end-of-sequence plausibility;
-- [ ] probability margin against the next-best order of the same bag.
+- [x] total log probability;
+- [x] mean log probability per word;
+- [x] minimum/worst conditional log probability;
+- [x] 2/3/4/5-gram direct-hit or backoff statistics;
+- [x] beginning-of-sequence plausibility;
+- [x] end-of-sequence plausibility;
+- [x] probability margin against the next-best order of the same bag.
 
-- [ ] Run the scorer against the existing retained-order pool first.
-- [ ] Do not change search yet.
+- [x] Run the scorer against the existing retained-order pool first.
+- [x] Do not change production search yet.
 - [ ] Measure the feature alone and in combination with current grammar,
       structure, phrase and cohesion signals.
 

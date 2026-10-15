@@ -241,6 +241,21 @@ features; plain TSV is also accepted. These are offline reports, not corpus/mode
 promotion. Use each command's `--help` for paths and budgets.
 Experimental dependencies live only in `xtask`, not the installed application.
 
+`research train-ngram --text SENTENCES.txt --arpa-output NEW.arpa` trains a
+research-only order-five interpolated modified Kneser-Ney model in Rust. Input
+must be lower-case ASCII/apostrophe tokens, one sentence per line, at most 100
+words per sentence and 32 MiB total. It never reads targets and refuses to
+overwrite models. `research ngram` maps unknown words before history lookup and
+reports OOV exposure; an LM score is not a human usefulness judgment. See
+`tests/quality/phase7-experiment.v1.json` for the unpromoted real-model pilot.
+
+`quality --cases tests/quality/cases.v4.json --human-judgments tests/quality/human-judgments.v1.json`
+evaluates the permissive owner review separately from `--model-judgments`.
+Maybe/conflicting-context votes remain unresolved. The current development suite
+contains fifty exposed bags, not a representative heldout gate. Registered
+`review --human-judgments FILE` inputs refresh readable owner coverage and top-ten
+useful delivery during checks/builds without overwriting human annotation CSVs.
+
 The Python solver, parity tests, obsolete runners and workflow are retired into
 local-only `.codex/archive/python-retired-2026-10-13/`, with a content-hash manifest.
 Tracked JSON/reference records remain historical evidence. Rust is authoritative;

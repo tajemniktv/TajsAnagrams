@@ -422,6 +422,7 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
             "judgments",
             "summary",
             "model-judgments",
+            "human-judgments",
         ] {
             if let Some(s) = config[key].as_str()
                 && Path::new(s).is_relative()
@@ -484,7 +485,7 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
             }
         }
         let mut summary = summary(&runs, &workloads, &dictionaries, &labels)?;
-        if let Some(path) = config["model-judgments"].as_str() {
+        if config["model-judgments"].is_string() || config["human-judgments"].is_string() {
             let cases = workloads
                 .values()
                 .map(reference_case)
@@ -492,7 +493,15 @@ pub fn refresh(config: Option<&Value>, output: &Path) -> Result<()> {
                 .collect::<Result<quality::Cases>>()?;
             let mut product = quality::report(&runs, &cases, &["desktop"], &[], Some(&labels))?;
             product["model_standalone_usefulness"] =
-                quality::accepted_model_reviews(path, &runs, &cases, &["desktop"])?;
+                if let Some(path) = config["model-judgments"].as_str() {
+                    quality::accepted_model_reviews(path, &runs, &cases, &["desktop"])?
+                } else {
+                    json!([])
+                };
+            if let Some(human) = config["human-judgments"].as_str() {
+                product["human_standalone_usefulness"] =
+                    quality::human_reviews(human, &runs, &cases, &["desktop"])?;
+            }
             summary["accepted_development_evidence"] = product;
         }
         write_json(config["summary"].as_str(), &summary)?;
@@ -592,6 +601,27 @@ fn accepted_development(out: &mut String, report: &Value) -> Result<()> {
             p["intended_at_10_flattened"]
         ));
     }
+    if let Some(human) = report.get("human_standalone_usefulness") {
+        out.push_str(&format!("\n### Owner review, separate from model judgments\n\nSource counts: {}. Maybe and unseen wording remain unknown; no task-fit verdict is inferred. Matching standalone wording uses exact letters, not opaque desktop case IDs. Source SHA256: `{}`. This is a development convenience sample, not population validation.\n\n| Variant | Cache | Useful slots | Not useful slots | Unknown slots | Definite coverage | Cases with useful answer @10 |\n| --- | --- | ---: | ---: | ---: | ---: | ---: |\n",human["source_counts"],human["source_export_sha256"].as_str().unwrap_or("")));
+        for p in human["panels"]
+            .as_array()
+            .ok_or("Missing owner panels")?
+            .iter()
+            .filter(|p| p["top_n"] == 10 && p["display_scope"] == "each_word_count_bucket")
+        {
+            out.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} | {} / {} |\n",
+                name(&p["variant"]),
+                escape(p["cache_state"].as_str().unwrap_or("")),
+                p["useful_rows"],
+                p["not_useful_rows"],
+                p["unreviewed_rows"],
+                p["judgment_coverage"],
+                p["known_useful_successes"],
+                p["attempts"]
+            ));
+        }
+    }
     out.push_str("\n### Accepted model judgments, separate from human judgments\n\nOwner-accepted for development evaluation. Maybe and unseen outputs remain unknown; a lookup flag does not silently change a verdict. These sources are not independent human truth: identities are reported, and Sol discloses prior label exposure. Counts below cover the first ten of **each word-count group**, not a flattened prefix. Low coverage prevents an overall noise conclusion.\n\n| Judge | Variant | Cache | Useful slots | Not useful slots | Unknown slots | Definite coverage |\n| --- | --- | --- | ---: | ---: | ---: | ---: |\n");
     for source in report["model_standalone_usefulness"]
         .as_array()
@@ -662,6 +692,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "summary",
             "output",
             "model-judgments",
+            "human-judgments",
         ],
         &[],
     )?;
@@ -669,7 +700,7 @@ pub fn command(args: &[String]) -> Result<()> {
     let config = if a.has("runs") {
         Some(
             json!({"runs":a.required("runs")?,"workloads":a.required("workloads")?,"dictionaries":a.required("dictionaries")?,
-            "judgments":a.value("judgments",".codex/temp/tajsbench-judgments.csv"),"summary":a.value("summary",".codex/temp/tajsbench-review-summary.json"),"model-judgments":a.get("model-judgments")}),
+            "judgments":a.value("judgments",".codex/temp/tajsbench-judgments.csv"),"summary":a.value("summary",".codex/temp/tajsbench-review-summary.json"),"model-judgments":a.get("model-judgments"),"human-judgments":a.get("human-judgments")}),
         )
     } else if path.exists() {
         Some(read_json(&path)?)
@@ -736,6 +767,22 @@ mod tests {
         assert!(text.contains("Maybe and unseen outputs remain unknown"));
         assert!(text.contains("| echo | baseline | uncached | 1 | 0 | 0 |"));
         assert!(text.contains("Testing Anagram Solver | not displayed | not displayed"));
+        report["model_standalone_usefulness"] = json!([]);
+        report["human_standalone_usefulness"] = quality::human_reviews(
+            root()
+                .join("tests/quality/human-judgments.v1.json")
+                .to_str()
+                .unwrap(),
+            &runs,
+            &cases,
+            &["desktop"],
+        )
+        .unwrap();
+        let mut human_only = String::new();
+        accepted_development(&mut human_only, &report).unwrap();
+        assert!(human_only.contains("Owner review, separate from model judgments"));
+        assert!(human_only.contains("532") || human_only.contains("236"));
+        assert!(!human_only.contains("| echo |"));
     }
     #[test]
     fn rank_diagnostics_preserve_slots_duplicates_and_failures() {

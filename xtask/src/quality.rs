@@ -716,6 +716,91 @@ pub(crate) fn accepted_model_reviews(
     }
     Ok(json!(reports))
 }
+
+/// Owner judgments remain distinct from model labels. Match standalone wording
+/// by exact inventory, never by a guessed opaque desktop case id. Conflicting
+/// context-specific votes abstain rather than silently selecting a winner.
+pub(crate) fn human_reviews(
+    path: &str,
+    runs: &[Value],
+    cases: &Cases,
+    rankings: &[&str],
+) -> Result<Value> {
+    let source = read_json(path)?;
+    if source["schema_version"] != 1
+        || source["reviewer_source"] != "human"
+        || source["rubric_version"] != "standalone-usefulness-v1"
+    {
+        return Err("Invalid human judgment provenance".into());
+    }
+    let judgments = source["judgments"]
+        .as_array()
+        .ok_or("Missing human judgments")?;
+    let mut votes = BTreeMap::<(String, String), BTreeSet<String>>::new();
+    let mut ids = BTreeSet::new();
+    let mut counts = BTreeMap::<String, usize>::new();
+    for j in judgments {
+        let phrase = text(j, "phrase")?;
+        let inventory = text(j, "inventory")?;
+        let verdict = text(j, "verdict")?;
+        if signature(phrase) != inventory
+            || key(inventory).is_empty()
+            || !["useful", "not_useful", "unsure"].contains(&verdict)
+            || !ids.insert(text(j, "source_output_id")?)
+            || text(j, "context_id")?.is_empty()
+            || text(j, "provenance")?.is_empty()
+        {
+            return Err("Invalid/duplicate human judgment".into());
+        }
+        *counts.entry(verdict.to_owned()).or_default() += 1;
+        votes
+            .entry((key(inventory), rendered_key(phrase)))
+            .or_default()
+            .insert(verdict.into());
+    }
+    let mut labels = Vec::new();
+    let mut matched = 0;
+    for c in cases.values() {
+        let inventory = signature(&c.source);
+        for ((bag, phrase), vs) in &votes {
+            if bag != &inventory {
+                continue;
+            }
+            matched += 1;
+            if vs.len() == 1 && !vs.contains("unsure") {
+                labels.push(json!({"case_id":c.id,"phrase":phrase,"useful":vs.contains("useful")}));
+            }
+        }
+    }
+    let attempts = latest(runs)?;
+    let strata = attempts
+        .iter()
+        .map(|r| Ok((text(r, "variant")?, state(r)?)))
+        .collect::<Result<BTreeSet<_>>>()?;
+    let mut panels = Vec::new();
+    for ranking in rankings {
+        for (variant, cache) in &strata {
+            let group = attempts
+                .iter()
+                .copied()
+                .filter(|r| r["variant"] == *variant && state(r).unwrap() == *cache)
+                .collect::<Vec<_>>();
+            for n in [1, 5, 10] {
+                for per_bucket in [false, true] {
+                    panels.push(usefulness_scope(
+                        &group, &labels, ranking, variant, cache, n, per_bucket,
+                    )?);
+                }
+            }
+        }
+    }
+    Ok(
+        json!({"reviewer_source":"human","judgment_set_sha256":crate::digest(path)?,"source_export_sha256":source["source_export_sha256"],
+        "policy":source["policy"],"source_counts":counts,"matched_case_renderings":matched,"definite_matched_labels":labels.len(),
+        "conflicting_context_renderings":votes.values().filter(|v|v.len()>1).count(),
+        "matching":"Standalone wording plus independently checked exact inventory; task-fit votes are not transferred; U/conflicts abstain.","panels":panels}),
+    )
+}
 pub fn report(
     runs: &[Value],
     cases: &Cases,
@@ -827,7 +912,7 @@ pub fn report(
 pub fn command(args: &[String]) -> Result<()> {
     if args == ["--help"] {
         println!(
-            "quality --runs FILE [--cases FILE --ranking desktop|final_score|both --preferences FILE --usefulness FILE --model-judgments FILE --output FILE]\nquality --stages FILE [--cases FILE --output FILE] regrades recorded native stage captures"
+            "quality --runs FILE [--cases FILE --ranking desktop|final_score|both --preferences FILE --usefulness FILE --model-judgments FILE --human-judgments FILE --output FILE]\nquality --stages FILE [--cases FILE --output FILE] regrades recorded native stage captures"
         );
         return Ok(());
     }
@@ -840,6 +925,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "preferences",
             "usefulness",
             "model-judgments",
+            "human-judgments",
             "output",
             "stages",
         ],
@@ -876,12 +962,76 @@ pub fn command(args: &[String]) -> Result<()> {
         out["model_standalone_usefulness"] =
             accepted_model_reviews(path, &runs, &cases, &rankings)?;
     }
+    if let Some(path) = a.get("human-judgments") {
+        out["human_standalone_usefulness"] = human_reviews(path, &runs, &cases, &rankings)?;
+    }
     write_json(a.get("output"), &out)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn owner_fixture_keeps_maybe_separate_and_matches_desktop_opaque_ids_by_inventory() {
+        let c = load_cases(crate::root().join("tests/quality/cases.v4.json")).unwrap();
+        assert_eq!(c.len(), 50);
+        for (id, previous) in load_cases(crate::root().join("tests/quality/cases.v3.json")).unwrap()
+        {
+            assert_eq!(
+                serde_json::to_value(&c[&id]).unwrap(),
+                serde_json::to_value(previous).unwrap()
+            );
+        }
+        let r = run("Several Migrants Tango", 1.);
+        let v = human_reviews(
+            crate::root()
+                .join("tests/quality/human-judgments.v1.json")
+                .to_str()
+                .unwrap(),
+            &[r],
+            &c,
+            &["desktop"],
+        );
+        let v = v.unwrap();
+        assert_eq!(
+            v["source_counts"],
+            json!({"useful":59,"not_useful":237,"unsure":236})
+        );
+        assert!(v["definite_matched_labels"].as_u64().unwrap() > 200);
+        assert!(
+            v["panels"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|p| p["useful_rows"] == 1)
+        );
+    }
+    #[test]
+    fn conflicting_owner_contexts_abstain_and_invalid_inventory_fails() {
+        let dir = crate::root().join(".codex/temp/xtask/human-tests");
+        fs::create_dir_all(&dir).unwrap();
+        let dir = tempfile::tempdir_in(dir).unwrap();
+        let path = dir.path().join("judgments.json");
+        let mut source = json!({"schema_version":1,"reviewer_source":"human","rubric_version":"standalone-usefulness-v1","judgments":[
+            {"source_output_id":"one","context_id":"a","provenance":"owner","inventory":signature("testinganagramsolver"),"phrase":"Several Migrants Tango","verdict":"useful"},
+            {"source_output_id":"two","context_id":"b","provenance":"owner","inventory":signature("testinganagramsolver"),"phrase":"Several Migrants Tango","verdict":"not_useful"}
+        ]});
+        write_json(path.to_str(), &source).unwrap();
+        let report = human_reviews(
+            path.to_str().unwrap(),
+            &[run("Several Migrants Tango", 1.)],
+            &cases(),
+            &["desktop"],
+        )
+        .unwrap();
+        assert_eq!(report["conflicting_context_renderings"], 1);
+        assert_eq!(report["panels"][0]["useful_rows"], 0);
+        assert_eq!(report["panels"][0]["not_useful_rows"], 0);
+        assert_eq!(report["panels"][0]["unreviewed_rows"], 1);
+        source["judgments"][0]["inventory"] = json!("wrong");
+        write_json(path.to_str(), &source).unwrap();
+        assert!(human_reviews(path.to_str().unwrap(), &[], &cases(), &["desktop"]).is_err());
+    }
     fn cases() -> Cases {
         load_cases(crate::root().join("tests/quality/cases.v1.json")).unwrap()
     }

@@ -1,0 +1,1343 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-15",
+  "purpose": "Phase 7 development experiment, not a production language-quality win or representative holdout. Preserve raw owner judgments, uncertainty and permissive anagram usefulness.",
+  "source_head": "48d520eabf6ff70eb5d31a2b1f1cac7a3b34ea58",
+  "source_dirty": true,
+  "human_review": {
+    "export_sha256": "93634d87faef7fa4107820be616b9912ffd779ff160e763db8b3c8494368e277",
+    "captures": 289,
+    "positions": 5952,
+    "unique_outputs": 532,
+    "judgments": {
+      "useful": 59,
+      "not_useful": 237,
+      "unsure": 236
+    },
+    "added": 401,
+    "old_votes_unchanged": true,
+    "definite_coverage": 0.556390977443609,
+    "bycase": {
+      "lucas-02": {
+        "input": "Indonesia Jan",
+        "useful": 2,
+        "not_useful": 44,
+        "unsure": 25
+      },
+      "01997972aa1cfeba7f78d4929525c4d4b0f7561498b0026930149247e81159d0": {
+        "input": "testingshit",
+        "useful": 5,
+        "not_useful": 13,
+        "unsure": 12
+      },
+      "keys_table": {
+        "input": "thekeysareonyourtable",
+        "useful": 1,
+        "not_useful": 15,
+        "unsure": 9
+      },
+      "testing_anagram_solver": {
+        "input": "testinganagramsolver",
+        "useful": 1,
+        "not_useful": 3,
+        "unsure": 9
+      },
+      "books-02": {
+        "input": "LOHISEEACHBCN",
+        "useful": 1,
+        "not_useful": 19,
+        "unsure": 11
+      },
+      "welcome-housewarming": {
+        "input": "SEA WOURM HING",
+        "useful": 7,
+        "not_useful": 6,
+        "unsure": 30
+      },
+      "turtles-01": {
+        "input": "PEAR HERALD",
+        "useful": 2,
+        "not_useful": 24,
+        "unsure": 12
+      },
+      "red_fox": {
+        "input": "adeeefloprssx",
+        "useful": 2,
+        "not_useful": 11,
+        "unsure": 19
+      },
+      "disguise-strahd": {
+        "input": "Strahd von Zarovich",
+        "useful": 0,
+        "not_useful": 15,
+        "unsure": 0
+      },
+      "countquote-boat": {
+        "input": "aaabbdeeeeggginnnooorrtuy",
+        "useful": 0,
+        "not_useful": 10,
+        "unsure": 8
+      },
+      "gaps-thirteen": {
+        "input": "aainrst",
+        "useful": 9,
+        "not_useful": 22,
+        "unsure": 9
+      },
+      "developers-03": {
+        "input": "Amusing Idiots",
+        "useful": 8,
+        "not_useful": 11,
+        "unsure": 20
+      },
+      "multigrams-02": {
+        "input": "HIGH TOAD FEN VIGIL TEND",
+        "useful": 2,
+        "not_useful": 6,
+        "unsure": 15
+      },
+      "wordmath-extolsrfia": {
+        "input": "EXTOLSRFIA",
+        "useful": 9,
+        "not_useful": 12,
+        "unsure": 12
+      },
+      "knowledge_power": {
+        "input": "knowledgeispower",
+        "useful": 3,
+        "not_useful": 6,
+        "unsure": 15
+      },
+      "gish-reference": {
+        "input": "TUNIDONNDDERENSTARCETRETHAEF",
+        "useful": 2,
+        "not_useful": 1,
+        "unsure": 22
+      },
+      "whiskey-jameson": {
+        "input": "aejmnos",
+        "useful": 5,
+        "not_useful": 19,
+        "unsure": 8
+      }
+    },
+    "notes": "Three private notes remain in the exact local original, omitted from public fixture. No source-task labels inferred. One real pairwise preference retained in the original; not expanded into synthetic pair labels.",
+    "task_fit": 0,
+    "pairs": 1
+  },
+  "cases": {
+    "file": "cases.v4.json",
+    "bags": 50,
+    "sha256": "8368892b01f9f553616e18ebe28c3f0301208a02abe83c995692c91641e02b60",
+    "policy": "All 43 v3 records unchanged plus seven already exposed public bags; authored titles/sentences and intended top-ten acceptance retained. These are development observations, not 50 independent source families."
+  },
+  "shortlist": {
+    "treatment": "Spend the initial shortlist budget on distinct morphology families rather than rows; otherwise identical native request, corpus and ranking.",
+    "method": "One randomized paired uncached call per treatment per bag; 10000 candidate prefix cap, 10s deadline, 15s process guard. lexical60 research dictionary in both; not a default-dictionary comparison. No competing compilation during captures; OS/background effects uncontrolled.",
+    "inputs": {
+      "before": {
+        "bytes": 5554176,
+        "sha256": "5ada4e19c6f3c0f97883f9ab9573a2cb97dfb75788b319cc7496fecb7c325fe6"
+      },
+      "bigrams": {
+        "bytes": 5566017,
+        "sha256": "781c0596c3eea532d30bef9f3dba1d5137d652f00376260822c761a7584dfb8c"
+      },
+      "cases": {
+        "bytes": 29873,
+        "sha256": "8368892b01f9f553616e18ebe28c3f0301208a02abe83c995692c91641e02b60"
+      },
+      "cli": {
+        "bytes": 5559296,
+        "sha256": "cfa3c296bc954115b557a77a52c24448556c2fe0491440f48aeb63fcb4507ccd"
+      },
+      "desktop_defaults_source": {
+        "bytes": 12406,
+        "sha256": "f652570b0a9e643e1afc2504857d09a8292ad69cf22b0ade43926997f2542b86"
+      },
+      "dictionary": {
+        "bytes": 2117938,
+        "sha256": "36c21cfb0711ea467c5ac2cfa265af10dd3cc878e63d1d451da6296089492cb0"
+      },
+      "measurement_tool": {
+        "bytes": 6737408,
+        "sha256": "818ad9c281380c4229c4b90fc21c7abda4ee7df7ebdf64732fd4a6bcecde1cb8"
+      },
+      "unigrams": {
+        "bytes": 4956241,
+        "sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690"
+      },
+      "wordnet/adj.exc": {
+        "bytes": 23019,
+        "sha256": "8824cc24bbedd797b9702316b27f07cd4c2b76b629539f0a1276f03926758016"
+      },
+      "wordnet/adv.exc": {
+        "bytes": 85,
+        "sha256": "e7291461b629abfe63301bbe1998cee09fd575ed7107abd7ea9763adb05bf0a8"
+      },
+      "wordnet/cntlist": {
+        "bytes": 911244,
+        "sha256": "2694cf6c60234cb5b997c5d02ce50663a73b3ad204afc59644d32451dd24fbf2"
+      },
+      "wordnet/cntlist.rev": {
+        "bytes": 911244,
+        "sha256": "a198580b8f705fa02797bba8b13e5cbe4a9f9f40cb1697e774c7fc6a5865b035"
+      },
+      "wordnet/cousin.exc": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "wordnet/data.adj": {
+        "bytes": 3167437,
+        "sha256": "ca1033bf627eb95f6cbb2864f8990be8e6a01a3c182e7d7c7094ccf8ead242cc"
+      },
+      "wordnet/data.adv": {
+        "bytes": 520168,
+        "sha256": "aea301f39ac1b24be9a880dbc6cc6331bc5391f58c7525a1b298a13c922f2ed3"
+      },
+      "wordnet/data.noun": {
+        "bytes": 15325523,
+        "sha256": "2cad22fe43461ee7ae61a564ae6a518c57445c8597e53542caddb5c26a6a5d94"
+      },
+      "wordnet/data.verb": {
+        "bytes": 2778475,
+        "sha256": "eb1cf196dab6e1b815a1c86fa20c909fb7413b2f34250d7fe60a0fb35ef59e03"
+      },
+      "wordnet/index.adj": {
+        "bytes": 825353,
+        "sha256": "7d2b4d4037f0571ca309ce2ebadbe860a1607d494a70cd40f9bd61bc25a57016"
+      },
+      "wordnet/index.adv": {
+        "bytes": 162795,
+        "sha256": "0ea0811bb06eeeb973805ab0b066cb724ebc9dc01f07583582b59579a5b4a36c"
+      },
+      "wordnet/index.noun": {
+        "bytes": 4792749,
+        "sha256": "799fad7c8084eb0f6f2a32ec737a251c85f51adb8b2603eb02bfebc4ce5ffa3d"
+      },
+      "wordnet/index.sense": {
+        "bytes": 7304224,
+        "sha256": "a09db263da96dbb3273064c60546530dee5927a2e5a39c90fb576cdbebbb1a22"
+      },
+      "wordnet/index.verb": {
+        "bytes": 524435,
+        "sha256": "e65b2d67274c8a5f9ba6f696fdc73f4546db2a138b362a3be582e3787c879c7a"
+      },
+      "wordnet/log.grind.3.1": {
+        "bytes": 2511,
+        "sha256": "7449fca5a8d02910d9ad891ef87ca58c2b0f6b0a3fe84bdcb027d9ba4bbacf0a"
+      },
+      "wordnet/noun.exc": {
+        "bytes": 38301,
+        "sha256": "fbde4026e4732d8698ca605edfd18cc0274312cf3751513d182bd2d89e47ce34"
+      },
+      "wordnet/sentidx.vrb": {
+        "bytes": 73166,
+        "sha256": "129e267389fe88ea413b90addda3fcfb2a42b009339298b60711676b2b5d9bf0"
+      },
+      "wordnet/sents.vrb": {
+        "bytes": 5319,
+        "sha256": "6fb59507c96c4aeb267e016ce4a654a1791a438815de98c52e7975df20db15c9"
+      },
+      "wordnet/verb.Framestext": {
+        "bytes": 1125,
+        "sha256": "e7edc9055e1fafb77622e1df54cb22da82bf5853527687c2b1409acd9c0dc49b"
+      },
+      "wordnet/verb.exc": {
+        "bytes": 38033,
+        "sha256": "dbbcf9a601b2d77e934e413b91d90e88ec7f933a8b77cfc00602a923b891b42c"
+      }
+    },
+    "capture_sha256": "da2a7d11b5c2e39a314f02a2b2c58598ab8e6ac27f903eee1c1048397cb8b3bb",
+    "manifest_sha256": "0dda7f4e14c8f4d49ad6847950fb20e6b82c6a8f1095d8ae23d27a82dc1dc67d",
+    "experimental_patch": "diff --git a/crates/anagram-core/src/ranking.rs b/crates/anagram-core/src/ranking.rs\nindex 969ca69..54efd21 100644\n--- a/crates/anagram-core/src/ranking.rs\n+++ b/crates/anagram-core/src/ranking.rs\n@@ -185,8 +185,9 @@ pub fn prepare_controlled(\n     Ok(rows)\n }\n \n-/// `per_group` is the initial shortlist size, not a hard deployment work cap:\n-/// family expansion intentionally includes every selected inflection sibling.\n+/// `per_group` counts distinct word families, not inflection siblings competing\n+/// for the same seed slots. Expansion includes every selected sibling; this is\n+/// not a hard deployment work cap (that remains an adapter-owned limit).\n pub fn choose_deep(rows: &[Row], per_group: usize, deep_all: bool) -> BTreeSet<usize> {\n     choose_deep_controlled(\n         rows,\n@@ -218,11 +219,13 @@ pub fn choose_deep_controlled(\n                 .then_with(|| rows[j].input.fam.total_cmp(&rows[i].input.fam))\n                 .then_with(|| rows[j].input.lex.total_cmp(&rows[i].input.lex))\n         })?;\n-        for &i in bucket\n-            .iter()\n-            .take(if deep_all { bucket.len() } else { per_group })\n-        {\n+        let mut seeded = BTreeSet::new();\n+        for &i in bucket.iter() {\n             control.check()?;\n+            if !deep_all && seeded.len() >= per_group {\n+                break;\n+            }\n+            seeded.insert(rows[i].family_key.clone());\n             families.insert((rows[i].input.word_count, rows[i].family_key.clone()));\n         }\n     }\n@@ -515,3 +518,32 @@ pub fn rank_buckets_controlled(\n     }\n     Ok(buckets)\n }\n+\n+#[cfg(test)]\n+mod tests {\n+    use super::*;\n+    fn row(family: &str, score: f64, count: usize) -> Row {\n+        serde_json::from_value(serde_json::json!({\n+            \"words\":[family],\"word_count\":count,\"old_rank\":1,\"old_pre\":0.,\"lex\":0.,\"fam\":0.,\"old_pair\":0.,\"hint\":0.,\"zavg\":0.,\"zmin\":0.,\"old_pcov\":0.,\"hints\":[],\n+            \"wn_coverage\":0.,\"grammar_potential\":0.,\"grammar_potential_norm\":0.,\"pre_score\":score,\"deep\":false,\"best_order\":[],\"grammar_raw\":0.,\"grammar_norm\":0.,\"structure_norm\":0.,\"valency_norm\":0.,\"syntax_coverage\":0.,\"phrase_kind\":\"unknown\",\"base_final\":0.,\"colloc_norm\":0.,\"phrase_attest_norm\":0.,\"phrase_bonus\":0.,\"final\":0.,\"family_key\":[family]\n+        })).unwrap()\n+    }\n+    #[test]\n+    fn inflection_siblings_do_not_consume_distinct_family_seed_slots() {\n+        let rows = vec![\n+            row(\"alpha\", 10., 2),\n+            row(\"alpha\", 9., 2),\n+            row(\"beta\", 8., 2),\n+            row(\"gamma\", 7., 2),\n+            row(\"alpha\", 1., 2),\n+            row(\"delta\", 10., 3),\n+        ];\n+        assert_eq!(\n+            choose_deep(&rows, 2, false),\n+            BTreeSet::from([0, 1, 2, 4, 5])\n+        );\n+        assert_eq!(choose_deep(&rows, 1, false), BTreeSet::from([0, 1, 4, 5]));\n+        assert_eq!(choose_deep(&rows, 0, false), BTreeSet::new());\n+        assert_eq!(choose_deep(&rows, 0, true), (0..rows.len()).collect());\n+    }\n+}\n",
+    "strata": [
+      {
+        "variant": "before",
+        "attempts": 50,
+        "completed": 47,
+        "failures": [
+          "disguise-strahd",
+          "actions_words",
+          "countquote-boat"
+        ],
+        "attempt_median_ms": 1260.9650000000001,
+        "deep_analyzed_total": 9780,
+        "intended_bucket_top10": 13,
+        "intended_bucket_top1": 8,
+        "intended_flattened_top10": 10,
+        "human": {
+          "useful_slots": 48,
+          "not_useful_slots": 106,
+          "unknown_slots": 963,
+          "definite_coverage": 0.1378692927484333,
+          "puzzles_with_known_useful_answer": 14
+        },
+        "successful_case_ids": [
+          "gaps-thirteen",
+          "hips_dont_lie",
+          "knowledge_power",
+          "listen_silent",
+          "lucas-02",
+          "quiet_machine",
+          "quiet_rain",
+          "warm_bread_title",
+          "we_need_sleep",
+          "welcome-housewarming",
+          "whiskey-jameson",
+          "window_opens",
+          "wordmath-extolsrfia"
+        ]
+      },
+      {
+        "variant": "after",
+        "attempts": 50,
+        "completed": 47,
+        "failures": [
+          "disguise-strahd",
+          "actions_words",
+          "countquote-boat"
+        ],
+        "attempt_median_ms": 1300.4508,
+        "deep_analyzed_total": 11005,
+        "intended_bucket_top10": 13,
+        "intended_bucket_top1": 8,
+        "intended_flattened_top10": 10,
+        "human": {
+          "useful_slots": 47,
+          "not_useful_slots": 108,
+          "unknown_slots": 962,
+          "definite_coverage": 0.1387645478961504,
+          "puzzles_with_known_useful_answer": 13
+        },
+        "successful_case_ids": [
+          "gaps-thirteen",
+          "hips_dont_lie",
+          "knowledge_power",
+          "listen_silent",
+          "lucas-02",
+          "quiet_machine",
+          "quiet_rain",
+          "warm_bread_title",
+          "we_need_sleep",
+          "welcome-housewarming",
+          "whiskey-jameson",
+          "window_opens",
+          "wordmath-extolsrfia"
+        ]
+      }
+    ],
+    "decision": "Rejected for promotion: same intended recovery, a known human positive displaced from top ten in books-02 (no chile beachs); no demonstrated product-quality win. Production row-seed/family-expansion behavior retained."
+  },
+  "language_model": {
+    "input_sha256": "26280bc8e5585a2f12cca3dde7ed0c1de78e21decc305bb187593cea5f69d5a1",
+    "levels": [
+      {
+        "discount_fallback": false,
+        "discounts": [
+          0.10118688392677522,
+          1.82389677497435,
+          2.737351329066611
+        ],
+        "ngrams": 8253,
+        "order": 1
+      },
+      {
+        "discount_fallback": false,
+        "discounts": [
+          0.740654788162412,
+          1.1672152492810743,
+          1.488877168587344
+        ],
+        "ngrams": 105014,
+        "order": 2
+      },
+      {
+        "discount_fallback": false,
+        "discounts": [
+          0.8744870009918739,
+          1.2802743105009968,
+          1.4710343555596623
+        ],
+        "ngrams": 214349,
+        "order": 3
+      },
+      {
+        "discount_fallback": false,
+        "discounts": [
+          0.9561460426986563,
+          1.416167771834671,
+          1.7115762545195412
+        ],
+        "ngrams": 249192,
+        "order": 4
+      },
+      {
+        "discount_fallback": false,
+        "discounts": [
+          0.9807715731094347,
+          1.6682440751433036,
+          1.8833162613285837
+        ],
+        "ngrams": 244349,
+        "order": 5
+      }
+    ],
+    "method": "interpolated modified Kneser-Ney, order 5; singleton words mapped to UNK; no pruning",
+    "model_bytes": 35957972,
+    "model_sha256": "f61360a5e47721e7a29e5728b62108d1a0b9a5e57072aaff9141bee615b9abd8",
+    "research_only": true,
+    "schema_version": 1,
+    "sentences": 16902,
+    "tokens": 281671,
+    "training_ms": 8458,
+    "sources": [
+      {
+        "author": "austen",
+        "commit": "ed94a32be3e875c0814568050c7544e03aad3ef5",
+        "remote": "https://github.com/standardebooks/jane-austen_pride-and-prejudice.git",
+        "license_sha256": "5a8124e75edecf71d684c6784131c98b0d944654c7b0c49519768790377f01fb",
+        "sentences": 6840,
+        "text_files": 61,
+        "files_manifest_sha256": "988a5b812d413b28d63bfc7b38f788d3ee5009513649862a661be81b59ee5a52"
+      },
+      {
+        "author": "doyle",
+        "commit": "48ec456ea50987a81f564821457b9fb32cc2bfc6",
+        "remote": "https://github.com/standardebooks/arthur-conan-doyle_the-adventures-of-sherlock-holmes.git",
+        "license_sha256": "5a8124e75edecf71d684c6784131c98b0d944654c7b0c49519768790377f01fb",
+        "sentences": 6946,
+        "text_files": 12,
+        "files_manifest_sha256": "dc29af8cc6bbc5ad6d55080eb75aab443a2e5d869658f13f80a7a28aa74bdf99"
+      },
+      {
+        "author": "wells",
+        "commit": "7c2c332ce1ce8025d07ec982b02dad293dc63671",
+        "remote": "https://github.com/standardebooks/h-g-wells_the-war-of-the-worlds.git",
+        "license_sha256": "5a8124e75edecf71d684c6784131c98b0d944654c7b0c49519768790377f01fb",
+        "sentences": 3299,
+        "text_files": 31,
+        "files_manifest_sha256": "ce0fa1b29fefd7822fe4d0e660b430c0f397e8a997c86ca1855f9c34eb66f84b"
+      },
+      {
+        "author": "carroll",
+        "commit": "9ecdf2ffa23098e7cb3c72157d7c3031b6f59903",
+        "remote": "https://github.com/standardebooks/lewis-carroll_alices-adventures-in-wonderland.git",
+        "license_sha256": "5a8124e75edecf71d684c6784131c98b0d944654c7b0c49519768790377f01fb",
+        "sentences": 1696,
+        "text_files": 15,
+        "files_manifest_sha256": "b49db9998c68ac175a685535808a36e0b971116f22b1d26988af660b0533623e"
+      }
+    ],
+    "corpus_manifest_sha256": "2fd05ca76983089d5b291a6d18f5049d89f569ee14c24d87da9ffca4bb78a8dd",
+    "tokenization": "Only p-elements; strip inline tags, decode numeric/common entities; curly apostrophes to ASCII; split on .!?; ASCII letter tokens with internal apostrophes; 2..100 words per sentence; deterministic every tenth sentence reserved. No benchmark or target-answer access.",
+    "training_answers_accessed": false,
+    "artifact_role": "Unbundled offline research only; Standard Ebooks source licenses retained locally. No flagged TUBELEX archive restored.",
+    "sanity_control": {
+      "sentences": 1879,
+      "natural_beats_reverse": 1852,
+      "ties": 3,
+      "limits": "Every tenth sentence from the same four books; possible repeated sentences and nearby text, not author/genre holdout or representative anagram quality."
+    },
+    "frozen_order_pool": {
+      "bags": 1560,
+      "orders": 23706,
+      "hashes": {
+        "ordering-inputs.json": "2d33ce2cb29cc28e5e09edd0c28c45bacd446e45cb054b3546581001a8929be9",
+        "ordering-pools.jsonl": "0294e0950153a8032ff29533bf76fd7cd7a815b01df8c51646bfaa205eaa4bc2",
+        "ngram-scores.json": "17bbb26430801bd5c95eacae3c59644d210a075e753f5f97490a7ebe0de999d6",
+        "literary5.arpa": "f61360a5e47721e7a29e5728b62108d1a0b9a5e57072aaff9141bee615b9abd8"
+      },
+      "policies": [
+        {
+          "policy": "native",
+          "chosen_counts": {
+            "useful": 58,
+            "not_useful": 212,
+            "unsure": 214,
+            "unreviewed": 1076
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 58,
+          "changed_order_bags": 0
+        },
+        {
+          "policy": "base_final",
+          "chosen_counts": {
+            "useful": 58,
+            "not_useful": 212,
+            "unsure": 213,
+            "unreviewed": 1077
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 58,
+          "changed_order_bags": 9
+        },
+        {
+          "policy": "lm",
+          "chosen_counts": {
+            "useful": 27,
+            "not_useful": 52,
+            "unsure": 62,
+            "unreviewed": 1419
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 27,
+          "changed_order_bags": 1147
+        },
+        {
+          "policy": "hybrid05",
+          "chosen_counts": {
+            "useful": 56,
+            "not_useful": 202,
+            "unsure": 202,
+            "unreviewed": 1100
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 56,
+          "changed_order_bags": 193
+        },
+        {
+          "policy": "hybrid10",
+          "chosen_counts": {
+            "useful": 56,
+            "not_useful": 193,
+            "unsure": 189,
+            "unreviewed": 1122
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 56,
+          "changed_order_bags": 261
+        },
+        {
+          "policy": "hybrid20",
+          "chosen_counts": {
+            "useful": 56,
+            "not_useful": 176,
+            "unsure": 172,
+            "unreviewed": 1156
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 56,
+          "changed_order_bags": 370
+        },
+        {
+          "policy": "hybrid10_known",
+          "chosen_counts": {
+            "useful": 58,
+            "not_useful": 209,
+            "unsure": 213,
+            "unreviewed": 1080
+          },
+          "bags_with_known_useful_order": 59,
+          "selected_known_useful": 58,
+          "changed_order_bags": 44
+        }
+      ],
+      "pair_discrimination": [
+        {
+          "policy": "native",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.48576812401373803,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.5284090909090909
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.6
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.6
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 0.42105263157894735
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.2261904761904762
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.75
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.797979797979798
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.5625
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.25
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.21296296296296297
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.6111111111111112
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 0
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.7263157894736842
+            }
+          ]
+        },
+        {
+          "policy": "base_final",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.4839292838415645,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.5284090909090909
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.5692307692307692
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.6
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 0.42105263157894735
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.25
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.75
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.797979797979798
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.5511363636363636
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.25
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.14814814814814814
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.6666666666666666
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 0
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.7263157894736842
+            }
+          ]
+        },
+        {
+          "policy": "lm",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.495412290763168,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.3522727272727273
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.47692307692307695
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.26666666666666666
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 0.7368421052631579
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.40476190476190477
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.625
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0.045454545454545456
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.5808080808080808
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.5113636363636364
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.4166666666666667
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.5185185185185185
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.2222222222222222
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 1
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.2736842105263158
+            }
+          ]
+        },
+        {
+          "policy": "hybrid05",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.514058457786528,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.5340909090909091
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.5692307692307692
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.4666666666666667
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 0.8421052631578947
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.40476190476190477
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.6875
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.8282828282828283
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.5909090909090909
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.4166666666666667
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.3425925925925926
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.3333333333333333
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 0
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.6947368421052632
+            }
+          ]
+        },
+        {
+          "policy": "hybrid10",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.5602332219437484,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.5227272727272727
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.6
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.4666666666666667
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 0.8421052631578947
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.42857142857142855
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.7291666666666666
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.8383838383838383
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.625
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.5
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.4444444444444444
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.2222222222222222
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 0.5
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.6842105263157895
+            }
+          ]
+        },
+        {
+          "policy": "hybrid20",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.5597690856901383,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.48863636363636365
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.5846153846153846
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.4
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 1
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.35714285714285715
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.7708333333333334
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.8333333333333334
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.6704545454545454
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.4166666666666667
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.5
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.2222222222222222
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 0.5
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.6526315789473685
+            }
+          ]
+        },
+        {
+          "policy": "hybrid10_known",
+          "puzzles": 15,
+          "mean_puzzle_concordance": 0.48620257747450724,
+          "by_puzzle": [
+            {
+              "inventory": "aadeiijnnnos",
+              "yes": 2,
+              "no": 44,
+              "pairs": 88,
+              "concordance": 0.5625
+            },
+            {
+              "inventory": "eghiinssttt",
+              "yes": 5,
+              "no": 13,
+              "pairs": 65,
+              "concordance": 0.4153846153846154
+            },
+            {
+              "inventory": "aabeeeehklnoorrsttuyy",
+              "yes": 1,
+              "no": 15,
+              "pairs": 15,
+              "concordance": 0.6
+            },
+            {
+              "inventory": "aaaeeggilmnnorrssttv",
+              "yes": 1,
+              "no": 3,
+              "pairs": 3,
+              "concordance": 1
+            },
+            {
+              "inventory": "abcceehhilnos",
+              "yes": 1,
+              "no": 19,
+              "pairs": 19,
+              "concordance": 0.42105263157894735
+            },
+            {
+              "inventory": "aeghimnorsuw",
+              "yes": 7,
+              "no": 6,
+              "pairs": 42,
+              "concordance": 0.2976190476190476
+            },
+            {
+              "inventory": "aadeehlprr",
+              "yes": 2,
+              "no": 24,
+              "pairs": 48,
+              "concordance": 0.7708333333333334
+            },
+            {
+              "inventory": "adeeefloprssx",
+              "yes": 2,
+              "no": 11,
+              "pairs": 22,
+              "concordance": 0
+            },
+            {
+              "inventory": "aainrst",
+              "yes": 9,
+              "no": 22,
+              "pairs": 198,
+              "concordance": 0.8080808080808081
+            },
+            {
+              "inventory": "adgiiimnosstu",
+              "yes": 8,
+              "no": 11,
+              "pairs": 88,
+              "concordance": 0.5625
+            },
+            {
+              "inventory": "addeefgghhiiilnnottv",
+              "yes": 2,
+              "no": 6,
+              "pairs": 12,
+              "concordance": 0.4166666666666667
+            },
+            {
+              "inventory": "aefilorstx",
+              "yes": 9,
+              "no": 12,
+              "pairs": 108,
+              "concordance": 0.5185185185185185
+            },
+            {
+              "inventory": "deeegiklnooprsww",
+              "yes": 3,
+              "no": 6,
+              "pairs": 18,
+              "concordance": 0.2777777777777778
+            },
+            {
+              "inventory": "aacdddeeeeefhinnnnorrrsttttu",
+              "yes": 2,
+              "no": 1,
+              "pairs": 2,
+              "concordance": 0
+            },
+            {
+              "inventory": "aejmnos",
+              "yes": 5,
+              "no": 19,
+              "pairs": 95,
+              "concordance": 0.6421052631578947
+            }
+          ]
+        }
+      ],
+      "scope": "Frozen actual native 56 retained/diversified orders per displayed/owner-reviewed bag. No new search, no answer injection. Labels are independent owner observations; unjudged new orders remain unjudged. Hypotheses/weights exploratory, not heldout selection.",
+      "probe_binary_sha256": "77a66e25c65152f8f484e46033b6e8fd29041f62aed26c85176d9a3108413f94",
+      "token_boundary": "Use native display_phrase (including contraction rendering), not raw letter-key words, for ARPA lookup and human matching. Raw-token first-pass files are preserved locally; no human label or native word order changed."
+    },
+    "decision": "Not promoted: ungated hybrid changes known-positive choices; in-vocabulary gating preserves them but removes almost all apparent pair-discrimination gain. Source/domain coverage and UNK confounding remain unresolved. No end-to-end LM latency/quality claim, no phrase/cohesion ablation win.",
+    "research_batch_cost": {
+      "exit_code": 0,
+      "elapsed_ms": 2695.9512,
+      "sampled_peak_rss_bytes": 100442112,
+      "samples": 64,
+      "sample_interval_ms": 20,
+      "scope": "One offline batch of 23706 frozen orders, including two ARPA scans and JSON output. Not a production LM latency claim; OS/background uncontrolled."
+    }
+  },
+  "decisions": [
+    "Human labels and LLM labels remain distinct. Maybes/conflicting contexts abstain; no fabricated consensus or task-fit vote.",
+    "Intended recovery and usefulness of alternatives are separate axes. Negative historical target contrasts are not human No labels.",
+    "No dictionary, runtime model, default ranker or native shortlist algorithm promoted. No answer-specific production condition introduced.",
+    "Next discriminating experiment: broader independently sourced conversational/title/name coverage with OOV-stratified ablation against phrase/collocation/cohesion on frozen full candidate pools; do not retune against these fifty exposed cases and call it holdout."
+  ]
+}

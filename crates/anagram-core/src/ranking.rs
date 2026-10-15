@@ -185,8 +185,8 @@ pub fn prepare_controlled(
     Ok(rows)
 }
 
-/// `per_group` is the initial shortlist size, not a hard deployment work cap:
-/// family expansion intentionally includes every selected inflection sibling.
+/// `per_group` is the initial row shortlist size, not a distinct-family budget
+/// or hard deployment work cap: expansion includes every selected sibling.
 pub fn choose_deep(rows: &[Row], per_group: usize, deep_all: bool) -> BTreeSet<usize> {
     choose_deep_controlled(
         rows,
@@ -514,4 +514,30 @@ pub fn rank_buckets_controlled(
         })?;
     }
     Ok(buckets)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn row(family: &str, score: f64, count: usize) -> Row {
+        serde_json::from_value(serde_json::json!({
+            "words":[family],"word_count":count,"old_rank":1,"old_pre":0.,"lex":0.,"fam":0.,"old_pair":0.,"hint":0.,"zavg":0.,"zmin":0.,"old_pcov":0.,"hints":[],
+            "wn_coverage":0.,"grammar_potential":0.,"grammar_potential_norm":0.,"pre_score":score,"deep":false,"best_order":[],"grammar_raw":0.,"grammar_norm":0.,"structure_norm":0.,"valency_norm":0.,"syntax_coverage":0.,"phrase_kind":"unknown","base_final":0.,"colloc_norm":0.,"phrase_attest_norm":0.,"phrase_bonus":0.,"final":0.,"family_key":[family]
+        })).unwrap()
+    }
+    #[test]
+    fn row_seed_budget_expands_siblings_without_changing_into_a_family_budget() {
+        let rows = vec![
+            row("alpha", 10., 2),
+            row("alpha", 9., 2),
+            row("beta", 8., 2),
+            row("gamma", 7., 2),
+            row("alpha", 1., 2),
+            row("delta", 10., 3),
+        ];
+        assert_eq!(choose_deep(&rows, 2, false), BTreeSet::from([0, 1, 4, 5]));
+        assert_eq!(choose_deep(&rows, 1, false), BTreeSet::from([0, 1, 4, 5]));
+        assert_eq!(choose_deep(&rows, 0, false), BTreeSet::new());
+        assert_eq!(choose_deep(&rows, 0, true), (0..rows.len()).collect());
+    }
 }

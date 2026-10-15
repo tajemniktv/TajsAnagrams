@@ -44,3 +44,32 @@ treated here as blanket redistribution clearance for the raw texts or a derived
 shipped model. It was considered, not downloaded, trained or approved for
 packaging. This source/footprint review remains distinct from testing the scorer
 or demonstrating an anagram-quality improvement.
+
+## Phase 7 general-text pilot (2026-10-15)
+
+No flagged TUBELEX archive was restored. A separate offline five-gram model was
+trained by `cargo xtask research train-ngram` from four Standard Ebooks repositories:
+
+- [Pride and Prejudice](https://github.com/standardebooks/jane-austen_pride-and-prejudice)
+- [The Adventures of Sherlock Holmes](https://github.com/standardebooks/arthur-conan-doyle_the-adventures-of-sherlock-holmes)
+- [The War of the Worlds](https://github.com/standardebooks/h-g-wells_the-war-of-the-worlds)
+- [Alice's Adventures in Wonderland](https://github.com/standardebooks/lewis-carroll_alices-adventures-in-wonderland)
+
+Their inspected `LICENSE.md` files describe the original texts/artwork as believed
+US public domain, with contributors' work dedicated worldwide under CC0. This
+records the publisher's terms, not a blanket international redistribution claim.
+Original clones, licenses, exact commits, per-file hashes, paragraph extraction
+and tokenization manifest remain under `.codex/temp/phase7-2026-10-15`; condensed
+identities and results are versioned in `phase7-experiment.v1.json`. Only body
+paragraph text was used, not cover art or upstream executable tooling. No target
+file, intended answer, user note or model judgment was used for training.
+
+The training method follows interpolated modified Kneser-Ney's continuation
+counts and count-dependent discounts; see [Chen and Goodman's empirical
+study](https://www.microsoft.com/en-us/research/publication/an-empirical-study-of-smoothing-techniques-for-language-modeling/).
+It is a research implementation, not KenLM binary compatibility or an assertion
+of equal corpus quality. The 35.96 MB ARPA remains **unbundled**: the pilot's
+mixed/OOV-confounded evidence does not pass the quality/domain/footprint gate.
+No model path or provider selector has been added to ordinary Settings, no
+production loading/caching contract was changed, and phase/corpus attestation
+ablation and managed packaging remain future work.

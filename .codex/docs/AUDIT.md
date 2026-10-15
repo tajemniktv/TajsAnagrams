@@ -599,6 +599,80 @@ visual/physical-key acceptance or a claim that solver language quality changed.
 No production lexicon/ranker or human judgments were replaced. No push or hosted
 CI result is claimed.
 
+### Phase 7: permissive owner evidence and discriminating experiments (2026-10-15)
+
+This later checkpoint supersedes the preceding checkpoint's "no model trained"
+state, not its historical evidence. Exact sources and measured summaries are
+frozen in `tests/quality/phase7-experiment.v1.json`; raw research remains under
+`.codex/temp/phase7-2026-10-15`. Neither rejected treatment is a new default.
+
+| Stable finding | Disposition | Evidence and boundary |
+| --- | --- | --- |
+| F-50: the latest owner review could be treated as the old 131-row batch or all 50 new cases | Verified and versioned separately | Export SHA256 `93634d87faef7fa4107820be616b9912ffd779ff160e763db8b3c8494368e277`: 289 unchanged captures, 5,952 positions, 532 context/output judgments (59 Yes / 237 No / 236 Maybe); all 131 earlier votes unchanged. These cover the older sixteen experiment bags plus a desktop bag, not all fifty development cases. Three private notes and the original pair are preserved locally. `human-judgments.v1.json` omits private notes/paths, not verdicts. |
+| F-51: unknown words can back off without first mapping the sequence history | Fixed in the research scorer | A word absent from the ARPA vocabulary must become UNK before higher-order lookup, including later history positions. Previously a real `<unk> good` transition could disappear behind unrelated backoff. The two-pass queried scorer now maps histories correctly, reports OOV words, and has a hand-calculated transition test plus native trainer/ARPA roundtrip. This is not a newly packaged runtime LM. |
+| F-52: a real five-gram model necessarily improves permissive anagram usefulness | Not supported by this pilot | Native interpolated modified Kneser-Ney trains on four general books without target input: 281,671 tokens, 16,902 sentences, 35,957,972-byte plain ARPA. On 1,560 frozen native bags / 23,706 retained orders, an exploratory grammar/LM blend improves within-puzzle Yes/No concordance 0.486→0.560 but selects 56 known-positive orders versus native 58. In-vocabulary-only blending retains 58 but concordance is 0.486. Apparent improvement is confounded with OOV/domain coverage; no production winner. |
+| F-53: distinct-family shortlist seeds necessarily improve delivery over row seeds | Rejected by randomized native experiment | Fifty before/after pairs, same research lexical60 dictionary and 10-second deadline: 47 completed per treatment, intended bucket-top-ten 13/50 both; known-human useful delivery falls 14→13 puzzles. The owner-approved `no chile beachs` leaves books-02's displayed ten. Deep work increases 9,780→11,005 rows; attempt medians 1,261→1,300 ms, one observation per case and uncontrolled background/OS effects. The proposal is preserved as experimental evidence, not shipped. Production row-seeded family expansion remains. |
+| F-54: a bigger reconstruction suite or familiar-language metric is a complete benchmark | Still open, with better evidence boundaries | `cases.v4.json` retains every v3 record and adds seven already exposed public bags (50 total). Owner/model sources remain distinct; uncertainty and conflicting contexts abstain. Intended reconstruction at bucket top ten and useful alternatives are separate. Word-order features, reversed-prose controls and exposed puzzles do not establish a population quality gate or replace broader source-family-separated collection. |
+
+The raw owner export was copied unchanged before analysis. Independent checks
+validate row links, actual per-bucket ranks, phrases and exact inventories;
+captures equal the earlier export byte-for-data, with 401 added judgments.
+All 532 reviewed context outputs are represented. No task-fit verdicts were
+collected, and one real pair is not expanded into many supposed preferences.
+`quality --human-judgments` maps standalone wording by independently checked
+inventory rather than guessing opaque desktop case IDs; duplicate contexts with
+conflicting verdicts abstain. Maybes remain unknown, not No. Existing chat and
+historical label files remain intact.
+
+Regrading the old sixteen-bag experiment yields known useful-answer delivery
+per cold trial of 11/16 baseline, 12/16 names80 and 14/16 frequency3. Those three
+timing repeats are not 48 independent puzzles; missing/Maybe/new outputs remain
+unresolved. On the newer 43-bag capture, owner definite-label coverage is only
+about 11–12.5% of displayed slots. Even exhaustive reviewing of the older pool
+does not make the newer outputs comprehensively judged. The registered readable
+TajsBench view now automatically includes a separate owner panel with coverage,
+useful delivery and source hash, without overwriting CSVs or model judgments.
+
+The LM's natural-versus-reversed sanity control scores 1,852/1,879 original
+sentences higher, with three ties. Sentences are withheld from training by a
+deterministic every-tenth split within the same four books; nearby/repeated
+sentences and artificial reversals prevent treating this as an independent
+anagram-quality or author/genre holdout. The real-order comparison averages
+within fifteen puzzles, not thousands of supposedly independent human labels;
+no significance or representative-family claim is made. These order features do
+not include the production row's lexical priors or phrase/corpus rescoring.
+
+The native ordering probe now exports actual rendered phrases. Eleven retained
+bags contain contraction letter keys; the final experiment scores native
+`don't` rendering instead of raw `dont`, with the first-pass raw-token files
+preserved separately. This changes no human labels or solver orders. One offline
+23,706-order batch, including two ARPA scans and JSON output, takes 2,696 ms and
+has a 100,442,112-byte sampled process RSS peak. It is a single research-process
+measurement, not production per-solve latency or a guaranteed memory peak.
+
+`DATA_RESEARCH.md` records Standard Ebooks' inspected source terms, exact-source
+hash/provenance policy and unbundled boundary. The historically flagged TUBELEX
+archive remains absent. The pilot is research-only: no ordinary Settings model
+path/selector, no managed runtime model/cache schema, and no production lexicon,
+ranker or shortlist change. Phase 7's production gate remains open pending broader
+domain coverage, OOV-stratified comparison, phrase/cohesion ablation and actual
+end-to-end footprint/latency evidence. Do not tune more weights on this exposed
+sample and call that holdout validation or begin Phase 8 assuming a proven LM.
+
+Validation: 177 native pipeline tests pass, with strict Clippy, formatting,
+16 generated contract artifacts and 19 shared AJV fixtures. All 27 ordinary
+desktop tests pass (the explicit local-import experiment remains intentionally
+ignored in that ordinary run), desktop all-target Clippy passes, and the
+frontend reports zero errors/warnings with an input/output-verified cache hit.
+The normal cached desktop build installs/restarts the app at the standard
+TajemnikTV location: PID 42916, responsive; installed SHA256
+`8589289AB6A3227E66C24AFD6AFD76EC380EA17697975E321677F66CBBE2ED07`.
+A read-only installed SQLite check compares all 289 captures, 532 judgments and
+one preference to the exact original export: all records, including notes and
+metadata, are unchanged. The original export hash is unchanged too. This proves
+stored review preservation and a responsive-process dogfood, not new visual or
+physical-key acceptance. No push or hosted CI result is claimed.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose

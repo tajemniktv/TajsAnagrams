@@ -13,6 +13,16 @@
 
 ## Post-snapshot completed updates
 
+2026-10-15 (later): the complete 532-output owner export is preserved as a
+separate permissive human judgment source (Maybe is not No). Native quality and
+auto-refreshed review reports evaluate it separately from LLM labels; the current
+development reconstruction suite retains all 43 v3 cases and adds seven exposed
+public bags. Rust-native modified Kneser-Ney five-gram training and OOV-correct
+ARPA scoring support a real retained-order experiment. The mixed/OOV-confounded
+LM pilot and a distinct-family shortlist proposal failed promotion criteria;
+production ranking, search and vocabulary are unchanged. Measured evidence lives
+in `tests/quality/phase7-experiment.v1.json`, with current open gates in PLAN/AUDIT.
+
 2026-10-15: review friction follow-up adds a default one-at-a-time Yes/Maybe/No
 queue with keyboard shortcuts, automatic advance, context-safe deduplication and
 previous/revise. Notes, reasons, observation selection, calibration and pairwise
