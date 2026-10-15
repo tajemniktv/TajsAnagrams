@@ -24,7 +24,9 @@ export const bridge = {
   reviewState: () => invoke<ReviewState>('review_state'),
   reviewCapture: (id: number) => invoke<number>('review_capture', { id }),
   reviewImport: (path: string, workloads: string | null) => invoke<number>('review_import', { path, workloads }),
-  reviewJudge: (judgment: ReviewJudgment) => invoke<void>('review_judge', { judgment }),
+  // Saved records also contain provenance/timestamps. Send only the strict
+  // editable command fields, not read-only metadata copied from a loaded row.
+  reviewJudge: (j: ReviewJudgment) => invoke<void>('review_judge', { judgment: {id:j.id,verdict:j.verdict,reasons:j.reasons,note:j.note,task_fit:j.task_fit,looked_up:j.looked_up} }),
   reviewPrefer: (preference: ReviewPreference) => invoke<void>('review_prefer', { preference }),
   reviewExport: () => invoke<string | null>('review_export'),
   manage: (action: unknown) => invoke<void>('manage', { action }),

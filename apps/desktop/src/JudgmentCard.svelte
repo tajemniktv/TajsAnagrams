@@ -2,7 +2,7 @@
   import { untrack } from 'svelte';
   import { ThumbsUp, ThumbsDown, CircleHelp } from '@lucide/svelte';
   import { message, type ReviewRow, type ReviewJudgment, type Verdict } from './bridge';
-  let { row, value, onsave }: {row: ReviewRow; value?: ReviewJudgment; onsave: (v: ReviewJudgment) => Promise<void>} = $props();
+  let { row, value, onsave, quick = false, shortcutEnabled = true, onrated }: {row: ReviewRow; value?: ReviewJudgment; onsave: (v: ReviewJudgment) => Promise<void>; quick?: boolean; shortcutEnabled?: boolean; onrated?: (id: string) => void} = $props();
   let draft = $state<ReviewJudgment>(untrack(() => value ? structuredClone($state.snapshot(value)) : {id:row.id,verdict:null,reasons:[],note:'',task_fit:null,looked_up:false}));
   let busy = $state(false); let error = $state(''); let status = $state('');
   const reasons = [
@@ -16,23 +16,29 @@
     if(draft.reasons.includes(key)) draft.reasons=key==='unspecified' ? ['unspecified'] : draft.reasons.filter(r=>r!=='unspecified');
     void save();
   }
-  async function save(verdict: Verdict | null = draft.verdict) {
+  async function save(verdict: Verdict | null = draft.verdict, advance = false) {
     if(busy) return; busy=true; error=''; status='';
     const next=structuredClone($state.snapshot(draft)); next.verdict=verdict;
     if(verdict==='not_useful' && !next.reasons.length) next.reasons=['unspecified'];
-    try {await onsave(next); draft=next; status='Saved locally';} catch(e){error=message(e);} finally{busy=false;}
+    try {await onsave(next); draft=next; status='Saved locally'; if(advance) onrated?.(next.id);} catch(e){error=message(e);} finally{busy=false;}
+  }
+  function shortcut(event: KeyboardEvent) {
+    if(!quick || !shortcutEnabled || busy || event.repeat || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]') || (event.target instanceof Element && event.target.closest('input,textarea,select,[contenteditable]')))return;
+    const v=({'1':'useful','2':'unsure','3':'not_useful'} as Record<string,Verdict>)[event.key];
+    if(v){event.preventDefault();void save(v,true);}
   }
 </script>
-<article class="judgment-card">
+<svelte:window onkeydown={shortcut}/>
+<article class:quick class="judgment-card">
   <div class="row-title"><span class="rank">{row.word_count} words · rank {row.rank}</span><strong>{row.phrase || '[Unordered word bag — not judgeable]'}</strong></div>
   {#if row.judgeable}
   <div class="actions votes" aria-label={`Usefulness of ${row.phrase}`}>
-    <button disabled={busy} aria-pressed={draft.verdict==='useful'} aria-label={`Useful: ${row.phrase}`} onclick={() => save('useful')}><ThumbsUp size={16}/>Useful</button>
-    <button disabled={busy} aria-pressed={draft.verdict==='unsure'} aria-label={`Unsure: ${row.phrase}`} onclick={() => save('unsure')}><CircleHelp size={16}/>Unsure</button>
-    <button disabled={busy} aria-pressed={draft.verdict==='not_useful'} aria-label={`Not useful: ${row.phrase}`} onclick={() => save('not_useful')}><ThumbsDown size={16}/>Not useful</button>
-    <button disabled={busy || !draft.verdict} onclick={() => save(null)}>Clear verdict</button>
+    <button disabled={busy} aria-pressed={draft.verdict==='useful'} aria-label={`Useful: ${row.phrase}`} onclick={() => save('useful',quick)}><ThumbsUp size={16}/>{quick ? 'Yes · 1' : 'Useful'}</button>
+    <button disabled={busy} aria-pressed={draft.verdict==='unsure'} aria-label={`Unsure: ${row.phrase}`} onclick={() => save('unsure',quick)}><CircleHelp size={16}/>{quick ? 'Maybe · 2' : 'Unsure'}</button>
+    <button disabled={busy} aria-pressed={draft.verdict==='not_useful'} aria-label={`Not useful: ${row.phrase}`} onclick={() => save('not_useful',quick)}><ThumbsDown size={16}/>{quick ? 'No · 3' : 'Not useful'}</button>
+    {#if !quick}<button disabled={busy || !draft.verdict} onclick={() => save(null)}>Clear verdict</button>{/if}
   </div>
-  <details open={draft.verdict==='not_useful' || draft.verdict==='unsure'}><summary>Reasons, short note and source-task fit</summary>
+  <details><summary>{quick ? 'Optional: add a note or reason' : 'Reasons, short note and source-task fit'}</summary>
   {#if draft.verdict === 'not_useful' || draft.verdict === 'unsure'}
     <fieldset disabled={busy} class="reason-grid"><legend>Diagnostic reasons (multiple allowed; not automatic labels)</legend>
       {#each ['Language form','Meaning','Knowledge','Task','Other'] as group}<div><span class="hint">{group}</span>{#each reasons.filter(r=>r[0]===group) as [,key,label]}<label class="check"><input type="checkbox" value={key} bind:group={draft.reasons} onchange={() => reasonChanged(key)}/>{label}</label>{/each}</div>{/each}

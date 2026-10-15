@@ -481,6 +481,18 @@ explicitly separate. Source-family metadata is retained when matching workload
 JSON is supplied; missing families are unknown. No row-level significance claim
 or twelve-sample statistical comparison is manufactured.
 
+Quick review defaults to one new distinct contextual output and Yes/Maybe/No,
+with optional diagnostics rather than forced reasons or repeated observation
+selection. Model-assisted labeling may be used as a separate proposal layer,
+not stored as personal human judgments. For an independent model pass, hide human
+labels/notes, scores, treatment identities, ranks and source answers; require the
+exact displayed phrase, abstention and brief diagnostic reasons. Compare only
+after fixing its first-pass labels, using held-aside puzzles/source families where
+possible. Report agreement/abstention on definite human labels separately from
+human-uncertain cases. No 131-row sample is 131 independent puzzles, and no general
+LLM judging result establishes anagram-specific calibration. Keep exact arithmetic
+and rank validation in deterministic tools; an LLM's explanation is not that proof.
+
 The Markdown view also has expandable actual-rank diagnostics for the first
 empty-cache trial of each treatment on each bag. These retain duplicate slots
 and failures, with treatment names/scores hidden. They are selected diagnostic

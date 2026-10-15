@@ -52,17 +52,30 @@ solve: desktop IPC deliberately has no mocked or browser-local fallback.
 
 Enable **Settings → General → Developer mode**, save, then switch to the
 **Developer review** workspace tab. Finish a ranked solve and **Add current solve**,
-or import native benchmark solve JSONL; optionally choose matching workload JSON
-first to preserve task context and source families. Importing does not run a solver
+or use **Import benchmark** to choose native solve JSONL. Matching sibling
+`workloads.json` context is detected automatically; no second chooser is needed.
+Optional diagnostics retain an explicit workload chooser for other layouts.
+Importing does not run a solver
 or turn published answers into judgments. Unranked word bags are not phrases.
 
-Results stay grouped by original puzzle/input and captured observation. Ranks are
+Quick review is the default: one previously unreviewed phrase at a time, grouped
+by puzzle, with **Yes / Maybe / No** (keyboard **1 / 2 / 3**). Votes save and
+advance automatically; repeated phrases across trials/treatments are shown once
+per context, and previously reviewed Maybe entries are not continually re-asked.
+Maybe remains uncertain, not negative. **Previous / revise** revisits the last
+saved phrase. No explanation or note is required. Reasons never pop open after a
+vote; expand them only when wanted. Shortcuts are inactive while typing, in a
+settings modal or with optional diagnostics open. Failed saves do not advance.
+
+The queue is not a ranked result list. Each shown rank is a real captured position
+within a word-count bucket. **Optional diagnostics, calibration and comparisons**
+retains the full observation chooser and original displayed lists. Their ranks are
 the actual returned positions **within each word-count bucket**, including duplicate
 slots; they are not reconstructed by sorting model scores. Scores and treatment
 identity are hidden until explicitly revealed; visible ranks still mean this is
 not a completely blinded experiment.
 
-Use Useful / Unsure / Not useful independently for each phrase. A coherent title,
+Yes/Maybe/No save Useful/Unsure/Not useful independently for each phrase. A coherent title,
 noun phrase, sentence or recognizable name can qualify. Negative/uncertain reviews
 can have grouped reasons (grammar, rendering, meaning/incompleteness/anomaly,
 contrived context, unfamiliar/unverified name, task mismatch, unspecified).
@@ -71,7 +84,8 @@ Task fit is a separate field. Pairwise preference randomizes A/B from the same
 puzzle/context across observations, allows equal usefulness/both bad/unsure, and
 does not change either phrase's individual verdict.
 
-Coverage counts definite useful/not-useful verdicts; unsure and unreviewed remain
+Quick progress counts reviewed outputs including Maybe; diagnostics separately
+count definite useful/not-useful coverage. Unsure and unreviewed remain
 unresolved. Each observation reports whether any known useful row was delivered.
 Calibration prompts alternate after five saved edits and are explicitly excluded
 from metrics. One positive is your prior judgment; the negative is a curator
@@ -84,6 +98,11 @@ the solver cache does not delete evidence. Export review JSON for later analysis
 backup; it contains puzzle text, notes and local paths, so inspect before sharing.
 Imports are bounded to 32 MiB/1,000 attempts, validate inventory and request/context
 mapping, and are atomic/idempotent. Review exports are backups, not solver JSONL.
+Automatic context discovery does not fork existing reviewed captures into new
+IDs: reimport retains their original context and judgments. Missing/malformed or
+nonmatching automatic metadata leaves provenance unknown; explicitly selected
+incompatible metadata fails closed. Source-family enrichment for historical
+reviews must be recorded separately, not silently change judgment contexts.
 They are not yet automatically converted into promotion scores: statistical
 comparisons must cluster by puzzle/source family, not output rows or repeated trials.
 

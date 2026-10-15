@@ -13,6 +13,14 @@
 
 ## Post-snapshot completed updates
 
+2026-10-15: review friction follow-up adds a default one-at-a-time Yes/Maybe/No
+queue with keyboard shortcuts, automatic advance, context-safe deduplication and
+previous/revise. Notes, reasons, observation selection, calibration and pairwise
+comparison stay optional; no automatic reason expansion. Quick import detects
+matching sibling workload context without another chooser, while reimport never
+forks already-reviewed capture IDs. The user's first real export was validated
+without changing its 131 human judgments; model-judgment proposals remain separate.
+
 2026-10-14: opt-in Developer review now preserves native solve captures in a
 separate local SQLite store, displays original bags and actual bucket ranks, and
 collects per-output Useful/Unsure/Not useful, grouped reasons, notes/lookup flags,

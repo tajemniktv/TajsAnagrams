@@ -1,6 +1,6 @@
 # TajsAnagrams audit: architecture, assumptions and validated evidence
 
-Date: 2026-10-14. This is the single consolidated audit. Architecture findings
+Date: 2026-10-15. This is the single consolidated audit. Architecture findings
 are revalidated below; the earlier quality experiments and initial investigation
 retain their own dated evidence boundaries rather than becoming fresh claims.
 
@@ -304,6 +304,72 @@ the installation checkpoint, SHA256
 `E2C9ED257BF9BA5BF4F04BF997CA049580D6591C10E7B5C75314C1E8F78290B2`).
 No existing user settings/corpora/reviews were replaced by QA data; the new mode
 stays default-off. No hosted CI or push is claimed.
+
+### Phase E continuation: real review intake and friction reduction (2026-10-15)
+
+The user's actual export was found alongside the controlled capture as
+`.codex/temp/lexicon-experiment-2026-10-14/tajsbench-reviews.json`, 11,886,089 bytes,
+SHA256 `947E3893E6DCBB92B2B7073163D5569691B24D305442E217A8D080BD9C9D2ED0`.
+It is preserved unchanged. It contains 289 observations (all 288 historical
+controlled attempts and one new desktop solve), 17 puzzle/context groups, 5,952
+displayed positions and 532 distinct rendered/context outputs. There are 131
+personal judgments across seven puzzles: **14 useful, 52 not useful, 65 unsure**;
+three notes; no source-task verdicts; one pairwise preference, Indiana Jones over
+Inside Joanna. These are actual human entries, not invented assistant labels.
+
+Independent local validation passes schema/link/verdict/reason/note checks,
+original word-count-bucket positions and exact phrase/word inventories. All 288
+imported request/result/error tuples agree with the earlier raw capture. This
+does not independently re-derive every capture ID hash or validate English/name
+identity. Definite judgment coverage over all 532 outputs is 12.4%; including
+uncertainty, 24.6% have been reviewed. The selected seven-puzzle sample does not
+establish whole-pool quality/noise, a representative release gate or 131
+independent quality observations.
+
+| Stable finding | Disposition | Evidence and response |
+| --- | --- | --- |
+| F-36: the diagnostic-first review UI made simple judgments a chore | Quick workflow implemented | User explicitly reported friction from repetitions/navigation, many controls, ambiguous language, workload/observation selection, poorly understood pairing and automatic reason expansion. Default review now shows one new distinct contextual phrase at a time with Yes/Maybe/No, 1/2/3 shortcuts, save-and-advance and previous/revise. Notes/reasons are optional and never automatically expanded. Observation inspection, calibration and pairwise tools remain under optional diagnostics. Maybe remains uncertain, and previously reviewed rows are skipped rather than re-asked across trials. |
+| F-37: context selection was an avoidable prerequisite that lost provenance | Quick import improved; historical evidence preserved | The real export has no source-family metadata for any capture. A separate exact-request match to the retained workload file recovers four named source families among the seven reviewed puzzles; the other three remain unclassified, not presumed independent families. New quick imports discover compatible sibling `workloads.json` per case/request. Malformed/nonmatching automatic context cannot invent a family; explicit incompatible context fails closed. Automatic reimport detects already-preserved source observations and does not fork IDs or detach existing judgments. The original export and its context IDs are not silently rewritten by analysis. |
+| F-38: the user's missing-word example might be just an ordering failure | Dictionary admission gap confirmed; production change not made | The new desktop input is `testingshit`. Its selected dictionary's current SHA256 matches the captured identity `49f34d7a7b5d4f7b5d88255a1963d582a8095c1c363d66cd535e597d02c4b7e5`; normalized `shit` is absent, while `testing` exists and the unigram source contains `shit` with count 14,058,658. Generation exhausts 689 admitted bags and deep-analyzes all 689, publishing 30 rows; none contains the missing word. Increasing this search cap cannot recover an absent lexeme. This is not proof of intentional profanity filtering or that adding the word alone would rank the desired phrase first. The broad frequency3 experiment already contains it, but its earlier quality/timeout tradeoffs remain and no target-specific addition or default corpus promotion was made. |
+| F-39: model review could be mistaken for human preference or mathematical validation | Separate proposal protocol and compact packet prepared | The local 8,212-byte `llm-review-packet.md` contains the 131 sampled phrases in puzzle groups, shuffled within group, without human labels/notes, ranks, source answers, model scores, treatments or private paths. It requests explicit LLM provenance, abstention, diagnostic explanations and verification flags, not invented name facts. The private human comparison mapping is separate. No external judging service was called, no model verdicts were produced and no export was uploaded. This session has already seen the human labels and is not itself a blinded judge. |
+| F-40: editing a reloaded judgment could send read-only metadata to a strict native command | Fixed at transport ownership boundary | Persisted records include provenance, rubric and timestamp fields, while the native editable command correctly denies unknown fields. Cloning a loaded record could therefore make a later edit fail. A strict browser transport fixture reproduces `Unknown judgment wire field` before the fix. `bridge.reviewJudge` now explicitly sends only the six editable fields; the same hydrated-record roundtrip and quick-review flow pass without relaxing native validation. |
+
+LLM-assisted grammar/meaning triage is a testable convenience, not a new authority.
+The primary [LLM-as-a-judge study](https://arxiv.org/abs/2306.05685) documents
+position, verbosity and self-enhancement biases; its chat-response agreement
+results do not establish anagram-specific calibration. Compare a separately fixed
+first-pass model judgment with definite human judgments; retain human uncertainty
+as a different stratum, and inspect disagreement/lookup cases rather than
+overwriting the person's labels. Further calibration/validation must use separate
+puzzles/families rather than tuning and validating on the same 131 rows.
+
+The deterministic analysis, original-export hash, compact packet and private
+comparison mapping are under `.codex/temp/review-analysis-2026-10-15`. All UI QA
+uses an isolated transport fixture: original 131 labels/preferences are preserved,
+and extra test ratings are explicitly synthetic and never enter installed data.
+Rendered testing covers quick import without a workload chooser, one-card
+deduplication, click/keyboard advance, no reason pop-up, note typing, revision,
+disabled shortcuts during diagnostics and failed-save retention. It caught an
+async ownership bug where a post-save callback could reference the next card's
+ID; using the saved snapshot ID fixes previous/revise. Native regression tests
+cover automatic context matching/fallback and non-forking reimport preserving an
+existing uncertain judgment. No automatic LLM or clustered promotion scoring is
+claimed, and native versus rendered evidence retain the earlier separation.
+
+Completed checks: 156 native pipeline tests plus 26 desktop tests pass (182
+automated Rust tests total; the separate explicitly local-capture experiment
+remains ignored by ordinary tests). Core/CLI/tooling and desktop all-target Clippy,
+formatting, 16 contract artifacts, 19 AJV fixtures and frontend type checking pass.
+Rendered QA passes identity/nonblank/overlay/console/screenshot/interaction checks
+at 1200×900 and 650×900 using bundled Playwright and an explicit isolated browser
+transport fixture at `http://127.0.0.1:5174`; no Browser plugin was available.
+Shortcuts also remain inactive in settings modals. This is separate from native
+storage/import proof, not a new installed UI/IPC end-to-end claim. The final normal
+build installs/restarts the app; PID 47948 is freshly verified responsive, and
+installed SHA256 is
+`4B682B2299EA7CACC81AC0B6F2CF9871377DDF46DC19E1827DE6DE7F0706CDE1`.
+Original export SHA256 is unchanged, and no experimental corpus/ranker or LLM
+labels were promoted. No hosted CI or push is claimed.
 
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 

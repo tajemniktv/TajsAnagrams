@@ -175,9 +175,53 @@ pub fn import(data: &Path, path: &Path, workloads: Option<&Path>) -> Result<usiz
     let bytes = bounded(path)?;
     let text = std::str::from_utf8(&bytes).map_err(|e| e.to_string())?;
     let mut runs = Vec::new();
+    let mut seen_lines = 0;
+    fn source_identity(run: &Value) -> String {
+        let mut original = run.clone();
+        if let Some(fields) = original.as_object_mut() {
+            for name in [
+                "id",
+                "rows",
+                "context_id",
+                "input",
+                "rubric",
+                "source_context",
+                "source_family",
+                "task_mapping",
+            ] {
+                fields.remove(name);
+            }
+        }
+        hash(&original)
+    }
+    // Automatic metadata discovery must not fork already-reviewed captures into
+    // fresh row IDs. Preserve existing source/context and its human judgments.
+    let existing = if workloads.is_none() {
+        read(data)?["captures"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(source_identity)
+            .collect::<BTreeSet<_>>()
+    } else {
+        BTreeSet::new()
+    };
     let metadata: Option<Value> = workloads
         .map(|p| bounded(p).and_then(|b| serde_json::from_slice(&b).map_err(|e| e.to_string())))
         .transpose()?;
+    // Quick import needs only the capture chooser. A sibling workload file may
+    // supply context, but only per-case exact request matches may be attached.
+    // Explicit metadata stays fail-closed; absent/malformed automatic metadata
+    // never invents a source family or prevents importing the capture itself.
+    let automatic = if workloads.is_none() {
+        path.parent()
+            .map(|p| p.join("workloads.json"))
+            .and_then(|p| bounded(&p).ok())
+            .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+            .filter(|v| v["schema_version"] == 1 && v["workloads"].is_array())
+    } else {
+        None
+    };
     if metadata
         .as_ref()
         .is_some_and(|v| v["schema_version"] != 1 || !v["workloads"].is_array())
@@ -185,12 +229,22 @@ pub fn import(data: &Path, path: &Path, workloads: Option<&Path>) -> Result<usiz
         return Err("Invalid workload metadata".into());
     }
     for line in text.lines().filter(|l| !l.trim().is_empty()) {
+        seen_lines += 1;
+        if seen_lines > 1000 {
+            return Err("Import limited to 1000 attempts".into());
+        }
         let mut r: Value = serde_json::from_str(line).map_err(|e| e.to_string())?;
         if r["mode"] == "generate" || r["request"]["generation"].is_null() {
             return Err("Import ranked solve JSONL, not generation or stage captures".into());
         }
         r["origin"] =
             json!("imported native capture; source-family/context metadata may be absent");
+        let explicit_context = !r["source_context"].is_null()
+            || !r["source_family"].is_null()
+            || !r["task_mapping"].is_null();
+        if !explicit_context && existing.contains(&source_identity(&r)) {
+            continue;
+        }
         if let Some(metadata) = &metadata {
             let w = metadata["workloads"]
                 .as_array()
@@ -204,14 +258,26 @@ pub fn import(data: &Path, path: &Path, workloads: Option<&Path>) -> Result<usiz
             r["source_context"] = w["source_context"].clone();
             r["source_family"] = w["source_evidence"]["family_id"].clone();
             r["task_mapping"] = w["mapping"].clone();
+        } else if let Some(w) = automatic
+            .as_ref()
+            .filter(|_| !explicit_context)
+            .and_then(|m| m["workloads"].as_array())
+            .and_then(|ws| {
+                ws.iter()
+                    .find(|w| w["id"] == r["case_id"] && w["request"] == r["request"])
+            })
+        {
+            r["source_context"] = w["source_context"].clone();
+            r["source_family"] = w["source_evidence"]["family_id"].clone();
+            r["task_mapping"] = w["mapping"].clone();
         }
         runs.push(r);
-        if runs.len() > 1000 {
-            return Err("Import limited to 1000 attempts".into());
-        }
+    }
+    if seen_lines == 0 {
+        return Err("Empty capture file".into());
     }
     if runs.is_empty() {
-        return Err("Empty capture file".into());
+        return Ok(0);
     }
     store(data, &runs)
 }
@@ -464,6 +530,67 @@ mod tests {
                 .len(),
             1
         );
+    }
+    #[test]
+    fn automatic_workload_context_matches_exactly_without_blocking_quick_import() {
+        let temp = scratch();
+        let input = temp.path().join("runs.jsonl");
+        let context = temp.path().join("workloads.json");
+        let mut source = run();
+        source.as_object_mut().unwrap().remove("source_family");
+        fs::write(&input, source.to_string()).unwrap();
+        let mut metadata = json!({"schema_version":1,"workloads":[{"id":"six-letters","request":run()["request"],"source_evidence":{"family_id":"automatic-family"}}]});
+        fs::write(&context, metadata.to_string()).unwrap();
+        let target = temp.path().join("matched");
+        import(&target, &input, None).unwrap();
+        assert_eq!(
+            read(&target).unwrap()["captures"][0]["source_family"],
+            "automatic-family"
+        );
+        metadata["workloads"][0]["request"]["generation"]["text"] = json!("wrong");
+        fs::write(&context, metadata.to_string()).unwrap();
+        let target = temp.path().join("unmatched");
+        import(&target, &input, None).unwrap();
+        assert_eq!(
+            read(&target).unwrap()["captures"][0]["source_family"],
+            Value::Null
+        );
+        fs::write(&context, "malformed").unwrap();
+        let target = temp.path().join("malformed");
+        assert_eq!(import(&target, &input, None).unwrap(), 1);
+    }
+    #[test]
+    fn automatic_context_discovery_does_not_fork_existing_review_ids() {
+        let temp = scratch();
+        let input = temp.path().join("runs.jsonl");
+        let mut source = run();
+        source.as_object_mut().unwrap().remove("source_family");
+        fs::write(&input, source.to_string()).unwrap();
+        let target = temp.path().join("existing");
+        import(&target, &input, None).unwrap();
+        let before = read(&target).unwrap();
+        let id = before["captures"][0]["rows"][0]["id"].as_str().unwrap();
+        judge(&target, judgment(id, Some("unsure"))).unwrap();
+        let metadata = json!({"schema_version":1,"workloads":[{"id":"six-letters","request":run()["request"],"source_evidence":{"family_id":"new-family"},"source_context":{"original_context":"new context"}}]});
+        fs::write(temp.path().join("workloads.json"), metadata.to_string()).unwrap();
+        assert_eq!(import(&target, &input, None).unwrap(), 0);
+        let after = read(&target).unwrap();
+        assert_eq!(after["captures"], before["captures"]);
+        assert_eq!(after["judgments"][0]["id"], id);
+        assert_eq!(after["judgments"][0]["verdict"], "unsure");
+        // Explicit source context is a different input, not an automatic
+        // enrichment to silently discard or replace with a sibling file.
+        let mut contextual = run();
+        contextual["source_context"] = json!({"original_context":"Different explicit task"});
+        fs::write(&input, contextual.to_string()).unwrap();
+        assert_eq!(import(&target, &input, None).unwrap(), 1);
+        let after = read(&target).unwrap();
+        assert_eq!(after["captures"][1]["source_family"], "family-one");
+        assert_eq!(
+            after["captures"][1]["source_context"],
+            contextual["source_context"]
+        );
+        assert_ne!(after["captures"][1]["rows"][0]["id"], id);
     }
     #[test]
     fn old_settings_default_off_and_mode_changes_preserve_evidence() {
