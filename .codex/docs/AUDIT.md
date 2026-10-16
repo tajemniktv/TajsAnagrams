@@ -733,6 +733,16 @@ and word-count-balanced frontiers against the fixed mean-LM beam, preserving
 exactness and source/OOV controls. Do not claim Phase 8's quality gate has passed
 or ship a managed LM merely because this prototype exists.
 
+The four-input readable comparison is in `TAJSBENCH-HEAD-TO-HEAD.md` (2026-10-16).
+It shows up to 25 outputs in desktop word-count/bucket order from the preserved
+higher-work capture. Native and Phase 8 are actual responses on the same
+experimental lexical60 dictionary, not a default-installed-dictionary claim.
+Phase 7's middle column is explicitly a frozen-bag/rank `hybrid10` order replay;
+there is no measured complete Phase 7 alternative ranker, so it cannot establish
+end-to-end recovery or latency. All 220 available rows across these views pass
+independent letter/bag/group checks; short lists are not padded with invented
+answers. Input hashes and the local reproduction command accompany the report.
+
 Validation: 183 native pipeline tests, strict all-target Clippy/formatting,
 16 generated contracts and 19 AJV fixtures pass. Tiny exhaustive comparisons
 cover repeat policies, required multiplicities, Any/ExactlyOne hints (including
