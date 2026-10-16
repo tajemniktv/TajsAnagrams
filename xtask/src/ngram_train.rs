@@ -7,11 +7,16 @@ use std::{
     fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
-type Counts = BTreeMap<Vec<String>, u64>;
+type Counts = BTreeMap<Vec<u32>, u64>;
+
+struct Trained {
+    levels: Vec<Level>,
+    vocabulary: Vec<String>,
+}
 
 struct Level {
     counts: Counts,
-    contexts: BTreeMap<Vec<String>, (u64, f64)>,
+    contexts: BTreeMap<Vec<u32>, (u64, f64)>,
     discounts: [f64; 3],
     fallback: bool,
 }
@@ -36,7 +41,7 @@ fn level(counts: Counts) -> Level {
             (3. - 4. * y * n[3] / n[2]).clamp(0.01, 2.99),
         ]
     };
-    let mut contexts = BTreeMap::<Vec<String>, (u64, f64)>::new();
+    let mut contexts = BTreeMap::<Vec<u32>, (u64, f64)>::new();
     for (g, &c) in &counts {
         let entry = contexts.entry(g[..g.len() - 1].to_vec()).or_default();
         entry.0 += c;
@@ -49,7 +54,7 @@ fn level(counts: Counts) -> Level {
         fallback,
     }
 }
-fn probability(levels: &[Level], g: &[String]) -> f64 {
+fn probability(levels: &[Level], g: &[u32]) -> f64 {
     let l = &levels[g.len() - 1];
     if g.len() == 1 {
         return l.counts.get(g).copied().unwrap_or(0) as f64 / l.contexts[&Vec::new()].0 as f64;
@@ -66,7 +71,7 @@ fn probability(levels: &[Level], g: &[String]) -> f64 {
     };
     (direct + removed * lower) / total as f64
 }
-fn train(sentences: &[Vec<String>]) -> Result<Vec<Level>> {
+fn train(sentences: &[Vec<String>]) -> Result<Trained> {
     if sentences.is_empty() {
         return Err("Empty training corpus".into());
     }
@@ -76,17 +81,32 @@ fn train(sentences: &[Vec<String>]) -> Result<Vec<Level>> {
             *frequencies.entry(w.clone()).or_default() += 1;
         }
     }
+    // Lexically assigned IDs preserve the original String-key iteration and
+    // floating accumulation order, without copying each token into every gram.
+    let mut vocabulary: Vec<_> = frequencies
+        .keys()
+        .cloned()
+        .chain(["<s>".into(), "</s>".into(), "<unk>".into()])
+        .collect();
+    vocabulary.sort();
+    vocabulary.dedup();
+    let ids = vocabulary
+        .iter()
+        .enumerate()
+        .map(|(i, w)| (w.as_str(), i as u32))
+        .collect::<BTreeMap<_, _>>();
+    let (bos, eos, unk) = (ids["<s>"], ids["</s>"], ids["<unk>"]);
     let mut raw: Vec<Counts> = (0..5).map(|_| Counts::new()).collect();
     for s in sentences {
-        let t: Vec<_> = std::iter::once("<s>".to_owned())
+        let t: Vec<_> = std::iter::once(bos)
             .chain(s.iter().map(|w| {
                 if frequencies[w] < 2 {
-                    "<unk>".into()
+                    unk
                 } else {
-                    w.clone()
+                    ids[w.as_str()]
                 }
             }))
-            .chain(std::iter::once("</s>".into()))
+            .chain(std::iter::once(eos))
             .collect();
         for n in 1..=5 {
             for g in t.windows(n) {
@@ -96,25 +116,29 @@ fn train(sentences: &[Vec<String>]) -> Result<Vec<Level>> {
     }
     // Continuation counts, not token counts, below the highest order.
     let mut effective = vec![Counts::new(); 5];
-    effective[4] = raw[4].clone();
     for n in 1..5 {
         for g in raw[n].keys() {
             *effective[n - 1].entry(g[1..].to_vec()).or_default() += 1;
         }
         // A sentence-initial history has no left context; retain its raw count.
         for (g, &c) in &raw[n - 1] {
-            if g[0] == "<s>" && n > 1 {
+            if g[0] == bos && n > 1 {
                 effective[n - 1].insert(g.clone(), c);
             }
         }
     }
-    effective[0].remove(&vec!["<s>".into()]);
-    if !effective[0].contains_key(&vec!["<unk>".into()]) {
+    effective[4] = std::mem::take(&mut raw[4]);
+    drop(raw);
+    effective[0].remove(&vec![bos]);
+    if !effective[0].contains_key(&vec![unk]) {
         return Err(
             "Training needs singleton words to estimate <unk>; no fabricated probability".into(),
         );
     }
-    Ok(effective.into_iter().map(level).collect())
+    Ok(Trained {
+        levels: effective.into_iter().map(level).collect(),
+        vocabulary,
+    })
 }
 pub fn command(input: &str, output: &str) -> Result<Value> {
     if std::path::Path::new(output).exists() {
@@ -132,7 +156,8 @@ pub fn command(input: &str, output: &str) -> Result<Value> {
         Ok(s)
     }).collect::<Result<Vec<_>>>()?.into_iter().filter(|s| !s.is_empty()).collect::<Vec<_>>();
     let start = std::time::Instant::now();
-    let levels = train(&sentences)?;
+    let trained = train(&sentences)?;
+    let levels = &trained.levels;
     let mut f = BufWriter::new(File::create_new(output)?);
     writeln!(f, "\\data\\")?;
     for (i, l) in levels.iter().enumerate() {
@@ -148,7 +173,9 @@ pub fn command(input: &str, output: &str) -> Result<Value> {
         if i == 0 {
             let (n, d) = levels[1]
                 .contexts
-                .get(&vec!["<s>".into()])
+                .get(&vec![
+                    trained.vocabulary.binary_search(&"<s>".into()).unwrap() as u32,
+                ])
                 .ok_or("No BOS context")?;
             writeln!(f, "-99\t<s>\t{}", (d / *n as f64).log10())?;
         }
@@ -156,8 +183,11 @@ pub fn command(input: &str, output: &str) -> Result<Value> {
             write!(
                 f,
                 "{:.10}\t{}",
-                probability(&levels, g).log10(),
-                g.join(" ")
+                probability(levels, g).log10(),
+                g.iter()
+                    .map(|&i| trained.vocabulary[i as usize].as_str())
+                    .collect::<Vec<_>>()
+                    .join(" ")
             )?;
             if let Some(next) = levels.get(i + 1) {
                 let bow = next
@@ -200,23 +230,28 @@ mod tests {
             vec!["<s>", "a", "cat"],
             vec!["<s>", "a", "cat", "sat"],
         ] {
-            let sum: f64 = m[0]
+            let sum: f64 = m.levels[0]
                 .counts
                 .keys()
                 .map(|w| {
                     let g = h
                         .iter()
-                        .map(|s| s.to_string())
-                        .chain(w.iter().cloned())
+                        .map(|s| {
+                            m.vocabulary
+                                .binary_search(&s.to_string())
+                                .map_or(u32::MAX, |i| i as u32)
+                        })
+                        .chain(w.iter().copied())
                         .collect::<Vec<_>>();
-                    probability(&m, &g)
+                    probability(&m.levels, &g)
                 })
                 .sum();
             assert!((sum - 1.).abs() < 1e-10, "{h:?}: {sum}");
         }
+        let id = |s: &str| m.vocabulary.binary_search(&s.into()).unwrap() as u32;
         assert!(
-            probability(&m, &["a".into(), "cat".into()])
-                > probability(&m, &["cat".into(), "a".into()])
+            probability(&m.levels, &[id("a"), id("cat")])
+                > probability(&m.levels, &[id("cat"), id("a")])
         );
     }
     #[test]

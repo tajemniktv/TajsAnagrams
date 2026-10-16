@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-16",
+  "scope": "Bounded Phase 7 follow-up followed by two Phase 8 research budgets. Development-exposed cases and permissive owner labels, not a heldout general-quality gate. No human/model labels changed.",
+  "source_parent": "3f0866a",
+  "source_dirty": true,
+  "followup": {
+    "source_url": "https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences_detailed.tsv.bz2",
+    "source_terms": "Tatoeba download specification: CC BY 2.0 FR; selected attribution and full original source retained locally; no raw corpus/model bundled.",
+    "compressed_sha256": "1d8c40545b4af2c6531d1a8b64941fa9d0fa3ee5bcc11cb705c8d8c1fd930c84",
+    "source_sha256": "3f7d0ad83ea9d1df9aa49315d9b6c141a7daa0d24bbfa50980896b3b734dfabe",
+    "sampling_policy": "Lowest SHA256 normalized texts, deduplicated within selected sample; 2..30 ASCII/apostrophe words; hash-byte mod10 reserves sentences, not independent authors. No target/judgment input.",
+    "selected": 100000,
+    "training_modern_sentences": 84448,
+    "training_modern_tokens": 630804,
+    "reserved_sentences": 15552,
+    "training": {
+      "input_sha256": "47d1454cd84755bf20531b613b58b56db905cb4117ffae04a5240761309aec72",
+      "levels": [
+        {
+          "discount_fallback": false,
+          "discounts": [
+            0.10093134069742249,
+            1.8344152179837514,
+            2.7366003249817044
+          ],
+          "ngrams": 15856,
+          "order": 1
+        },
+        {
+          "discount_fallback": false,
+          "discounts": [
+            0.7340980143462529,
+            1.1354404343836104,
+            1.428467027155372
+          ],
+          "ngrams": 242018,
+          "order": 2
+        },
+        {
+          "discount_fallback": false,
+          "discounts": [
+            0.8513952176754429,
+            1.2023978438620644,
+            1.4334695909982824
+          ],
+          "ngrams": 547713,
+          "order": 3
+        },
+        {
+          "discount_fallback": false,
+          "discounts": [
+            0.9259154395131277,
+            1.3206937709635573,
+            1.573908232359352
+          ],
+          "ngrams": 672442,
+          "order": 4
+        },
+        {
+          "discount_fallback": false,
+          "discounts": [
+            0.9515796759892545,
+            1.38679378884361,
+            1.557963383548407
+          ],
+          "ngrams": 658572,
+          "order": 5
+        }
+      ],
+      "method": "interpolated modified Kneser-Ney, order 5; singleton words mapped to UNK; no pruning",
+      "model_bytes": 93546633,
+      "model_sha256": "6ca655362d1d9ac1898f8c324189dafd3c6f3dda68cf3a506ff11c96db51b4c9",
+      "research_only": true,
+      "schema_version": 1,
+      "sentences": 101350,
+      "tokens": 912475,
+      "training_ms": 8236
+    },
+    "corpus_manifest_sha256": "547c272f03f409332652709fa6d08633810112a5866302641a48831b39a67b03",
+    "pilot_equivalence_sha256": "f61360a5e47721e7a29e5728b62108d1a0b9a5e57072aaff9141bee615b9abd8",
+    "frozen_pool_sha256": "0294e0950153a8032ff29533bf76fd7cd7a815b01df8c51646bfaa205eaa4bc2",
+    "comparison_sha256": "d4c0d96e3e99e932fa2f9a506e9d25c8830e225e1e2802c5baee50c3c51dc088",
+    "comparisons": [
+      {
+        "model": "pilot",
+        "judged_total": {
+          "useful": 59,
+          "not_useful": 237,
+          "unsure": 236
+        },
+        "judged_oov": {
+          "useful": 47,
+          "not_useful": 211,
+          "unsure": 191
+        },
+        "policies": [
+          {
+            "policy": "native",
+            "chosen": {
+              "useful": 58,
+              "not_useful": 212,
+              "unsure": 214,
+              "unreviewed": 1076
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.48576812401373803
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.4722222222222222
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5002227424213842
+              }
+            }
+          },
+          {
+            "policy": "corpus",
+            "chosen": {
+              "useful": 57,
+              "not_useful": 219,
+              "unsure": 222,
+              "unreviewed": 1062
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.508352019974827
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.4097222222222222
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5038142126795211
+              }
+            }
+          },
+          {
+            "policy": "cohesion",
+            "chosen": {
+              "useful": 57,
+              "not_useful": 215,
+              "unsure": 216,
+              "unreviewed": 1072
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.51051149630097
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.4236111111111111
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5095126443647948
+              }
+            }
+          },
+          {
+            "policy": "hybrid05",
+            "chosen": {
+              "useful": 56,
+              "not_useful": 202,
+              "unsure": 202,
+              "unreviewed": 1100
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.514058457786528
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.6875
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5354412046326308
+              }
+            }
+          },
+          {
+            "policy": "hybrid10",
+            "chosen": {
+              "useful": 56,
+              "not_useful": 193,
+              "unsure": 189,
+              "unreviewed": 1122
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.5602332219437484
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.6875
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5700958652741335
+              }
+            }
+          },
+          {
+            "policy": "hybrid_known",
+            "chosen": {
+              "useful": 58,
+              "not_useful": 209,
+              "unsure": 213,
+              "unreviewed": 1080
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.48620257747450724
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.6875
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.504422636094962
+              }
+            }
+          },
+          {
+            "policy": "corpus_lm_known",
+            "chosen": {
+              "useful": 57,
+              "not_useful": 212,
+              "unsure": 217,
+              "unreviewed": 1074
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.48668239979643485
+              },
+              "both_iv": {
+                "families": 4,
+                "mean_family_concordance": 0.65625
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5095292578682504
+              }
+            }
+          }
+        ]
+      },
+      {
+        "model": "modern",
+        "judged_total": {
+          "useful": 59,
+          "not_useful": 237,
+          "unsure": 236
+        },
+        "judged_oov": {
+          "useful": 29,
+          "not_useful": 182,
+          "unsure": 140
+        },
+        "policies": [
+          {
+            "policy": "native",
+            "chosen": {
+              "useful": 58,
+              "not_useful": 212,
+              "unsure": 214,
+              "unreviewed": 1076
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.48576812401373803
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.47368927368927366
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.4245437670292891
+              }
+            }
+          },
+          {
+            "policy": "corpus",
+            "chosen": {
+              "useful": 57,
+              "not_useful": 219,
+              "unsure": 222,
+              "unreviewed": 1062
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.508352019974827
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.5111111111111111
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.45029776457258996
+              }
+            }
+          },
+          {
+            "policy": "cohesion",
+            "chosen": {
+              "useful": 57,
+              "not_useful": 215,
+              "unsure": 216,
+              "unreviewed": 1072
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.51051149630097
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.5144781144781144
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.45205215053750225
+              }
+            }
+          },
+          {
+            "policy": "hybrid05",
+            "chosen": {
+              "useful": 57,
+              "not_useful": 193,
+              "unsure": 191,
+              "unreviewed": 1119
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.4980953825252071
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.556060606060606
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.47764074323135813
+              }
+            }
+          },
+          {
+            "policy": "hybrid10",
+            "chosen": {
+              "useful": 53,
+              "not_useful": 176,
+              "unsure": 177,
+              "unreviewed": 1154
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.5034953269602392
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.5883116883116883
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.5142025860391556
+              }
+            }
+          },
+          {
+            "policy": "hybrid_known",
+            "chosen": {
+              "useful": 54,
+              "not_useful": 201,
+              "unsure": 200,
+              "unreviewed": 1105
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.45170151810502684
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.5883116883116883
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.48332824108586325
+              }
+            }
+          },
+          {
+            "policy": "corpus_lm_known",
+            "chosen": {
+              "useful": 53,
+              "not_useful": 206,
+              "unsure": 206,
+              "unreviewed": 1095
+            },
+            "strata": {
+              "all": {
+                "families": 15,
+                "mean_family_concordance": 0.4576367816718694
+              },
+              "both_iv": {
+                "families": 11,
+                "mean_family_concordance": 0.6021645021645022
+              },
+              "matched_oov_count": {
+                "families": 15,
+                "mean_family_concordance": 0.49953545500343316
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "decision": "Coverage improves, but LM blends still replace known-positive orders and do not establish an overall permissive-usefulness win. Phrase/cohesion evidence is measured separately using existing core functions; no installed corpus replacement. Proceed to Phase 8 research as owner requested."
+  },
+  "phase8": {
+    "algorithm": "Shared native lexical admission; ordered residual-inventory beam; required words reserved but may occupy any order position; normalized log10 LM + cheap lexical prior/short-word penalty. No target-aware expansion. One best order per bag and ten bags per word-count bucket.",
+    "score_formula": "(sum conditional log10 including EOS + 0.05 sum Zipf - 0.15 count(words<=2 letters)) / word count",
+    "limits": "Same 10s per-process deadline; model intake included for ordered search. Native 10000 candidate cap and ordered word-check caps are different work units, not equal-work claims. No competing compilation during captures. OS/background effects uncontrolled.",
+    "budgets": [
+      {
+        "name": "initial",
+        "beam_width": 64,
+        "word_check_cap": 200000,
+        "raw_sha256": "50b99dc35d03997f8e9c87c858a0efbde093747803049a6c10fcb00224b29041",
+        "treatments": [
+          {
+            "variant": "native",
+            "attempts": 50,
+            "successful_result_transport": 47,
+            "nonempty_delivery": 47,
+            "intended_bucket_top10": 13,
+            "intended_bucket_top1": 8,
+            "hits": [
+              "gaps-thirteen",
+              "hips_dont_lie",
+              "knowledge_power",
+              "listen_silent",
+              "lucas-02",
+              "quiet_machine",
+              "quiet_rain",
+              "warm_bread_title",
+              "we_need_sleep",
+              "welcome-housewarming",
+              "whiskey-jameson",
+              "window_opens",
+              "wordmath-extolsrfia"
+            ],
+            "known_human_useful_puzzles": 14,
+            "useful_slots": 48,
+            "not_useful_slots": 106,
+            "unknown_slots": 963,
+            "judgment_coverage": 0.1378692927484333,
+            "median_attempt_ms": 1344.616,
+            "median_sampled_peak_rss_bytes": 75169792,
+            "stops": {
+              "candidate_cap": 33,
+              "exhausted": 14
+            },
+            "max_search_ms": null
+          },
+          {
+            "variant": "ordered",
+            "attempts": 50,
+            "successful_result_transport": 50,
+            "nonempty_delivery": 33,
+            "intended_bucket_top10": 6,
+            "intended_bucket_top1": 3,
+            "hits": [
+              "gaps-thirteen",
+              "i_like_rain",
+              "listen_silent",
+              "lucas-02",
+              "welcome-housewarming",
+              "whiskey-jameson"
+            ],
+            "known_human_useful_puzzles": 5,
+            "useful_slots": 6,
+            "not_useful_slots": 2,
+            "unknown_slots": 527,
+            "judgment_coverage": 0.014953271028037384,
+            "median_attempt_ms": 1681.8783,
+            "median_sampled_peak_rss_bytes": 51122176,
+            "stops": {
+              "beam_pruned": 19,
+              "work_cap": 31
+            },
+            "max_search_ms": 367
+          }
+        ]
+      },
+      {
+        "name": "higher_work",
+        "beam_width": 64,
+        "word_check_cap": 1000000,
+        "raw_sha256": "3edd44d3abcd521610d458e04570a2a795c680857319739b2f405d40979623e4",
+        "treatments": [
+          {
+            "variant": "native",
+            "attempts": 50,
+            "successful_result_transport": 47,
+            "nonempty_delivery": 47,
+            "intended_bucket_top10": 13,
+            "intended_bucket_top1": 8,
+            "hits": [
+              "gaps-thirteen",
+              "hips_dont_lie",
+              "knowledge_power",
+              "listen_silent",
+              "lucas-02",
+              "quiet_machine",
+              "quiet_rain",
+              "warm_bread_title",
+              "we_need_sleep",
+              "welcome-housewarming",
+              "whiskey-jameson",
+              "window_opens",
+              "wordmath-extolsrfia"
+            ],
+            "known_human_useful_puzzles": 14,
+            "useful_slots": 48,
+            "not_useful_slots": 106,
+            "unknown_slots": 963,
+            "judgment_coverage": 0.1378692927484333,
+            "median_attempt_ms": 1323.5084,
+            "median_sampled_peak_rss_bytes": 75005952,
+            "stops": {
+              "exhausted": 14,
+              "candidate_cap": 33
+            },
+            "max_search_ms": null
+          },
+          {
+            "variant": "ordered",
+            "attempts": 50,
+            "successful_result_transport": 50,
+            "nonempty_delivery": 42,
+            "intended_bucket_top10": 6,
+            "intended_bucket_top1": 3,
+            "hits": [
+              "gaps-thirteen",
+              "i_like_rain",
+              "listen_silent",
+              "lucas-02",
+              "welcome-housewarming",
+              "whiskey-jameson"
+            ],
+            "known_human_useful_puzzles": 5,
+            "useful_slots": 6,
+            "not_useful_slots": 2,
+            "unknown_slots": 715,
+            "judgment_coverage": 0.011065006915629323,
+            "median_attempt_ms": 1697.0674999999999,
+            "median_sampled_peak_rss_bytes": 51277824,
+            "stops": {
+              "beam_pruned": 41,
+              "work_cap": 9
+            },
+            "max_search_ms": 1204
+          }
+        ]
+      }
+    ],
+    "recovery": {
+      "original_attempts": 78,
+      "resumption_attempts": 38,
+      "missing_added": 22,
+      "supplementary_repeats": 16,
+      "selection": "Keep every original attempt (including errors), add only previously missing case/treatment keys. Never select a successful rerun over an original failure. Primary reports retain exactly 50 pairs. Interruption cause not established."
+    },
+    "raw_chunks": {
+      "ordered-paired.jsonl": "50b99dc35d03997f8e9c87c858a0efbde093747803049a6c10fcb00224b29041",
+      "ordered-highwork.jsonl": "aa66b354ae7bc008d000d4780d1c9a579c4288fc7e6069f240e8b161c66ff40c",
+      "ordered-highwork-remainder.jsonl": "c891bea623953e0e70b14d5f56bc811b2ba8f9db37e76647c849c6fb1dccd305",
+      "ordered-paired.jsonl.manifest.json": "79a8df36b5f58a2cef9a0be34fcbb85e1f072705facf7400c8078eb880d2ba3e",
+      "ordered-highwork-remainder.jsonl.manifest.json": "419b10c49d8a8641e54dc3482f341695fdd8fde650edf14226b94ac7d4074f74"
+    },
+    "decision": "Research entry implemented and measured, not promoted: both beam64 budgets recover 6/50 intended references versus native 13/50; known human useful delivery is 5 versus 14 puzzles. Larger work produces more unknown outputs, not additional target or known-useful successes. Preserve native default and exact generator."
+  },
+  "validation": {
+    "independent_letter_rows": 3492,
+    "duplicate_bag_checks": true,
+    "native_completed_results_equal_pre_refactor": 47
+  },
+  "open_gates": [
+    "No production LM or guided-search strategy is selected; no ordinary UI/model setting added.",
+    "New wording outside the frozen owner labels remains unknown, not negative. Low known-negative counts are not proof of low noise.",
+    "Research result JSON is not the production SolveResult wire contract. Incremental completion callback is tested, not connected to a new desktop UI stream.",
+    "More work at fixed beam/scorer does not itself isolate beam pruning from objective mismatch; next study should compare completion-feasible/word-count-balanced frontiers before more weight tuning."
+  ]
+}

@@ -256,6 +256,30 @@ contains fifty exposed bags, not a representative heldout gate. Registered
 `review --human-judgments FILE` inputs refresh readable owner coverage and top-ten
 useful delivery during checks/builds without overwriting human annotation CSVs.
 
+For broader-source experiments, `research corpus --text DETAILED_TATOEBA.tsv
+--train-output NEW.txt --heldout-output NEW.txt --output MANIFEST.json` performs
+answer-independent deterministic sampling and retains selected attribution.
+`research order-evidence --groups FILE --text SENTENCES.txt` evaluates existing
+native phrase/cohesion functions on the supplied text and native bigram corpus;
+it does not replace the installed phrase database.
+
+```powershell
+cargo xtask research ordered-search --before build/release/anagram-cli.exe --dictionary DICTIONARY.txt --arpa MODEL.arpa --cases tests/quality/cases.v4.json --beam-width 64 --work-cap 200000 --timeout-ms 10000 --output NEW.jsonl
+```
+
+This is a **development-only Phase 8 prototype**, not a normal solve option.
+It runs randomized native/ordered cold-process pairs, includes model intake in
+each deadline/wall time, and records model/binary/input hashes in a sibling
+manifest. The internal `ordered-worker` endpoint accepts a native solve request
+on stdin, but replaces the ranking pipeline with experimental bounded ordered
+generation; scores are not native final scores. Shared native admission preserves
+subtraction, reserved required-word multiplicity, hints/exclusions and frequency
+policies. Work and beam limits are separate; caps/pruning never prove exhaustion
+or global final-score optimality. Partial exact answers survive interruption.
+The internal observer supports incremental completions; this is not a new UI
+streaming implementation. Unjudged outputs remain unknown when regrading JSONL
+with `quality --human-judgments ...`.
+
 The Python solver, parity tests, obsolete runners and workflow are retired into
 local-only `.codex/archive/python-retired-2026-10-13/`, with a content-hash manifest.
 Tracked JSON/reference records remain historical evidence. Rust is authoritative;

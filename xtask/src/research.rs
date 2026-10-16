@@ -12,7 +12,7 @@ use std::{
     io::{self, BufRead, BufReader, Read, Write},
     path::Path,
 };
-type Model = BTreeMap<Vec<String>, (f64, f64)>;
+pub(crate) type Model = BTreeMap<Vec<String>, (f64, f64)>;
 fn contexts(groups: &[Value]) -> Result<BTreeSet<Vec<String>>> {
     let mut out = BTreeSet::from([vec!["<unk>".into()]]);
     for g in groups {
@@ -36,6 +36,12 @@ fn contexts(groups: &[Value]) -> Result<BTreeSet<Vec<String>>> {
     Ok(out)
 }
 fn load_arpa(reader: impl BufRead, required: &BTreeSet<Vec<String>>) -> Result<Model> {
+    load_arpa_matching(reader, |p| required.contains(p))
+}
+pub(crate) fn load_arpa_matching(
+    reader: impl BufRead,
+    keep: impl Fn(&[String]) -> bool,
+) -> Result<Model> {
     let mut model = Model::new();
     let mut order = 0;
     for line in reader.lines() {
@@ -67,7 +73,7 @@ fn load_arpa(reader: impl BufRead, required: &BTreeSet<Vec<String>>) -> Result<M
             .iter()
             .map(|s| s.to_string())
             .collect::<Vec<_>>();
-        if order == 1 || required.contains(&p) {
+        if order == 1 || keep(&p) {
             let a: f64 = f[0].parse()?;
             let b: f64 = if f.len() == order + 2 {
                 f[order + 1].parse()?
@@ -84,7 +90,7 @@ fn load_arpa(reader: impl BufRead, required: &BTreeSet<Vec<String>>) -> Result<M
     }
     Ok(model)
 }
-fn conditional(model: &Model, sequence: &[String]) -> Result<(f64, usize, usize)> {
+pub(crate) fn conditional(model: &Model, sequence: &[String]) -> Result<(f64, usize, usize)> {
     let mut h = &sequence[sequence.len().saturating_sub(5)..];
     let (mut backoff, mut steps) = (0., 0);
     while h.len() > 1 {
@@ -197,6 +203,59 @@ fn desired(cases: &Cases) -> BTreeSet<String> {
         .flat_map(|p| p.split_whitespace())
         .map(quality::key)
         .collect()
+}
+
+fn order_evidence(groups: &str, text: &str, one: &str, two: &str) -> Result<Value> {
+    use std::collections::{HashMap, HashSet};
+    let groups_sha = digest(groups)?;
+    let groups = read_json(groups)?;
+    let groups = groups.as_array().ok_or("Groups must be an array")?;
+    let mut queried = HashSet::new();
+    let mut vocabulary = BTreeSet::new();
+    let canonical = |p: &str| {
+        p.split_whitespace()
+            .map(anagram_core::normalize_letters)
+            .collect::<Vec<_>>()
+    };
+    for g in groups {
+        for p in g["orders"].as_array().ok_or("Missing orders")? {
+            let words = canonical(p.as_str().ok_or("Non-string phrase")?);
+            if words.is_empty() || words.iter().any(String::is_empty) {
+                return Err("Empty/nonlexical phrase".into());
+            }
+            vocabulary.extend(words.iter().cloned());
+            queried.extend(anagram_core::phrase_evidence::queries(&words, 5));
+        }
+    }
+    let mut counts = HashMap::<String, i64>::new();
+    for line in BufReader::new(File::open(text)?).lines() {
+        let words = canonical(&line?);
+        for n in 2..=5 {
+            for gram in words.windows(n) {
+                let key = gram.join(" ");
+                if queried.contains(&key) {
+                    *counts.entry(key).or_default() += 1;
+                }
+            }
+        }
+    }
+    let collocation = anagram_core::corpus_ranking::Collocation::load(
+        BufReader::new(File::open(one)?),
+        BufReader::new(File::open(two)?),
+        &vocabulary,
+    )?;
+    let mut out = vec![];
+    for g in groups {
+        let mut rows = vec![];
+        for p in g["orders"].as_array().unwrap() {
+            let words = canonical(p.as_str().unwrap());
+            rows.push(json!({"phrase":p,"colloc_norm":collocation.score(&words).0,"phrase_attest":anagram_core::phrase_evidence::score(&words,&counts,5,true).0,"cohesion":anagram_core::cohesion::score(&words,&counts,5),"exact_count":counts.get(&words.join(" ")).copied().unwrap_or(0)}));
+        }
+        out.push(json!({"case_id":g["case_id"],"orders":rows}));
+    }
+    Ok(
+        json!({"schema_version":1,"source_text_sha256":digest(text)?,"unigrams_sha256":digest(one)?,"bigrams_sha256":digest(two)?,"query_groups_sha256":groups_sha,"groups":out}),
+    )
 }
 fn lexicon(db: &str, current: &str, cases: &Cases) -> Result<Value> {
     let con = Connection::open_with_flags(db, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
@@ -363,6 +422,9 @@ pub fn command(args: &[String]) -> Result<()> {
         println!(
             "lexicon --variant-dir DIR exports answer-independent baseline/names80/frequency3/lexical60 dictionaries using --db, --current and --unigrams; never changes production data."
         );
+        println!(
+            "research corpus --text DETAILED_TATOEBA.tsv --train-output NEW.txt --heldout-output NEW.txt [--sentences 100000 --output MANIFEST.json]\nresearch order-evidence --groups FILE --text SENTENCES.txt [--unigrams FILE --bigrams FILE --output FILE]\nresearch ordered-search --before NATIVE_CLI --dictionary FILE --arpa FILE [--cases FILE --beam-width 64 --work-cap 200000 --timeout-ms 10000 --seed 1608 --output NEW.jsonl]\nOrdered search is a bounded development prototype, not an installed strategy. It shares native admission, retains partial exact results, and makes no final-score optimality claim. Model intake is included in each child's deadline/wall time. ordered-worker is the internal stdin-JSON subprocess endpoint."
+        );
         return Ok(());
     }
     let a = Args::parse(
@@ -384,10 +446,39 @@ pub fn command(args: &[String]) -> Result<()> {
             "variant-dir",
             "text",
             "arpa-output",
+            "train-output",
+            "heldout-output",
+            "sentences",
+            "bigrams",
+            "before",
+            "dictionary",
+            "wordnet",
+            "timeout-ms",
+            "beam-width",
+            "work-cap",
+            "seed",
         ],
         &[],
     )?;
+    if name == "ordered-worker" {
+        return crate::ordered_search::worker(&a);
+    }
+    if name == "ordered-search" {
+        return crate::ordered_search::batch(&a);
+    }
     let result = match name.as_str() {
+        "order-evidence" => order_evidence(
+            a.required("groups")?,
+            a.required("text")?,
+            a.value("unigrams", ".anagram_data/ngrams/count_1w.txt"),
+            a.value("bigrams", ".anagram_data/ngrams/count_2w.txt"),
+        )?,
+        "corpus" => crate::research_corpus::prepare(
+            a.required("text")?,
+            a.required("train-output")?,
+            a.required("heldout-output")?,
+            usize::try_from(a.number("sentences", 100000)?)?,
+        )?,
         "train-ngram" => {
             crate::ngram_train::command(a.required("text")?, a.required("arpa-output")?)?
         }
@@ -423,6 +514,44 @@ pub fn command(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn corpus_evidence_counts_real_spans_without_reordering_or_editing_input() {
+        let scratch = root().join(".codex/temp/xtask/evidence-tests");
+        std::fs::create_dir_all(&scratch).unwrap();
+        let dir = tempfile::tempdir_in(scratch).unwrap();
+        let groups = dir.path().join("groups.json");
+        let text = dir.path().join("sentences.txt");
+        let one = dir.path().join("one.txt");
+        let two = dir.path().join("two.txt");
+        write_json(
+            groups.to_str(),
+            &json!([{"case_id":"toy","orders":["we run home","home run we"]}]),
+        )
+        .unwrap();
+        std::fs::write(&text, "we run home\nwe run home\nwe go home\n").unwrap();
+        std::fs::write(&one, "we 10\nrun 10\nhome 10\ngo 1\n").unwrap();
+        std::fs::write(&two, "we run 2\n").unwrap();
+        let before = digest(&text).unwrap();
+        let v = order_evidence(
+            groups.to_str().unwrap(),
+            text.to_str().unwrap(),
+            one.to_str().unwrap(),
+            two.to_str().unwrap(),
+        )
+        .unwrap();
+        assert_eq!(v["groups"][0]["orders"][0]["phrase"], "we run home");
+        assert_eq!(v["groups"][0]["orders"][0]["exact_count"], 2);
+        assert_eq!(v["groups"][0]["orders"][1]["exact_count"], 0);
+        assert!(
+            v["groups"][0]["orders"][0]["phrase_attest"]
+                .as_f64()
+                .unwrap()
+                > v["groups"][0]["orders"][1]["phrase_attest"]
+                    .as_f64()
+                    .unwrap()
+        );
+        assert_eq!(digest(&text).unwrap(), before);
+    }
     #[test]
     fn direct_backoff_unknown_and_invalid_arpa() {
         let arpa = "\\1-grams:\n-1 <s> -0.1\n-1 </s>\n-3 <unk>\n-1 good -0.2\n-1 bad -0.2\n\\2-grams:\n-0.1 <s> good -0.1\n-1 <s> bad -0.1\n-0.2 good </s>\n\\end\\\n";

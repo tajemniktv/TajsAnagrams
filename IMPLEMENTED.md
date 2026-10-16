@@ -13,6 +13,14 @@
 
 ## Post-snapshot completed updates
 
+Broader-source/ordered-search research: Rust-native Tatoeba sampling preserves
+attribution and deterministic selection; interned n-gram training reproduces the
+original model byte-for-byte. Native exact enumeration and the development beam
+now share one lexical/constraint preparation boundary. The bounded ordered-search
+tool supports cooperative cancellation, partial exact results and reproducible
+paired measurements, with provenance published before work begins. Two tested
+budgets fail promotion criteria; the installed solver strategy remains unchanged.
+
 2026-10-15 (later): the complete 532-output owner export is preserved as a
 separate permissive human judgment source (Maybe is not No). Native quality and
 auto-refreshed review reports evaluate it separately from LLM labels; the current

@@ -354,6 +354,111 @@ pub fn generate_observed_with_limits(
     )
 }
 
+/// Shared admission boundary for exact enumeration and development search
+/// experiments. Required words remain reserved outside the optional inventory.
+pub struct SearchSpace {
+    pub normalized_input: String,
+    pub remaining: Inventory,
+    pub required: Vec<String>,
+    pub hints: BTreeSet<String>,
+    pub candidates: Vec<generation::Candidate>,
+    pub vocabulary: BTreeSet<String>,
+    pub short_whitelist: BTreeSet<String>,
+}
+
+pub fn prepare_search_space(
+    request: &GenerateRequest,
+    dictionary: impl BufRead,
+    unigrams: Option<&Unigrams>,
+    control: &crate::control::Control,
+) -> Result<SearchSpace, Error> {
+    let limits = crate::policy::DeploymentLimits::default();
+    limits.admit_generation(request)?;
+    let mut budget = limits.corpus_read_budget();
+    prepare_search_checked(
+        request,
+        budget.buffered_reader(dictionary, "dictionary", control),
+        unigrams,
+        &|| control.check(),
+    )
+}
+
+fn prepare_search_checked(
+    request: &GenerateRequest,
+    dictionary: impl BufRead,
+    unigrams: Option<&Unigrams>,
+    check: &impl Fn() -> Result<(), &'static str>,
+) -> Result<SearchSpace, Error> {
+    check().map_err(|reason| Error::new(reason, reason))?;
+    let Validated {
+        normalized_input,
+        remaining,
+        required,
+        hints,
+        excluded,
+        forbidden,
+        exclude_regex,
+    } = validate(request)?;
+    let required_set: BTreeSet<_> = required.iter().cloned().collect();
+    if request.min_zipf > 0.0 && unigrams.is_none() {
+        return Err(Error::new(
+            "missing_frequency_data",
+            "Frequency filtering requires a unigram corpus",
+        ));
+    }
+    let mut vocabulary: BTreeSet<String> = required_set.union(&hints).cloned().collect();
+    let mut short_whitelist: BTreeSet<String> =
+        "a i am an as at be by do go he if in is it me my no of oh on or so to up us we"
+            .split_whitespace()
+            .map(str::to_owned)
+            .collect();
+    short_whitelist.extend(
+        request
+            .extra_short_words
+            .iter()
+            .map(|w| normalize_letters(w))
+            .filter(|w| !w.is_empty()),
+    );
+    short_whitelist.extend(vocabulary.iter().filter(|w| w.len() <= 2).cloned());
+    short_whitelist.retain(|w| !excluded.contains(w) && !exclude_regex.is_match(w));
+    let candidates = if remaining.is_empty() || required.len() >= request.max_words {
+        Vec::new()
+    } else {
+        let policy = Admission {
+            min_length: request.min_word_length,
+            max_length: request.max_word_length,
+            min_zipf: request.min_zipf,
+            short_policy: request.short_policy,
+            short_whitelist: short_whitelist.clone(),
+            forced: hints.clone(),
+            excluded,
+            forbidden,
+        };
+        lexicon::admit_checked(
+            dictionary,
+            remaining,
+            &policy,
+            unigrams,
+            |word| exclude_regex.is_match(word),
+            check,
+        )
+        .map_err(|e| match check() {
+            Err(reason) => Error::new(reason, reason),
+            Ok(()) => Error::corpus(e),
+        })?
+    };
+    vocabulary.extend(candidates.iter().map(|c| c.word.clone()));
+    Ok(SearchSpace {
+        normalized_input,
+        remaining,
+        required,
+        hints,
+        candidates,
+        vocabulary,
+        short_whitelist,
+    })
+}
+
 fn generate_inner(
     request: &GenerateRequest,
     dictionary: impl BufRead,
@@ -372,40 +477,18 @@ fn generate_inner(
             control.check()
         }
     };
-    check().map_err(|reason| Error::new(reason, reason))?;
-    let Validated {
+    let SearchSpace {
         normalized_input,
         remaining,
         required,
         hints,
-        excluded,
-        forbidden,
-        exclude_regex,
-    } = validate(request)?;
+        candidates,
+        vocabulary,
+        short_whitelist,
+    } = prepare_search_checked(request, dictionary, unigrams, &check)?;
     let required_set: BTreeSet<_> = required.iter().cloned().collect();
-    if request.min_zipf > 0.0 && unigrams.is_none() {
-        return Err(Error::new(
-            "missing_frequency_data",
-            "Frequency filtering requires a unigram corpus",
-        ));
-    }
     let initial_clues: BTreeSet<_> = required_set.intersection(&hints).cloned().collect();
-    let mut vocabulary_size = 0;
-    let mut vocabulary: BTreeSet<String> = required_set.union(&hints).cloned().collect();
-    let mut short_whitelist: BTreeSet<String> =
-        "a i am an as at be by do go he if in is it me my no of oh on or so to up us we"
-            .split_whitespace()
-            .map(str::to_owned)
-            .collect();
-    short_whitelist.extend(
-        request
-            .extra_short_words
-            .iter()
-            .map(|w| normalize_letters(w))
-            .filter(|w| !w.is_empty()),
-    );
-    short_whitelist.extend(vocabulary.iter().filter(|w| w.len() <= 2).cloned());
-    short_whitelist.retain(|w| !excluded.contains(w) && !exclude_regex.is_match(w));
+    let vocabulary_size = candidates.len();
     let result = if remaining.is_empty() {
         let valid = required.len() >= request.min_words
             && required.len() <= request.max_words
@@ -427,30 +510,6 @@ fn generate_inner(
             stop: Stop::Exhausted,
         }
     } else {
-        let policy = Admission {
-            min_length: request.min_word_length,
-            max_length: request.max_word_length,
-            min_zipf: request.min_zipf,
-            short_policy: request.short_policy,
-            short_whitelist: short_whitelist.clone(),
-            forced: hints.clone(),
-            excluded,
-            forbidden,
-        };
-        let candidates = lexicon::admit_checked(
-            dictionary,
-            remaining,
-            &policy,
-            unigrams,
-            |word| exclude_regex.is_match(word),
-            check,
-        )
-        .map_err(|e| match check() {
-            Err(reason) => Error::new(reason, reason),
-            Ok(()) => Error::corpus(e),
-        })?;
-        vocabulary_size = candidates.len();
-        vocabulary.extend(candidates.iter().map(|c| c.word.clone()));
         let options = Options {
             min_words: request.min_words.saturating_sub(required.len()).max(1),
             max_words: request.max_words - required.len(),

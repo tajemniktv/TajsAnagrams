@@ -673,6 +673,84 @@ metadata, are unchanged. The original export hash is unchanged too. This proves
 stored review preservation and a responsive-process dogfood, not new visual or
 physical-key acceptance. No push or hosted CI result is claimed.
 
+### Phase 7 follow-up and Phase 8 research entry (2026-10-16)
+
+The owner authorized the broader-source follow-up and, absent a useful win,
+continuing into Phase 8 research. That authorizes testing guided search without
+assuming a proven LM; it does not remove production quality/exactness gates.
+`tests/quality/phase8-experiment.v1.json` consolidates source identities,
+controlled follow-up metrics, both search budgets and independent validation.
+
+| Stable finding | Disposition | Evidence and boundary |
+| --- | --- | --- |
+| F-55: the book pilot failed only because of vocabulary coverage | Coverage improved; overall usefulness win still unsupported | Answer-independent Tatoeba sampling plus the unchanged book training set yields 912,475 tokens and a 93,546,633-byte five-gram. Owner positives affected by OOV fall 47/59→29/59. A known-vocabulary blend improves Yes/No separation within its covered stratum, but chooses 54 known-positive orders versus native 58. Ungated tested blends choose 57 or 53. Phrase/collocation/cohesion treatments also fail to preserve all known positives. New/unjudged outputs are not No; this is a failed promotion criterion, not a proof that language evidence is useless. |
+| F-56: a separate search must copy or silently weaken native constraint rules | Shared native preparation, verified | Exact enumeration and research search now call the same admission boundary. Subtraction, required-word reservation/multiplicity, hints, frequency/short-word policies, exclusions and regex behavior remain native-owned. Tiny exhaustive comparisons and independent inventory checks cover the prototype; all 47 completed native benchmark outputs match the pre-refactor buckets/counts exactly. No historical Python oracle is reinstated. |
+| F-57: exact letters or successful JSON transport proves exhaustive/useful ordered search | Explicitly rejected | The development beam maintains an exact residual inventory, LM history, required/optional state and lexical prior. It emits incremental exact completions internally and preserves partial results on cancellation. Work caps and beam pruning remain explicit; no global final-score optimality is claimed. Of fifty initial ordered responses, only 33 contain answers; fifty transported JSON objects are not fifty solved puzzles. No new desktop stream or installed strategy is implied. |
+| F-58: the initial Phase 8 miss is necessarily work-cap starvation | Controlled increase does not recover targets | At fixed beam64/scorer, raising checks 200k→1m reduces cap stops 31→9 and raises nonempty delivery 33→42/50, but intended top-ten recovery stays 6/50 and known-useful delivery stays 5 puzzles. Native gives 13/50 and 14 respectively. This supports investigating frontier/feasibility/objective behavior, not another unmotivated budget increase; it does not rule out other guided-search designs. |
+| F-59: an interrupted measurement can be reported as complete or retried selectively | Preserved and explicitly reconstructed | A higher-work collection stops after 78 valid records; cause is not established. A supplemental capture retains all 38 attempts on nineteen incomplete case pairs. Primary regrading keeps every original record, including errors, and adds only the 22 missing case/treatment keys: exactly fifty pairs, not 116 independent observations. Sixteen supplemental repeats remain separate. The runner now publishes options/input/command identities before starting, leaving interpretable provenance if interrupted. |
+
+The broader-source protocol never reads intended answers or judgments for
+selection/training. It retains the official detailed TSV, hashes, selected
+sentence IDs/contributors and actual split (84,448 train / 15,552 reserved) under
+`.codex/temp/phase7-followup-2026-10-16/`. The hash-reserve rule and lowest-hash
+selection interact, so this is not described as an exact 90/10 or independent-
+author holdout. Source-family means and matched-OOV controls are reported; missing
+family metadata remains unclassified rather than becoming a verified source.
+Existing native phrase/cohesion functions evaluate attestation on the supplied
+training text; this is not an ablation of a newly installed phrase database.
+
+The trainer interns tokens in lexical order and reuses highest-order counts,
+avoiding per-gram string duplication. Retraining the original pilot yields its
+exact original ARPA hash. The larger model remains unbundled; no historically
+flagged TUBELEX resource was restored and no private review was uploaded.
+
+Phase 8 measurements use the same experimental lexical60 dictionary, requests,
+ten-result word-count groups and 10-second deadlines in isolated native/ordered
+processes. Ordered model intake is included. Native's 10k candidate budget and
+the prototype's word-check budget are different units, not equal-work claims.
+There is no competing compilation during capture; OS/background state is not
+controlled. Lower known-negative counts cannot establish lower noise when new
+output has only about 1–1.5% definite owner coverage.
+
+| Treatment | Intended within bucket top ten | Known-useful puzzles | Nonempty delivery | Attempt median ms |
+| --- | ---: | ---: | ---: | ---: |
+| Native, initial pairs | 13/50 | 14/50 | 47/50 | 1,345 |
+| Ordered beam64, 200k checks | 6/50 | 5/50 | 33/50 | 1,682 |
+| Native, higher-work pairs | 13/50 | 14/50 | 47/50 | 1,324 |
+| Ordered beam64, 1m checks | 6/50 | 5/50 | 42/50 | 1,697 |
+
+The prototype gains the intended `I Like Rain` but loses eight native intended
+hits. More completions at the higher budget are mostly unjudged alternatives,
+not additional verified successes. Independent counter-based checks validate
+all 3,492 displayed row positions across the two primary comparisons, including
+exact letters, order/bag agreement, word-count grouping and duplicate-bag policy.
+These positions and timing repeats are not independent puzzles.
+
+Decision: Phase 8 research has started, but neither tested policy is promoted.
+The installed solver retains its strategy, data, normal Settings and exact
+generator. A useful next discriminating experiment compares completion-feasible
+and word-count-balanced frontiers against the fixed mean-LM beam, preserving
+exactness and source/OOV controls. Do not claim Phase 8's quality gate has passed
+or ship a managed LM merely because this prototype exists.
+
+Validation: 183 native pipeline tests, strict all-target Clippy/formatting,
+16 generated contracts and 19 AJV fixtures pass. Tiny exhaustive comparisons
+cover repeat policies, required multiplicities, Any/ExactlyOne hints (including
+invalid requests), subtraction and optional-word admission. Deadline/cancellation,
+partial-result retention, beam/work stops and manifest ownership are tested.
+A real two-job smoke additionally observes the running manifest before any
+capture is recorded and verifies its final capture digest; final publication is
+atomic and pre-existing manifest files are not overwritten. All 27 ordinary
+desktop tests and desktop Clippy pass; frontend checking has no errors/warnings
+and reuses its verified input/output cache.
+
+The normal cached build installs/restarts a responsive app (PID 24608), installed
+SHA256 `9f12a9624d2ae118bd8ac480c6cb94b126162e045c25cac8c90eadd086760861`.
+Read-only before/after SQLite snapshots confirm all 289 captures, 532 judgments
+and one preference are unchanged. This is installed-process/storage dogfood,
+not fresh visual/physical-key acceptance or promotion of research search. No
+push or hosted CI result is claimed.
+
 ## Phase D: Rust authority and Python-free development (2026-10-13)
 
 This phase supersedes Phase C's active-oracle policy. The user explicitly chose

@@ -73,3 +73,33 @@ mixed/OOV-confounded evidence does not pass the quality/domain/footprint gate.
 No model path or provider selector has been added to ordinary Settings, no
 production loading/caching contract was changed, and phase/corpus attestation
 ablation and managed packaging remain future work.
+
+## Broader-language follow-up
+
+The [Tatoeba download specification](https://tatoeba.org/en/downloads) identifies
+the detailed TSV fields (sentence ID, language, text, contributor, creation and
+modification dates) and the CC BY 2.0 FR release terms; part of the corpus is
+also CC0. The pinned [English detailed export](https://downloads.tatoeba.org/exports/per_language/eng/eng_sentences_detailed.tsv.bz2)
+was downloaded on 2026-10-16 (publisher index: 2026-10-10), SHA256
+`1d8c40545b4af2c6531d1a8b64941fa9d0fa3ee5bcc11cb705c8d8c1fd930c84`.
+The retained uncompressed source is
+`3f7d0ad83ea9d1df9aa49315d9b6c141a7daa0d24bbfa50980896b3b734dfabe`.
+
+`research corpus` samples normalized text by SHA256, never by benchmark words,
+and retains selected sentence IDs/contributors locally for provenance/attribution.
+The 100,000-text sample supplies 84,448 training sentences and 15,552 reserved
+sentences; the actual split is reported, not described as an exact 90/10 split
+(sampling the lowest hashes and reserving by first-byte modulo ten interact).
+The reserve is not an independent author/source holdout. Training combines
+630,804 modern-source tokens with the unchanged 281,671-token book training
+set: 912,475 tokens total. The resulting unpruned five-gram ARPA is 93,546,633
+bytes and stays research-only. No user judgments, notes, intended answers or
+benchmark source files enter corpus selection or training.
+
+The Rust trainer interns tokens in lexical order and reuses highest-order counts
+instead of cloning strings into every n-gram. Rebuilding the original pilot
+produces the exact original ARPA SHA256
+`f61360a5e47721e7a29e5728b62108d1a0b9a5e57072aaff9141bee615b9abd8`.
+This is an implementation/resource improvement, not a new quality treatment.
+Full source, selected attribution, split, scores and captures remain under
+`.codex/temp/phase7-followup-2026-10-16/`; no raw text/model is bundled or uploaded.

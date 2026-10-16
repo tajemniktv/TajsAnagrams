@@ -53,6 +53,23 @@ filling or overwriting the annotation CSV.
 
 ### Phase 7 measured research, not a promoted ranker
 
+Current development interfaces also support broader-source and ordered-search
+experiments (none changes normal Settings or the installed strategy):
+
+```powershell
+cargo xtask research corpus --text DETAILED_TATOEBA.tsv --train-output NEW.txt --heldout-output NEW.txt --output MANIFEST.json
+cargo xtask research order-evidence --groups ORDERS.json --text SENTENCES.txt --output EVIDENCE.json
+cargo xtask research ordered-search --before build/release/anagram-cli.exe --dictionary DICTIONARY.txt --arpa MODEL.arpa --cases tests/quality/cases.v4.json --beam-width 64 --work-cap 200000 --timeout-ms 10000 --output NEW.jsonl
+```
+
+The ordered-search JSONL can be regraded by `quality` using the same cases and
+owner fixture. Treat result transport, nonempty delivery, capped/pruned search
+and true exhaustion as different outcomes. Native and experimental score scales
+differ; compare actual displayed ranks, exact references and separately judged
+usefulness, not score magnitudes. Research keeps one winning order per word bag
+and ten distinct bags per word-count bucket, matching the default display scope.
+Raw model/corpus artifacts and local captures are not mandatory CI dependencies.
+
 `phase7-experiment.v1.json` freezes the owner validation, real 5-gram experiment
 and randomized native shortlist comparison. The model is **not bundled**:
 

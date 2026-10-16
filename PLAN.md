@@ -5,7 +5,31 @@ already implemented. The completed migration, parity work, performance evidence,
 desktop acceptance and historical milestones have moved to
 [`IMPLEMENTED.md`](IMPLEMENTED.md). This file is deliberately forward-looking.
 
-### Current next step — Phase 5 development suite and Phase 6 experiments
+### Current next step — Phase 8 research, not production promotion
+
+The broader-language follow-up has been run: a target-independent Tatoeba sample
+plus the book corpus trains a 912,475-token five-gram model. Coverage improves,
+but the tested LM blends still replace owner-approved orders. Existing phrase/
+cohesion functions and OOV-matched controls do not establish an overall usefulness
+win. The production model gate remains open; no corpus/model is installed.
+
+As explicitly authorized, Phase 8 now has a bounded ordered-search prototype in
+development tooling, sharing native admission rather than duplicating constraint
+rules. Two randomized 50-pair comparisons use the same research lexical60 corpus
+and 10-second deadlines, including model intake. Native reconstruction recovery
+is 13/50; beam64 search is 6/50 at both 200,000 and 1,000,000 word checks. Larger
+work improves nonempty delivery 33→42 puzzles, but not intended recovery or known
+useful-answer delivery (5 versus native 14 puzzles). Most new wording is unjudged,
+not proven useless. `tests/quality/phase8-experiment.v1.json` preserves the evidence.
+
+The next discriminating research question is completion-feasible / word-count-
+balanced frontier selection versus this fixed mean-LM beam, not more arbitrary
+budget increases or answer-specific exceptions. Preserve the native strategy and
+exact generator. Do not wire a new ordinary Settings selector or claim Phase 8's
+production gate has passed. Source/model rights, footprint, independent quality
+coverage and managed packaging remain separate acceptance requirements.
+
+### Baseline context and prior experiments
 
 TajsBench is the existing name; do not start a second TajsAnaBench project.
 The Rust measurement/evaluation tools exist, but a trustworthy product baseline
@@ -602,8 +626,12 @@ For every retained order, compute at least:
 
 - [x] Run the scorer against the existing retained-order pool first.
 - [x] Do not change production search yet.
-- [ ] Measure the feature alone and in combination with current grammar,
+- [x] Measure the feature alone and in combination with current grammar,
       structure, phrase and cohesion signals.
+
+Measured on frozen orders, with source-family means and OOV-restricted strata;
+the broader-source follow-up is not a production winner. This completes the
+development ablation, not representative quality validation.
 
 ### 7.2 Keep phrase attestation
 
@@ -656,12 +684,18 @@ hint/required state
 search priority / remaining bound
 ```
 
-- [ ] Generate only words that satisfy the exact residual inventory.
-- [ ] Order expansions using conditional LM probability plus cheap lexical priors.
-- [ ] Correct for pathological preference toward many tiny high-frequency words.
-- [ ] Reuse required/hint/exclusion semantics.
-- [ ] Make cancellation/deadline checks as strong as the current exact generator.
-- [ ] Preserve deterministic tie behavior for a fixed data/model version.
+- [x] Generate only words that satisfy the exact residual inventory (research).
+- [x] Order expansions using conditional LM probability plus cheap lexical priors (research).
+- [ ] Validate correction for pathological preference toward many tiny high-frequency words.
+- [x] Reuse required/hint/exclusion semantics through shared native admission.
+- [x] Check cancellation/deadline during intake and every word expansion.
+- [x] Preserve deterministic tie behavior for fixed inputs and a work cap.
+
+The research score includes a short-word-fraction penalty and length normalization,
+but their effectiveness is not established merely by having a term in a formula.
+Wall-deadline interruption need not stop at the same work count on different runs.
+The internal observer emits incremental exact completions and retains them on
+interruption; no new desktop streaming path or production strategy is selected.
 
 ### 8.2 Best-first / anytime behavior
 
