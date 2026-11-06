@@ -1,0 +1,62 @@
+{
+  "$defs": {
+    "Mode": {
+      "enum": [
+        "play",
+        "instant",
+        "practice"
+      ],
+      "type": "string"
+    },
+    "ProfileKind": {
+      "enum": [
+        "broad",
+        "common",
+        "custom"
+      ],
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "answers_path": {
+      "default": "",
+      "type": "string"
+    },
+    "attempts": {
+      "default": 6,
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "guesses_path": {
+      "default": "",
+      "type": "string"
+    },
+    "instant_profile": {
+      "$ref": "#/$defs/ProfileKind",
+      "default": "broad"
+    },
+    "length": {
+      "default": 5,
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "mode": {
+      "$ref": "#/$defs/Mode",
+      "default": "play"
+    },
+    "play_profile": {
+      "$ref": "#/$defs/ProfileKind",
+      "default": "broad"
+    },
+    "practice_profile": {
+      "$ref": "#/$defs/ProfileKind",
+      "default": "common"
+    }
+  },
+  "title": "Preferences",
+  "type": "object"
+}

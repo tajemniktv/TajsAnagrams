@@ -62,7 +62,11 @@ impl Desktop {
         work: impl FnOnce(&Control) -> Result<Value, String> + Send + 'static,
     ) -> Result<(), String> {
         let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
-        if inner.closing || inner.job.active || inner.experiment.active {
+        if inner.closing
+            || inner.job.active
+            || inner.experiment.active
+            || inner.wordle.snapshot.active
+        {
             return Err("Wait for the current solve or training run to finish".into());
         }
         if let Some(worker) = inner.worker.take() {

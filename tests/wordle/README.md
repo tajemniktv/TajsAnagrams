@@ -1,0 +1,28 @@
+# Wordle validation
+
+`fixtures/tests.txt` and `fixtures/LICENSE` are vendored from
+[yukosgiti/wordle-tests](https://github.com/yukosgiti/wordle-tests) at commit
+`f67af9257e3d46867c381ceb174118d676d8d71c`. The 76,607 rows encode answer, guess,
+and feedback (`c` green, `m` yellow, `w` gray). Preserve the MIT notice.
+These five-letter fixtures supplement the independent variable-length oracle
+and exhaustive small-policy comparisons in the Rust core tests.
+
+Use `cargo xtask wordle-bench --help` for native evaluation. For measured runs:
+
+```text
+cargo run --release -p xtask -- wordle-bench --samples 20 --output .codex/temp/wordle/evaluation.json
+cargo run --release -p xtask -- wordle-bench --split tuning --samples 10 --endgames 8,12,20 --batches 128,256 --cache-bytes 0,8388608 --output .codex/temp/wordle/tuning.json
+```
+
+Reports identify
+source bytes, effective vocabularies, answer workloads, strategy, guess policy,
+budgets and tuning/evaluation split. The selected vocabulary is a model of a
+game, not proof of the official Wordle answer distribution. Small sampled runs
+are engineering checks, not representative quality or tail-latency evidence.
+`--reference` accepts an independent answer list for coverage measurement; without
+one, coverage is only self-coverage of the selected pool. Exact completion rate
+counts actual multi-step endgame attempts, separately from singleton/final-turn
+optimal results. Per-turn records retain candidate counts, latency and search
+outcomes. The 100 ms soft target permits up to twice that time for interactive
+endgames; `--full` bypasses the soft target, while the specified hard deadline and
+state budget still apply. `--timeout-ms 0 --full` enables offline full evaluation.

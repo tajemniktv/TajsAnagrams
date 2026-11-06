@@ -1,4 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
+import type { WordleCommand } from '../../../contracts/generated/WordleCommand';
+import type { WordleSnapshot } from '../../../contracts/generated/WordleSnapshot';
+import type { WordlePreferences } from '../../../contracts/generated/WordlePreferences';
+export type { WordleCommand, WordleSnapshot, WordlePreferences };
 import type { SolveRequest } from '../../../contracts/generated/SolveRequest';
 import type { SolveResult as RankedResult } from '../../../contracts/generated/SolveResult';
 import type { Generated } from '../../../contracts/generated/Generated';
@@ -9,8 +13,8 @@ import type { JobStatus } from '../../../contracts/generated/JobStatus';
 import type { DeploymentLimits } from '../../../contracts/generated/DeploymentLimits';
 export type { SolveRequest, JobStatus };
 export type CorpusKey = 'dictionary' | 'unigrams' | 'bigrams' | 'wordnet' | 'phrase';
-export interface Settings { schema_version: number; developer_mode: boolean; theme: 'dark' | 'light' | 'system'; corpora: Record<CorpusKey, string>; model: string; request: SolveRequest; runtime: {cache_path: string; cache_entries: number; cache_bytes: number; custom_limits: boolean; limits: DeploymentLimits} }
-export interface Bootstrap { settings: Settings; notice: string | null; limits: DeploymentLimits; corpus_error: string | null; data_directory: string; engine_version: string; active_jobs: number; queue_capacity: number }
+export interface Settings { wordle: WordlePreferences; schema_version: number; developer_mode: boolean; theme: 'dark' | 'light' | 'system'; corpora: Record<CorpusKey, string>; model: string; request: SolveRequest; runtime: {cache_path: string; cache_entries: number; cache_bytes: number; custom_limits: boolean; limits: DeploymentLimits} }
+export interface Bootstrap { wordle_frequencies_available: boolean; settings: Settings; notice: string | null; limits: DeploymentLimits; corpus_error: string | null; data_directory: string; engine_version: string; active_jobs: number; queue_capacity: number }
 export interface Job { id: number; active: boolean; status: JobStatus | null; error: string | null }
 export interface TrainingStatus { active: boolean; error: string | null; report: { model_path: string; baseline: { groups: number; recall1: number; mrr: number }; held_out: { groups: number; recall1: number; mrr: number } } | null }
 export type Verdict = 'useful' | 'not_useful' | 'unsure';
@@ -21,6 +25,11 @@ export interface ReviewPreference { id?: string; capture_id: string; left: strin
 export interface ReviewState { schema_version: number; captures: ReviewCapture[]; judgments: ReviewJudgment[]; preferences: ReviewPreference[]; storage?: string }
 // All desktop transport lives here. Browser development never fabricates a solver.
 export const bridge = {
+  wordleStart: (command: WordleCommand) => invoke<number>('wordle_start', {command}),
+  wordleStatus: () => invoke<WordleSnapshot>('wordle_status'),
+  wordlePage: (mode: 'play' | 'instant' | 'practice', offset: number) => invoke<WordleSnapshot>('wordle_page', {mode, offset}),
+  wordleCancel: (id: number) => invoke<void>('wordle_cancel', {id}),
+  wordlePreferences: (preferences: WordlePreferences) => invoke<void>('wordle_preferences', {preferences}),
   reviewState: () => invoke<ReviewState>('review_state'),
   reviewCapture: (id: number) => invoke<number>('review_capture', { id }),
   reviewImport: (path: string, workloads: string | null) => invoke<number>('review_import', { path, workloads }),

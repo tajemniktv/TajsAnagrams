@@ -1,0 +1,214 @@
+{
+  "$defs": {
+    "Constraints": {
+      "additionalProperties": false,
+      "properties": {
+        "counts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/LetterBound"
+          },
+          "type": "array"
+        },
+        "fixed": {
+          "default": [],
+          "items": {
+            "maxLength": 1,
+            "minLength": 1,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": "array"
+        },
+        "forbidden_positions": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "GuessPolicy": {
+      "enum": [
+        "unrestricted",
+        "answers_only"
+      ],
+      "type": "string"
+    },
+    "HistoryRow": {
+      "additionalProperties": false,
+      "properties": {
+        "feedback": {
+          "items": {
+            "$ref": "#/$defs/Mark"
+          },
+          "type": "array"
+        },
+        "word": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "word",
+        "feedback"
+      ],
+      "type": "object"
+    },
+    "LetterBound": {
+      "additionalProperties": false,
+      "properties": {
+        "letter": {
+          "type": "string"
+        },
+        "max": {
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "min": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "letter",
+        "min"
+      ],
+      "type": "object"
+    },
+    "Mark": {
+      "enum": [
+        "gray",
+        "yellow",
+        "green"
+      ],
+      "type": "string"
+    },
+    "SearchBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "cache_bytes": {
+          "default": 8388608,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "endgame_candidates": {
+          "default": 12,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "full_search": {
+          "default": false,
+          "type": "boolean"
+        },
+        "initial_batch": {
+          "default": 256,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_states": {
+          "default": 50000,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "target_ms": {
+          "default": 100,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "timeout_ms": {
+          "default": 2000,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Strategy": {
+      "enum": [
+        "adaptive",
+        "entropy"
+      ],
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempts_remaining": {
+      "default": 6,
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "budget": {
+      "$ref": "#/$defs/SearchBudget",
+      "default": {
+        "cache_bytes": 8388608,
+        "endgame_candidates": 12,
+        "full_search": false,
+        "initial_batch": 256,
+        "max_states": 50000,
+        "target_ms": 100,
+        "timeout_ms": 2000
+      }
+    },
+    "constraints": {
+      "$ref": "#/$defs/Constraints",
+      "default": {
+        "counts": [],
+        "fixed": [],
+        "forbidden_positions": []
+      }
+    },
+    "guess_policy": {
+      "$ref": "#/$defs/GuessPolicy",
+      "default": "unrestricted"
+    },
+    "history": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/HistoryRow"
+      },
+      "type": "array"
+    },
+    "length": {
+      "default": 5,
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "limit": {
+      "default": 100,
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "offset": {
+      "default": 0,
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "strategy": {
+      "$ref": "#/$defs/Strategy",
+      "default": "adaptive"
+    }
+  },
+  "title": "AnalysisRequest",
+  "type": "object"
+}

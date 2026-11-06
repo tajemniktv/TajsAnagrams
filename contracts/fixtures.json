@@ -91,5 +91,10 @@
       "cache": { "hit": false, "rebuilt": false, "corrupt_entry_ignored": false },
       "exhaustion": "unknown", "error": { "code": "timed_out", "message": "timed_out" }
     }
-  }
+  },
+  { "schema": "WordleRequest", "valid": true, "value": { "length": 5, "history": [{"word":"apple","feedback":["green","gray","yellow","gray","green"]}] } },
+  { "schema": "WordleRequest", "valid": false, "value": { "history": [{"word":"apple","feedback":[null]}] } },
+  { "schema": "WordleRequest", "valid": false, "value": { "secret_answer": "apple" } },
+  { "schema": "WordleRequest", "valid": false, "value": { "strategy": "unknown" } }
+
 ]

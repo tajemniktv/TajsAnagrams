@@ -20,6 +20,8 @@ pub struct Corpora {
 #[serde(deny_unknown_fields)]
 pub struct Settings {
     #[serde(default)]
+    pub wordle: anagram_core::wordle::Preferences,
+    #[serde(default)]
     pub developer_mode: bool,
     #[serde(default)]
     pub runtime: Runtime,
@@ -96,6 +98,7 @@ pub fn limits() -> DeploymentLimits {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            wordle: Default::default(),
             runtime: Runtime::default(),
             developer_mode: false,
             model: String::new(),
@@ -275,6 +278,9 @@ pub(super) fn load_with_corpora(dir: &Path, corpora_root: &Path) -> (Settings, O
     }
 }
 pub fn validate(settings: &Settings) -> Result<(), String> {
+    if !(4..=8).contains(&settings.wordle.length) || !(1..=12).contains(&settings.wordle.attempts) {
+        return Err("Wordle supports 4–8 letters and 1–12 attempts".into());
+    }
     settings.runtime.limits.validate().map_err(|e| e.message)?;
     if settings.runtime.cache_entries == 0 || settings.runtime.cache_bytes == 0 {
         return Err("Cache bounds must be positive".into());

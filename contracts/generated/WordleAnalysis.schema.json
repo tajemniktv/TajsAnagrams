@@ -1,0 +1,274 @@
+{
+  "$defs": {
+    "DataIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "format": "uint64",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "representation": {
+          "$ref": "#/$defs/DataRepresentation"
+        },
+        "role": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "maxLength": 64,
+          "minLength": 64,
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "representation",
+        "present",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "DataRepresentation": {
+      "enum": [
+        "file_bytes",
+        "phrase_rows_v1"
+      ],
+      "type": "string"
+    },
+    "GuessPolicy": {
+      "enum": [
+        "unrestricted",
+        "answers_only"
+      ],
+      "type": "string"
+    },
+    "ProfileKind": {
+      "enum": [
+        "broad",
+        "common",
+        "custom"
+      ],
+      "type": "string"
+    },
+    "Recommendation": {
+      "properties": {
+        "expected_remaining": {
+          "description": "A solved branch has zero candidates left to guess.",
+          "format": "double",
+          "type": "number"
+        },
+        "immediate_win_probability": {
+          "format": "double",
+          "type": "number"
+        },
+        "information_bits": {
+          "format": "double",
+          "type": "number"
+        },
+        "penalized_expected_cost": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "solve_probability": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "word": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "word",
+        "information_bits",
+        "expected_remaining",
+        "immediate_win_probability"
+      ],
+      "type": "object"
+    },
+    "VocabularyProfile": {
+      "properties": {
+        "allowed_guesses": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "eligible_answers": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "frequency_available": {
+          "type": "boolean"
+        },
+        "kind": {
+          "$ref": "#/$defs/ProfileKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "probability_model": {
+          "type": "string"
+        },
+        "schema_version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/DataIdentity"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "name",
+        "fingerprint",
+        "sources",
+        "probability_model",
+        "allowed_guesses",
+        "eligible_answers",
+        "frequency_available"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "answer": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Recommendation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempts_remaining": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "candidate_count": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "candidates": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "diagnostic": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "engine_id": {
+      "type": "string"
+    },
+    "evaluated_guesses": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "expanded_states": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "filtering_ms": {
+      "format": "double",
+      "type": "number"
+    },
+    "guess_policy": {
+      "$ref": "#/$defs/GuessPolicy"
+    },
+    "guess_space_complete": {
+      "type": "boolean"
+    },
+    "length": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "method": {
+      "type": "string"
+    },
+    "notices": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "offset": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "optimal_for_profile": {
+      "type": "boolean"
+    },
+    "profile": {
+      "$ref": "#/$defs/VocabularyProfile"
+    },
+    "recommendation_ms": {
+      "format": "double",
+      "type": "number"
+    },
+    "strategic": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Recommendation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "engine_id",
+    "length",
+    "attempts_remaining",
+    "guess_policy",
+    "objective",
+    "profile",
+    "candidate_count",
+    "candidates",
+    "offset",
+    "method",
+    "optimal_for_profile",
+    "guess_space_complete",
+    "evaluated_guesses",
+    "expanded_states",
+    "notices",
+    "filtering_ms",
+    "recommendation_ms"
+  ],
+  "title": "Analysis",
+  "type": "object"
+}

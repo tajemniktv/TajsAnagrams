@@ -1,7 +1,18 @@
 # TajsAnagrams
 
-Desktop anagram solver powered by the native Rust engine, with a shared Svelte UI.
+Desktop anagram solver and Wordle assistant powered by the native Rust engine,
+with a shared Svelte UI.
 The installed application does not require Python or a separate CLI executable.
+
+The Wordle tab offers Play Along with editable feedback, an Instant Solver with
+position/count constraints, and a local Practice game with hints on demand.
+Choose 4–8 English letters and 1–12 attempts. Recommendations distinguish
+strategic probes from possible answers and identify heuristic versus completed
+profile-optimal search. Broad/Common English profiles reuse configured local
+data; custom answer and allowed-guess lists are supported. These profiles do not
+claim to reproduce the official Wordle vocabulary. Puzzle progress is session-only;
+preferences persist. See [Wordle validation](tests/wordle/README.md) for tests and
+reproducible policy/latency benchmarks.
 
 - [Desktop app and local builds](apps/desktop/README.md)
 - [Native CLI and data/model tools](NATIVE_TOOLS.md)

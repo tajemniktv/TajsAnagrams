@@ -6,6 +6,34 @@ Windows WebView2 Runtime is required (present on the development PC).
 
 Use Ctrl+Plus / Ctrl+Minus to adjust text/UI zoom and Ctrl+0 to reset it.
 
+## Wordle assistant
+
+Select **Wordle** for Play Along, Instant Solver, or Practice. Lengths 4–8 and
+attempt limits 1–12 are supported. Changing game configuration starts a new puzzle.
+In Play Along, type a guess, mark every tile, then apply feedback. Unset tiles are
+not gray. Click a historical row to correct it; subsequent candidate filtering is
+replayed. **Use word** fills the draft without submitting it. Instant Solver also
+accepts fixed/forbidden positions and letter-count bounds. Practice calculates its
+own feedback and keeps suggestions/word lists hidden until requested.
+
+Broad English uses the full configured dictionary as its answer pool. Common
+English uses the same allowed guesses and frequency-derived answers (Zipf ≥4).
+Practice defaults to Common when frequencies are available, otherwise Broad.
+Custom profiles accept separate answer/guess files; answer words are always
+allowed guesses. Imports validate original UTF-8 and English letters before case
+folding. Wordle needs only a dictionary, with optional unigram frequencies;
+missing anagram-only corpora do not prevent its operation.
+
+Recommendations distinguish strategic probes from possible answers. Analysis
+shows its vocabulary fingerprint and equal-answer probability assumption.
+Heuristic rankings are not optimality claims. Completed exact search optimizes
+success within remaining attempts, then penalized expected cost, for the selected
+profile. Interactive search has a soft latency target and a two-second ceiling;
+unfinished exact searches retain a heuristic suggestion. Profiles do not claim
+official Wordle vocabulary coverage. Preferences persist; puzzle progress survives
+tab/mode switching within the app session only. See
+[native validation and benchmarks](../../tests/wordle/README.md).
+
 ## Build and run
 
 From the repository root: `pwsh -File tools/build-desktop.ps1`.

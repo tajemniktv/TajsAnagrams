@@ -11,6 +11,7 @@ mod review;
 mod review_models;
 mod stages;
 mod verify;
+mod wordle;
 
 use serde_json::Value;
 use std::{
@@ -208,6 +209,7 @@ fn main_inner() -> Result<()> {
         }
         Some("quality") => quality::command(&args[1..]),
         Some("benchmark") => benchmark::command(&args[1..]),
+        Some("wordle-bench") => wordle::command(&args[1..]),
         Some("research") => research::command(&args[1..]),
         Some("review") => review::command(&args[1..]),
         None | Some("help" | "--help") => {

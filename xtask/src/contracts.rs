@@ -79,7 +79,7 @@ fn ts(s: &Value) -> Result<String> {
     })
 }
 pub fn generate(check: bool) -> Result<()> {
-    let schemas = json!({"GenerateRequest":schema_for!(request::GenerateRequest),"Generated":schema_for!(request::Generated),"SolveRequest":schema_for!(solve::Request),"SolveResult":schema_for!(solve::Result),"SolverError":schema_for!(request::Error),"ErrorResponse":schema_for!(request::ErrorResponse),"JobStatus":schema_for!(JobStatus),"DeploymentLimits":schema_for!(DeploymentLimits)});
+    let schemas = json!({"GenerateRequest":schema_for!(request::GenerateRequest),"Generated":schema_for!(request::Generated),"SolveRequest":schema_for!(solve::Request),"SolveResult":schema_for!(solve::Result),"SolverError":schema_for!(request::Error),"ErrorResponse":schema_for!(request::ErrorResponse),"JobStatus":schema_for!(JobStatus),"DeploymentLimits":schema_for!(DeploymentLimits),"WordleRequest":schema_for!(anagram_core::wordle::AnalysisRequest),"WordleAnalysis":schema_for!(anagram_core::wordle::Analysis),"WordleCommand":schema_for!(anagram_core::wordle::SessionCommand),"WordleSnapshot":schema_for!(anagram_core::wordle::SessionSnapshot),"WordlePreferences":schema_for!(anagram_core::wordle::Preferences)});
     let dir = root().join("contracts/generated");
     let mut outputs = BTreeMap::new();
     for (name, schema) in schemas.as_object().unwrap() {

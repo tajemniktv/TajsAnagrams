@@ -6,6 +6,9 @@
   import SettingsDialog from './SettingsDialog.svelte';
   import Results from './Results.svelte';
   import DeveloperReview from './DeveloperReview.svelte';
+  import Wordle from './Wordle.svelte';
+  let appTab = $state<'anagrams' | 'wordle'>('anagrams');
+  let wordleActive = $state(false);
   let boot = $state<Bootstrap | null>(null); let settings = $state<Settings | null>(null);
   let job = $state<Job | null>(null); let result = $state<SolveResult | null>(null);
   let error = $state(''); let toast = $state(''); let showSettings = $state(false); let busy = $state(false); let cancelling = $state(false);
@@ -14,7 +17,7 @@
   let extended = $state(false); let rebuild = $state(false);
   let generationOnly = $state(false);
   let workspaceTab = $state<'results' | 'review'>('results');
-  let active = $derived(busy || !!job?.active);
+  let active = $derived(busy || !!job?.active || wordleActive);
   let letters = $derived(settings?.request.generation.text.normalize('NFKD').replace(/[^a-z]/gi, '').length ?? 0);
   const words = (text: string) => text.split(/[\s,]+/).filter(Boolean);
   function applyTheme(theme: Settings['theme']) { document.documentElement.dataset.theme = theme; }
@@ -45,7 +48,8 @@
 </script>
 <div class="app-shell">
   <header><h1 style="display:flex;align-items:center;gap:10px"><img src="/logo.png" alt="" width="34" height="34"/>TajsAnagrams</h1><div class="header-actions"><span class="local"><i></i>Local engine</span><button class="icon" disabled={active || !settings} aria-label="Toggle appearance" onclick={toggleTheme}>{#if settings?.theme === 'light'}<Moon size={19}/>{:else}<Sun size={19}/>{/if}</button><button disabled={active || !settings} onclick={() => showSettings = true}><SettingsIcon size={17}/>Settings</button></div></header>
-  <main>
+  <nav class="app-tabs" aria-label="Puzzle tools"><button aria-pressed={appTab==='anagrams'} onclick={()=>appTab='anagrams'}>Anagrams</button><button aria-pressed={appTab==='wordle'} onclick={()=>appTab='wordle'}>Wordle</button></nav>
+  <main hidden={appTab!=='anagrams'}>
     <aside>
       <h2>Find the words</h2>
       {#if settings}
@@ -69,6 +73,7 @@
       {#if settings?.developer_mode && workspaceTab === 'review'}<DeveloperReview {job}/>{:else}<Results {result} {job} oncopy={copy} onexport={exportRows}/>{/if}
     </div>
   </main>
-  <footer role="status"><span>{active && cancelling ? 'Cancellation requested. Waiting for the worker to stop…' : toast || (active ? 'Solving locally' : job?.status?.state.replaceAll('_', ' ') ?? (job?.error ? 'Solve failed' : 'Ready'))}</span><span>Runs entirely on this PC · {extended ? 'extended search' : settings?.runtime.custom_limits ? 'custom execution limits' : '120 s job limit'}</span></footer>
+  <div class="wordle-view" hidden={appTab!=='wordle'}>{#if settings}<Wordle {settings} frequencyAvailable={!!boot?.wordle_frequencies_available} visible={appTab==='wordle'} bind:active={wordleActive}/>{/if}</div>
+  <footer role="status"><span>{wordleActive ? 'Analyzing Wordle' : active && cancelling ? 'Cancellation requested. Waiting for the worker to stop…' : toast || (active ? 'Solving locally' : job?.status?.state.replaceAll('_', ' ') ?? (job?.error ? 'Solve failed' : 'Ready'))}</span><span>Runs entirely on this PC{appTab==='wordle'?'':extended?' · extended search':settings?.runtime.custom_limits?' · custom execution limits':' · 120 s job limit'}</span></footer>
 </div>
 {#if showSettings && settings && boot}<SettingsDialog {settings} directory={boot.data_directory} onsave={save} onclose={() => showSettings = false}/>{/if}

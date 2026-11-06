@@ -2,6 +2,14 @@ import type { GenerateRequest } from './generated/GenerateRequest.js';
 import type { SolveRequest } from './generated/SolveRequest.js';
 import type { JobStatus } from './generated/JobStatus.js';
 import type { SolveResult } from './generated/SolveResult.js';
+import type { WordleRequest } from './generated/WordleRequest.js';
+import type { WordleCommand } from './generated/WordleCommand.js';
+const wordle = { length: 8, attempts_remaining: 12, history: [{word:'anything',feedback:['gray','yellow','green','gray','gray','gray','gray','gray']}] } satisfies WordleRequest;
+// @ts-expect-error Unset is a UI draft state and cannot cross the native feedback boundary.
+const unset: WordleRequest = {history:[{word:'apple',feedback:['unset']}]};
+// @ts-expect-error Session actions must retain a closed vocabulary.
+const action: WordleCommand['action'] = 'inspect_secret';
+void [wordle, unset, action];
 
 const generation = {
   schema_version: 1, text: 'ate', min_words: 1, max_words: 3,

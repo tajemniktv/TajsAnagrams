@@ -6,9 +6,60 @@ mod review;
 mod settings;
 #[cfg(test)]
 mod tests;
+mod wordle;
+#[cfg(test)]
+mod wordle_tests;
 use jobs::{Desktop, Snapshot};
 use serde_json::Value;
 use tauri::{Manager, State};
+
+#[tauri::command]
+fn wordle_start(
+    command: anagram_core::wordle::SessionCommand,
+    state: State<'_, Desktop>,
+) -> Result<u64, String> {
+    state.wordle_start(command)
+}
+#[tauri::command]
+fn wordle_status(
+    state: State<'_, Desktop>,
+) -> Result<anagram_core::wordle::SessionSnapshot, String> {
+    Ok(state
+        .inner
+        .lock()
+        .map_err(|e| e.to_string())?
+        .wordle
+        .snapshot
+        .clone())
+}
+#[tauri::command]
+fn wordle_page(
+    mode: anagram_core::wordle::Mode,
+    offset: usize,
+    state: State<'_, Desktop>,
+) -> Result<anagram_core::wordle::SessionSnapshot, String> {
+    state.wordle_page(mode, offset)
+}
+#[tauri::command]
+fn wordle_cancel(id: u64, state: State<'_, Desktop>) -> Result<(), String> {
+    let inner = state.inner.lock().map_err(|e| e.to_string())?;
+    if inner.wordle.snapshot.active && inner.wordle.snapshot.id == id {
+        inner.control.cancel();
+    }
+    Ok(())
+}
+#[tauri::command]
+fn wordle_preferences(
+    preferences: anagram_core::wordle::Preferences,
+    state: State<'_, Desktop>,
+) -> Result<(), String> {
+    let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
+    let mut next = inner.settings.clone();
+    next.wordle = preferences;
+    settings::save(&state.data, &next)?;
+    inner.settings = next;
+    Ok(())
+}
 
 fn review_enabled(state: &Desktop) -> Result<(), String> {
     if !state
@@ -206,7 +257,7 @@ fn cancel_training(state: State<'_, Desktop>) -> Result<(), String> {
 #[tauri::command]
 fn save_settings(settings: settings::Settings, state: State<'_, Desktop>) -> Result<(), String> {
     let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
-    if inner.job.active || inner.experiment.active {
+    if inner.job.active || inner.experiment.active || inner.wordle.snapshot.active {
         return Err("Wait for the current solve before changing settings.".into());
     }
     settings::save(&state.data, &settings)?;
@@ -387,6 +438,11 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            wordle_start,
+            wordle_status,
+            wordle_page,
+            wordle_cancel,
+            wordle_preferences,
             review_state,
             review_capture,
             review_judge,

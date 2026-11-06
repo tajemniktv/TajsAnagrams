@@ -31,6 +31,7 @@ pub mod solve;
 pub mod structure;
 pub mod training;
 pub mod validity;
+pub mod wordle;
 pub mod wordnet;
 
 /// Match Python's NFKD -> ASCII(ignore) -> lowercase -> [a-z] pipeline.

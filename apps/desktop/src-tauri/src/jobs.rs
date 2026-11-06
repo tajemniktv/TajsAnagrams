@@ -17,6 +17,7 @@ pub struct Snapshot {
     pub error: Option<String>,
 }
 pub struct Inner {
+    pub wordle: crate::wordle::HostState,
     pub experiment: crate::experimental::Snapshot,
     pub settings: Settings,
     pub notice: Option<String>,
@@ -129,6 +130,7 @@ impl Desktop {
         Ok(Self {
             data,
             inner: Arc::new(Mutex::new(Inner {
+                wordle: Default::default(),
                 settings,
                 notice,
                 job: Snapshot::default(),
@@ -192,7 +194,11 @@ impl Desktop {
             limits.admit(&request)
         }
         .map_err(|e| e.message)?;
-        if inner.closing || inner.job.active || inner.experiment.active {
+        if inner.closing
+            || inner.job.active
+            || inner.experiment.active
+            || inner.wordle.snapshot.active
+        {
             return Err("A solve is already running. Cancel it and wait for completion before starting another.".into());
         }
         if !generation_only {
@@ -340,7 +346,11 @@ impl Desktop {
     }
     pub fn clear_cache(&self) -> Result<(), String> {
         let inner = self.inner.lock().map_err(|e| e.to_string())?;
-        if inner.job.active || inner.experiment.active || inner.closing {
+        if inner.job.active
+            || inner.experiment.active
+            || inner.wordle.snapshot.active
+            || inner.closing
+        {
             return Err("Wait for the active solve before clearing the cache".into());
         }
         let path = inner.settings.runtime.cache_path(&self.data);
@@ -359,7 +369,7 @@ impl Desktop {
         let inner = self.inner.lock().map_err(|e| e.to_string())?;
         Ok(
             json!({"settings":inner.settings,"notice":inner.notice,"limits":settings::limits(),
-            "corpus_error":inner.settings.corpora.validate().err(),"data_directory":self.data,
+            "wordle_frequencies_available":Path::new(&inner.settings.corpora.unigrams).is_file(),"corpus_error":inner.settings.corpora.validate().err(),"data_directory":self.data,
             "engine_version":env!("CARGO_PKG_VERSION"),"active_jobs":1,"queue_capacity":0}),
         )
     }

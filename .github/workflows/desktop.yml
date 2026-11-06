@@ -47,7 +47,7 @@ jobs:
       - name: Build-cache policy regressions
         run: node --test tools/test-build-policy.cjs
       - name: Frontend asynchronous state regressions
-        run: node --test tools/test-desktop-ui.cjs
+        run: node --test tools/test-desktop-ui.cjs tools/test-wordle-ui.cjs
       - name: Installer preflight and rollback integration
         run: pwsh -NoProfile -File tools/test-desktop-installation.ps1
       - run: cargo test --locked -p tajs-anagrams

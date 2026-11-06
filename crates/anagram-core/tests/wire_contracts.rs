@@ -43,6 +43,9 @@ fn shared_request_and_progress_fixtures_match_rust_deserialization() {
     for fixture in fixtures {
         let value = fixture["value"].clone();
         let accepted = match fixture["schema"].as_str().unwrap() {
+            "WordleRequest" => {
+                serde_json::from_value::<anagram_core::wordle::AnalysisRequest>(value).is_ok()
+            }
             "DeploymentLimits" => {
                 serde_json::from_value::<anagram_core::policy::DeploymentLimits>(value)
                     .is_ok_and(|limits| limits.validate().is_ok())
@@ -67,6 +70,7 @@ fn shared_request_and_progress_fixtures_match_rust_deserialization() {
         ("GenerateRequest", 5),
         ("SolveRequest", 1),
         ("JobStatus", 1),
+        ("WordleRequest", 4),
     ] {
         assert_eq!(
             checked.get(schema),
