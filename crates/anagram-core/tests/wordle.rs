@@ -173,6 +173,55 @@ fn partial_duplicate_gray_does_not_exclude_an_unknown_positive_duplicate() {
     );
 }
 #[test]
+fn impossible_yellows_are_contradictory_even_with_partial_feedback() {
+    let v = vocab("jelly\njolly\nabout\napple\nareas", None);
+    for word in ["jjjjj", "aaaaa"] {
+        for position in 0..5 {
+            let mut marks = vec![None; 5];
+            marks[position] = Some(Mark::Yellow);
+            let request = AnalysisRequest {
+                partial_history: vec![PartialHistoryRow {
+                    word: word.into(),
+                    feedback: marks,
+                }],
+                ..Default::default()
+            };
+            let (a, _) = filter(&v, &request, &Control::default()).unwrap();
+            assert_eq!(a.diagnostic.as_deref(), Some("contradictory_clues"));
+            assert!(
+                a.notices
+                    .iter()
+                    .any(|notice| notice.contains("no possible unmatched position"))
+            );
+        }
+    }
+    // This yellow A can fit the final position and must not be called a conflict.
+    let mut request = AnalysisRequest {
+        partial_history: vec![PartialHistoryRow {
+            word: "aaaab".into(),
+            feedback: vec![Some(Mark::Yellow), None, None, None, None],
+        }],
+        ..Default::default()
+    };
+    assert_ne!(
+        filter(&v, &request, &Control::default())
+            .unwrap()
+            .0
+            .diagnostic
+            .as_deref(),
+        Some("contradictory_clues")
+    );
+    request.constraints.fixed = vec![None, None, None, None, Some('b')];
+    assert_eq!(
+        filter(&v, &request, &Control::default())
+            .unwrap()
+            .0
+            .diagnostic
+            .as_deref(),
+        Some("contradictory_clues")
+    );
+}
+#[test]
 fn importer_validates_original_bytes_and_profile_identity() {
     let c = Control::default();
     assert!(

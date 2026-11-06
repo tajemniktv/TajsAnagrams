@@ -18,6 +18,8 @@ the assistant immediately; unset tiles remain unknown, not gray. Enter is an
 optional shortcut to finish a word or move to the next row. Select a tile to replace
 its letter; Delete clears that tile, and Backspace removes the word's last letter.
 Historical edits replay filtering.
+Entered words with no marked feedback prompt for that feedback instead of showing
+another recommendation. Typing a word alone does not eliminate any answers.
 **Use word** fills the active row without submitting it. The keyboard stays below
 the board, with a vertical feedback palette to its left.
 

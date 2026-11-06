@@ -65,6 +65,7 @@ pub fn filter(
     }
     let mut rows = Vec::new();
     let mut notices = Vec::new();
+    let mut yellow_locations = Vec::new();
     let feedback_rows = request
         .history
         .iter()
@@ -105,6 +106,16 @@ pub fn filter(
                 gray[letter] = true;
             } else {
                 matched[letter] += 1;
+            }
+            if mark == Mark::Yellow {
+                // Copies at positions that also guess this letter would be
+                // green and consumed before any yellows can be assigned.
+                let positions: Vec<_> = word
+                    .bytes()
+                    .enumerate()
+                    .filter_map(|(i, guess)| (guess != b).then_some(i))
+                    .collect();
+                yellow_locations.push((word.clone(), b, positions));
             }
         }
         for i in 0..26 {
@@ -147,6 +158,23 @@ pub fn filter(
         contradiction |= minimum[i] > maximum[i];
     }
     contradiction |= minimum.iter().sum::<usize>() > n || maximum.iter().sum::<usize>() < n;
+    for (guess, letter, positions) in yellow_locations {
+        let l = (letter - b'a') as usize;
+        if !positions
+            .into_iter()
+            .any(|i| fixed[i].is_none_or(|fixed| fixed == letter) && !forbidden[i][l])
+        {
+            contradiction = true;
+            let notice = format!(
+                "The yellow {} in {} has no possible unmatched position in the answer.",
+                char::from(letter).to_ascii_uppercase(),
+                guess.to_uppercase()
+            );
+            if !notices.contains(&notice) {
+                notices.push(notice);
+            }
+        }
+    }
     let mut ids = Vec::new();
     if !contradiction {
         for &id in &v.answers {

@@ -10,7 +10,7 @@ function harness(mode='play'){
   const source=fs.readFileSync(path.join(__dirname,'../apps/desktop/src/Wordle.svelte'),'utf8').split('<script lang="ts">')[1].split('</script>')[0].replace(/^\s*import .*;$/gm,'');
   const state=Object.assign(x=>x,{snapshot:structuredClone}),derived=Object.assign(x=>x,{by:fn=>fn()});
   const context=vm.createContext({$state:state,$derived:derived,$bindable:x=>x,$props:()=>({settings:{wordle:preferences},visible:true,frequencyAvailable:false}),$effect:()=>{},untrack:fn=>fn(),onMount:()=>{},structuredClone,document:{querySelector:()=>null},requestAnimationFrame:fn=>fn(),setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),bridge:{wordleStart:async command=>{commands.push(structuredClone(command));statuses.push(deferred());return commands.length;},wordleStatus:()=>statuses.at(-1).promise,wordleCancel:async id=>{cancelled.push(id);},wordlePreferences:async()=>{}},message:String});
-  const expose=`globalThis.api={accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,effectiveRows,partialHistory,tileClick,setFeedback,editRow,selectRow,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
+  const expose=`globalThis.api={accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,effectiveRows,partialHistory,missingFeedback,tileClick,setFeedback,editRow,selectRow,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
   vm.runInContext(ts.transpileModule(source+'\n'+expose,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context);
   return {api:context.api,commands,statuses,cancelled,
     update(){for(const [id,t] of [...timers])if(t.ms===90){timers.delete(id);t.fn();}},
@@ -96,6 +96,23 @@ test('unfinished word fragments and their exact positions survive row switching'
   const h=harness();enterWord(h,'AP');h.api.selectRow(2);enterWord(h,'ST');h.api.selectRow(0);
   assert.equal(h.api.board.draft,'AP');assert.equal(h.api.effectiveRows(h.api.board).length,0);
   h.api.selectRow(2);assert.equal(h.api.board.draft,'ST');
+});
+test('entered words without feedback request guidance instead of presenting a new recommendation',async()=>{
+  const h=harness();assert.equal(h.api.missingFeedback(h.api.board).length,0);
+  const words=['TESTS','HELLO','MIAMI','LARES','PARES'];
+  for(let i=0;i<words.length;i++){h.api.selectRow(i);enterWord(h,words[i]);}
+  await h.api.submit();
+  assert.deepEqual(Array.from(h.api.missingFeedback(h.api.board),row=>row.word),words);
+  h.update();await flush();assert.equal(h.commands[0].request.attempts_remaining,1);
+  assert.equal(h.commands[0].request.partial_history.length,5);
+  for(let i=0;i<words.length;i++){h.api.selectRow(i);h.api.tileClick(i,0);}
+  assert.equal(h.api.missingFeedback(h.api.board).length,0);
+});
+test('an incomplete word or a partially marked word does not block partial-feedback analysis',()=>{
+  const h=harness();enterWord(h,'PARE');assert.equal(h.api.missingFeedback(h.api.board).length,0);
+  h.api.typeKey('S');assert.equal(h.api.missingFeedback(h.api.board).length,1);
+  h.api.tileClick(0,0);assert.equal(h.api.missingFeedback(h.api.board).length,0);
+  assert.equal(h.api.partialHistory(h.api.board).length,1);
 });
 test('using a recommendation fills the board and leaves submission to the user',()=>{
   const h=harness();h.api.useWord('apple');assert.equal(h.api.board.draft,'APPLE');assert.equal(h.api.board.cursor,0);
