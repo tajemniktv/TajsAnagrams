@@ -156,11 +156,15 @@ pub struct SearchBudget {
     /// Used for matched ablations; the interactive default remains enabled.
     pub exact_endgame: bool,
     pub timeout_ms: u64,
+    /// Initial seed/widening increment, never a permanent guess shortlist.
     pub initial_batch: usize,
     pub endgame_candidates: usize,
     pub max_states: usize,
+    /// Bypass soft phase targets, retaining caller/hard deadlines and state limits.
     pub full_search: bool,
     pub cache_bytes: usize,
+    /// Ordinary ranking target. Deeper adaptive endgames share twice this budget:
+    /// exact work yields after the first target so fallback ranking can resume.
     pub target_ms: u64,
 }
 impl Default for SearchBudget {

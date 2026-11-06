@@ -361,3 +361,129 @@ fn external_pinned_feedback_fixtures() {
         );
     }
 }
+
+#[test]
+fn small_seeds_widen_in_two_turn_search_and_without_exact_search() {
+    let answers = "bound\nfound\nhound\nmound\npound\nround\nsound\nwound";
+    let v = vocab(&format!("{answers}\nswamp"), Some(answers));
+    for initial_batch in [1, 2, 256] {
+        for turns in [2, 3] {
+            let result = run(
+                &v,
+                &AnalysisRequest {
+                    attempts_remaining: turns,
+                    budget: SearchBudget {
+                        initial_batch,
+                        exact_endgame: false,
+                        full_search: true,
+                        target_ms: 0,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+            );
+            assert_eq!(result.evaluated_guesses, v.words.len());
+            assert!(result.guess_space_complete);
+            assert_eq!(result.strategic.unwrap().word, "swamp");
+            assert_eq!(result.optimal_for_profile, turns == 2);
+        }
+    }
+}
+
+#[test]
+fn unfinished_exact_search_resumes_widening_in_coverage_order() {
+    let answers = "bound\nfound\nhound\nmound\npound\nround\nsound\nwound";
+    let v = vocab(&format!("{answers}\nswamp"), Some(answers));
+    let result = run(
+        &v,
+        &AnalysisRequest {
+            attempts_remaining: 3,
+            budget: SearchBudget {
+                initial_batch: 1,
+                max_states: 1,
+                timeout_ms: 0,
+                target_ms: 10_000,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    );
+    assert_eq!(result.method, "budget_limited_heuristic");
+    assert!(result.expanded_states > 0);
+    assert_eq!(result.evaluated_guesses, v.words.len());
+    assert!(result.guess_space_complete);
+    assert!(!result.optimal_for_profile);
+    assert_eq!(result.strategic.unwrap().word, "swamp");
+}
+
+#[test]
+fn full_search_crosses_256_guesses_but_soft_stop_remains_honest() {
+    let answers = "bound\nfound\nhound\nmound\npound\nround\nsound\nwound";
+    let mut words: Vec<String> = (0..1024)
+        .map(|mut n| {
+            (0..5)
+                .map(|_| {
+                    let b = b'a' + (n % 4) as u8;
+                    n /= 4;
+                    char::from(b)
+                })
+                .collect()
+        })
+        .collect();
+    words.push(answers.into());
+    words.push("swamp".into());
+    let v = vocab(&words.join("\n"), Some(answers));
+    let r = AnalysisRequest {
+        attempts_remaining: 2,
+        budget: SearchBudget {
+            initial_batch: 256,
+            target_ms: 0,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let limited = run(&v, &r);
+    assert_eq!(limited.evaluated_guesses, 1);
+    assert!(limited.strategic.is_some());
+    assert!(!limited.guess_space_complete);
+    assert!(!limited.optimal_for_profile);
+    let full = run(
+        &v,
+        &AnalysisRequest {
+            budget: SearchBudget {
+                full_search: true,
+                ..r.budget.clone()
+            },
+            ..r
+        },
+    );
+    assert!(full.evaluated_guesses > 256);
+    assert_eq!(full.evaluated_guesses, v.words.len());
+    assert!(full.guess_space_complete && full.optimal_for_profile);
+    assert_eq!(full.strategic.unwrap().solve_probability, Some(5.0 / 8.0));
+}
+
+#[test]
+fn direct_recommendation_rejects_zero_batches_and_expired_callers() {
+    let v = vocab("apple\nalley", None);
+    let request = AnalysisRequest::default();
+    let (mut result, ids) = filter(&v, &request, &Control::default()).unwrap();
+    let invalid = AnalysisRequest {
+        budget: SearchBudget {
+            initial_batch: 0,
+            ..Default::default()
+        },
+        ..request.clone()
+    };
+    assert!(recommend(&v, &invalid, &ids, &Control::default(), &mut result).is_err());
+    let expired =
+        Control::with_deadline(std::time::Instant::now() - std::time::Duration::from_secs(1));
+    assert!(recommend(&v, &request, &ids, &expired, &mut result).is_err());
+    let cancelled_after_filter = Control::default();
+    assert!(
+        analyze(&v, &request, &cancelled_after_filter, |_| {
+            cancelled_after_filter.cancel()
+        })
+        .is_err()
+    );
+}

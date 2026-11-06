@@ -29,7 +29,8 @@ shows its vocabulary fingerprint and equal-answer probability assumption.
 Heuristic rankings are not optimality claims. Completed exact search optimizes
 success within remaining attempts, then penalized expected cost, for the selected
 profile. Interactive search has a soft latency target and a two-second ceiling;
-unfinished exact searches retain a heuristic suggestion. Profiles do not claim
+unfinished exact searches resume progressively wider heuristic ranking. The seed
+size is a scheduling increment. Profiles do not claim
 official Wordle vocabulary coverage. Preferences persist; puzzle progress survives
 tab/mode switching within the app session only. See
 [native validation and benchmarks](../../tests/wordle/README.md).

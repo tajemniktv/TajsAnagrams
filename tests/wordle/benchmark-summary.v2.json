@@ -1,0 +1,1533 @@
+{
+  "schema_version": 2,
+  "date": "2026-11-06",
+  "engine_id": "core-sha256.4c4588b2b60c8140e62414500d2f657a9a06089eb677c06e74def9907012cb45",
+  "benchmark_tool_id": "62742af2c876b4f2bdf837518887896838564196d37f29df4104ee11575cf85c",
+  "vocabulary": {
+    "allowed_guesses": 81158,
+    "eligible_answers": 81158,
+    "fingerprint": "aea35c388ee5950e47dfe3ef188b88fc520cec9d663053bcefc1f3d7f8bc1590",
+    "frequency_available": true,
+    "kind": "broad",
+    "name": "Broad English",
+    "probability_model": "uniform",
+    "schema_version": 1,
+    "sources": [
+      {
+        "bytes": 1839180,
+        "present": true,
+        "representation": "file_bytes",
+        "role": "wordle_guesses",
+        "sha256": "49f34d7a7b5d4f7b5d88255a1963d582a8095c1c363d66cd535e597d02c4b7e5"
+      },
+      {
+        "bytes": 4956241,
+        "present": true,
+        "representation": "file_bytes",
+        "role": "wordle_frequencies",
+        "sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690"
+      }
+    ]
+  },
+  "protocol": {
+    "command_args": [
+      "--samples",
+      "500",
+      "--skip",
+      "510",
+      "--attempts",
+      "6",
+      "--strategies",
+      "entropy,adaptive-no-exact,adaptive",
+      "--paired-heuristics",
+      "--output",
+      ".codex/temp/wordle-widening/paired-500.json"
+    ],
+    "attempt_limit": 6,
+    "sample_offset": 510,
+    "paired_heuristics": true,
+    "memoized_decisions": true,
+    "phase_policy": "Initial batch is a seed/yield point, never a cap. Two-attempt ranking widens directly. Deeper adaptive endgames and their no-exact ablation share a two-target envelope; exact work uses the first target, unfinished search resumes heuristic widening in the remainder. Full mode ignores soft targets."
+  },
+  "conditions": [
+    {
+      "strategy": "entropy",
+      "policy": "answers_only",
+      "n": 2500,
+      "solved": 2342,
+      "failed": 158,
+      "solve_rate": 0.9368,
+      "mean_successful_guesses": 3.733134073441503,
+      "penalized_expected_cost": 3.9396,
+      "maximum_successful_guesses": 6,
+      "exact_visits": 0,
+      "exact_completed_visits": 0,
+      "fresh_exact_calls": 0,
+      "fresh_exact_completed": 0,
+      "fresh_endgame_latency_p50_ms": null,
+      "fresh_endgame_latency_p95_ms": null
+    },
+    {
+      "strategy": "entropy",
+      "policy": "unrestricted",
+      "n": 2500,
+      "solved": 2490,
+      "failed": 10,
+      "solve_rate": 0.996,
+      "mean_successful_guesses": 3.6915662650602408,
+      "penalized_expected_cost": 3.7048,
+      "maximum_successful_guesses": 6,
+      "exact_visits": 0,
+      "exact_completed_visits": 0,
+      "fresh_exact_calls": 0,
+      "fresh_exact_completed": 0,
+      "fresh_endgame_latency_p50_ms": null,
+      "fresh_endgame_latency_p95_ms": null
+    },
+    {
+      "strategy": "adaptive-no-exact",
+      "policy": "answers_only",
+      "n": 2500,
+      "solved": 2342,
+      "failed": 158,
+      "solve_rate": 0.9368,
+      "mean_successful_guesses": 3.732280102476516,
+      "penalized_expected_cost": 3.9388,
+      "maximum_successful_guesses": 6,
+      "exact_visits": 0,
+      "exact_completed_visits": 0,
+      "fresh_exact_calls": 0,
+      "fresh_exact_completed": 0,
+      "fresh_endgame_latency_p50_ms": null,
+      "fresh_endgame_latency_p95_ms": null
+    },
+    {
+      "strategy": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "n": 2500,
+      "solved": 2490,
+      "failed": 10,
+      "solve_rate": 0.996,
+      "mean_successful_guesses": 3.691164658634538,
+      "penalized_expected_cost": 3.7044,
+      "maximum_successful_guesses": 6,
+      "exact_visits": 0,
+      "exact_completed_visits": 0,
+      "fresh_exact_calls": 0,
+      "fresh_exact_completed": 0,
+      "fresh_endgame_latency_p50_ms": null,
+      "fresh_endgame_latency_p95_ms": null
+    },
+    {
+      "strategy": "adaptive",
+      "policy": "answers_only",
+      "n": 2500,
+      "solved": 2346,
+      "failed": 154,
+      "solve_rate": 0.9384,
+      "mean_successful_guesses": 3.737851662404092,
+      "penalized_expected_cost": 3.9388,
+      "maximum_successful_guesses": 6,
+      "exact_visits": 2053,
+      "exact_completed_visits": 2053,
+      "fresh_exact_calls": 1842,
+      "fresh_exact_completed": 1842,
+      "fresh_endgame_latency_p50_ms": 0.5031,
+      "fresh_endgame_latency_p95_ms": 1.1212799999999998
+    },
+    {
+      "strategy": "adaptive",
+      "policy": "unrestricted",
+      "n": 2500,
+      "solved": 2491,
+      "failed": 9,
+      "solve_rate": 0.9964,
+      "mean_successful_guesses": 3.6940987555198714,
+      "penalized_expected_cost": 3.706,
+      "maximum_successful_guesses": 6,
+      "exact_visits": 1720,
+      "exact_completed_visits": 1541,
+      "fresh_exact_calls": 1541,
+      "fresh_exact_completed": 1388,
+      "fresh_endgame_latency_p50_ms": 24.2604,
+      "fresh_endgame_latency_p95_ms": 183.2123
+    }
+  ],
+  "comparisons": [
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "answers_only",
+      "lengths": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n": 2500,
+      "solve_delta_pp": 0.16,
+      "solve_delta_ci95_pp": [
+        0.04,
+        0.32
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        -0.006800000000000001,
+        0.0068
+      ],
+      "rescued": 4,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 25,
+      "more_guesses_or_lost": 28,
+      "same_cost": 2447,
+      "joint_success_mean_guess_delta": 0.0025619128949615714,
+      "cost_difference_histogram": {
+        "-3": 1,
+        "-2": 3,
+        "-1": 21,
+        "0": 2447,
+        "1": 26,
+        "2": 2
+      },
+      "win_difference_histogram": {
+        "0": 2496,
+        "1": 4
+      },
+      "paired_win_exact_binomial_p": 0.125
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "answers_only",
+      "lengths": [
+        4
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        -0.01,
+        0.01
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 3,
+      "more_guesses_or_lost": 3,
+      "same_cost": 494,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "-1": 3,
+        "0": 494,
+        "1": 3
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "answers_only",
+      "lengths": [
+        5
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.4,
+      "solve_delta_ci95_pp": [
+        0.0,
+        1.0
+      ],
+      "penalized_cost_delta": -0.01,
+      "cost_delta_ci95": [
+        -0.032,
+        0.01
+      ],
+      "rescued": 2,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 9,
+      "more_guesses_or_lost": 6,
+      "same_cost": 485,
+      "joint_success_mean_guess_delta": -0.002136752136752137,
+      "cost_difference_histogram": {
+        "-3": 1,
+        "-2": 1,
+        "-1": 7,
+        "0": 485,
+        "1": 5,
+        "2": 1
+      },
+      "win_difference_histogram": {
+        "0": 498,
+        "1": 2
+      },
+      "paired_win_exact_binomial_p": 0.5
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "answers_only",
+      "lengths": [
+        6
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.4,
+      "solve_delta_ci95_pp": [
+        0.0,
+        1.0
+      ],
+      "penalized_cost_delta": -0.002,
+      "cost_delta_ci95": [
+        -0.02,
+        0.016
+      ],
+      "rescued": 2,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 9,
+      "more_guesses_or_lost": 9,
+      "same_cost": 482,
+      "joint_success_mean_guess_delta": 0.0020408163265306124,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 8,
+        "0": 482,
+        "1": 9
+      },
+      "win_difference_histogram": {
+        "0": 498,
+        "1": 2
+      },
+      "paired_win_exact_binomial_p": 0.5
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "answers_only",
+      "lengths": [
+        7
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.014,
+      "cost_delta_ci95": [
+        -0.002,
+        0.03
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 9,
+      "same_cost": 489,
+      "joint_success_mean_guess_delta": 0.014084507042253521,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 1,
+        "0": 489,
+        "1": 8,
+        "2": 1
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "answers_only",
+      "lengths": [
+        8
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": -0.002,
+      "cost_delta_ci95": [
+        -0.01,
+        0.004
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 1,
+      "same_cost": 497,
+      "joint_success_mean_guess_delta": -0.002004008016032064,
+      "cost_difference_histogram": {
+        "-1": 2,
+        "0": 497,
+        "1": 1
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n": 2500,
+      "solve_delta_pp": 0.16,
+      "solve_delta_ci95_pp": [
+        -0.12000000000000001,
+        0.44
+      ],
+      "penalized_cost_delta": -0.0008,
+      "cost_delta_ci95": [
+        -0.008799999999999999,
+        0.0068000000000000005
+      ],
+      "rescued": 8,
+      "lost": 4,
+      "fewer_guesses_or_rescued": 33,
+      "more_guesses_or_lost": 32,
+      "same_cost": 2435,
+      "joint_success_mean_guess_delta": 0.000855431993156544,
+      "cost_difference_histogram": {
+        "-3": 1,
+        "-2": 4,
+        "-1": 28,
+        "0": 2435,
+        "1": 27,
+        "2": 5
+      },
+      "win_difference_histogram": {
+        "-1": 4,
+        "0": 2488,
+        "1": 8
+      },
+      "paired_win_exact_binomial_p": 0.3876953125
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        4
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.2,
+      "solve_delta_ci95_pp": [
+        -0.6,
+        1.2
+      ],
+      "penalized_cost_delta": -0.006,
+      "cost_delta_ci95": [
+        -0.022,
+        0.01
+      ],
+      "rescued": 3,
+      "lost": 2,
+      "fewer_guesses_or_rescued": 9,
+      "more_guesses_or_lost": 5,
+      "same_cost": 486,
+      "joint_success_mean_guess_delta": -0.007792207792207792,
+      "cost_difference_histogram": {
+        "-1": 9,
+        "0": 486,
+        "1": 4,
+        "2": 1
+      },
+      "win_difference_histogram": {
+        "-1": 2,
+        "0": 495,
+        "1": 3
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        5
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.2,
+      "solve_delta_ci95_pp": [
+        -0.6,
+        1.0
+      ],
+      "penalized_cost_delta": -0.008,
+      "cost_delta_ci95": [
+        -0.034,
+        0.018
+      ],
+      "rescued": 3,
+      "lost": 2,
+      "fewer_guesses_or_rescued": 11,
+      "more_guesses_or_lost": 8,
+      "same_cost": 481,
+      "joint_success_mean_guess_delta": -0.004282655246252677,
+      "cost_difference_histogram": {
+        "-3": 1,
+        "-2": 2,
+        "-1": 8,
+        "0": 481,
+        "1": 5,
+        "2": 3
+      },
+      "win_difference_histogram": {
+        "-1": 2,
+        "0": 495,
+        "1": 3
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        6
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.4,
+      "solve_delta_ci95_pp": [
+        0.0,
+        1.0
+      ],
+      "penalized_cost_delta": -0.002,
+      "cost_delta_ci95": [
+        -0.02,
+        0.016
+      ],
+      "rescued": 2,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 9,
+      "more_guesses_or_lost": 9,
+      "same_cost": 482,
+      "joint_success_mean_guess_delta": 0.0020408163265306124,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 8,
+        "0": 482,
+        "1": 9
+      },
+      "win_difference_histogram": {
+        "0": 498,
+        "1": 2
+      },
+      "paired_win_exact_binomial_p": 0.5
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        7
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.014,
+      "cost_delta_ci95": [
+        -0.002,
+        0.03
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 9,
+      "same_cost": 489,
+      "joint_success_mean_guess_delta": 0.014084507042253521,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 1,
+        "0": 489,
+        "1": 8,
+        "2": 1
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        8
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": -0.002,
+      "cost_delta_ci95": [
+        -0.008,
+        0.004
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 1,
+      "same_cost": 497,
+      "joint_success_mean_guess_delta": -0.002004008016032064,
+      "cost_difference_histogram": {
+        "-1": 2,
+        "0": 497,
+        "1": 1
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n": 2500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        -0.2,
+        0.24
+      ],
+      "penalized_cost_delta": -0.0008,
+      "cost_delta_ci95": [
+        -0.0044,
+        0.0032
+      ],
+      "rescued": 4,
+      "lost": 4,
+      "fewer_guesses_or_rescued": 8,
+      "more_guesses_or_lost": 4,
+      "same_cost": 2488,
+      "joint_success_mean_guess_delta": -0.001710863986313088,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 7,
+        "0": 2488,
+        "1": 1,
+        "2": 3
+      },
+      "win_difference_histogram": {
+        "-1": 4,
+        "0": 2492,
+        "1": 4
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        4
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.2,
+      "solve_delta_ci95_pp": [
+        -0.6,
+        1.0
+      ],
+      "penalized_cost_delta": -0.006,
+      "cost_delta_ci95": [
+        -0.018,
+        0.008
+      ],
+      "rescued": 3,
+      "lost": 2,
+      "fewer_guesses_or_rescued": 6,
+      "more_guesses_or_lost": 2,
+      "same_cost": 492,
+      "joint_success_mean_guess_delta": -0.007792207792207792,
+      "cost_difference_histogram": {
+        "-1": 6,
+        "0": 492,
+        "1": 1,
+        "2": 1
+      },
+      "win_difference_histogram": {
+        "-1": 2,
+        "0": 495,
+        "1": 3
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        5
+      ],
+      "n": 500,
+      "solve_delta_pp": -0.2,
+      "solve_delta_ci95_pp": [
+        -0.8,
+        0.4
+      ],
+      "penalized_cost_delta": 0.002,
+      "cost_delta_ci95": [
+        -0.012,
+        0.016
+      ],
+      "rescued": 1,
+      "lost": 2,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 2,
+      "same_cost": 496,
+      "joint_success_mean_guess_delta": -0.0021413276231263384,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 1,
+        "0": 496,
+        "2": 2
+      },
+      "win_difference_histogram": {
+        "-1": 2,
+        "0": 497,
+        "1": 1
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        6
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        7
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "answers_only",
+      "lengths": [
+        8
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "lengths": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n": 2500,
+      "solve_delta_pp": 0.04,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.12000000000000001
+      ],
+      "penalized_cost_delta": 0.0016,
+      "cost_delta_ci95": [
+        -0.0036,
+        0.0068
+      ],
+      "rescued": 1,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 17,
+      "more_guesses_or_lost": 22,
+      "same_cost": 2461,
+      "joint_success_mean_guess_delta": 0.002008032128514056,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 16,
+        "0": 2461,
+        "1": 22
+      },
+      "win_difference_histogram": {
+        "0": 2499,
+        "1": 1
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "lengths": [
+        4
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.2,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.6
+      ],
+      "penalized_cost_delta": 0.006,
+      "cost_delta_ci95": [
+        -0.014,
+        0.026
+      ],
+      "rescued": 1,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 10,
+      "more_guesses_or_lost": 14,
+      "same_cost": 476,
+      "joint_success_mean_guess_delta": 0.008146639511201629,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 9,
+        "0": 476,
+        "1": 14
+      },
+      "win_difference_histogram": {
+        "0": 499,
+        "1": 1
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "lengths": [
+        5
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.006,
+      "cost_delta_ci95": [
+        -0.008,
+        0.02
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 5,
+      "more_guesses_or_lost": 8,
+      "same_cost": 487,
+      "joint_success_mean_guess_delta": 0.006012024048096192,
+      "cost_difference_histogram": {
+        "-1": 5,
+        "0": 487,
+        "1": 8
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "lengths": [
+        6
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": -0.004,
+      "cost_delta_ci95": [
+        -0.01,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 0,
+      "same_cost": 498,
+      "joint_success_mean_guess_delta": -0.004,
+      "cost_difference_histogram": {
+        "-1": 2,
+        "0": 498
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "lengths": [
+        7
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "adaptive-no-exact",
+      "policy": "unrestricted",
+      "lengths": [
+        8
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n": 2500,
+      "solve_delta_pp": 0.04,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.12000000000000001
+      ],
+      "penalized_cost_delta": 0.0012,
+      "cost_delta_ci95": [
+        -0.004,
+        0.0063999999999999994
+      ],
+      "rescued": 1,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 18,
+      "more_guesses_or_lost": 22,
+      "same_cost": 2460,
+      "joint_success_mean_guess_delta": 0.001606425702811245,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 17,
+        "0": 2460,
+        "1": 22
+      },
+      "win_difference_histogram": {
+        "0": 2499,
+        "1": 1
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        4
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.2,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.6
+      ],
+      "penalized_cost_delta": 0.004,
+      "cost_delta_ci95": [
+        -0.016,
+        0.024
+      ],
+      "rescued": 1,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 11,
+      "more_guesses_or_lost": 14,
+      "same_cost": 475,
+      "joint_success_mean_guess_delta": 0.006109979633401222,
+      "cost_difference_histogram": {
+        "-2": 1,
+        "-1": 10,
+        "0": 475,
+        "1": 14
+      },
+      "win_difference_histogram": {
+        "0": 499,
+        "1": 1
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        5
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.006,
+      "cost_delta_ci95": [
+        -0.008,
+        0.02
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 5,
+      "more_guesses_or_lost": 8,
+      "same_cost": 487,
+      "joint_success_mean_guess_delta": 0.006012024048096192,
+      "cost_difference_histogram": {
+        "-1": 5,
+        "0": 487,
+        "1": 8
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        6
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": -0.004,
+      "cost_delta_ci95": [
+        -0.01,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 2,
+      "more_guesses_or_lost": 0,
+      "same_cost": 498,
+      "joint_success_mean_guess_delta": -0.004,
+      "cost_difference_histogram": {
+        "-1": 2,
+        "0": 498
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        7
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        8
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n": 2500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": -0.0004,
+      "cost_delta_ci95": [
+        -0.0012000000000000001,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 1,
+      "more_guesses_or_lost": 0,
+      "same_cost": 2499,
+      "joint_success_mean_guess_delta": -0.00040160642570281126,
+      "cost_difference_histogram": {
+        "-1": 1,
+        "0": 2499
+      },
+      "win_difference_histogram": {
+        "0": 2500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        4
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": -0.002,
+      "cost_delta_ci95": [
+        -0.006,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 1,
+      "more_guesses_or_lost": 0,
+      "same_cost": 499,
+      "joint_success_mean_guess_delta": -0.002036659877800407,
+      "cost_difference_histogram": {
+        "-1": 1,
+        "0": 499
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        5
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        6
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        7
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    },
+    {
+      "target": "adaptive-no-exact",
+      "baseline": "entropy",
+      "policy": "unrestricted",
+      "lengths": [
+        8
+      ],
+      "n": 500,
+      "solve_delta_pp": 0.0,
+      "solve_delta_ci95_pp": [
+        0.0,
+        0.0
+      ],
+      "penalized_cost_delta": 0.0,
+      "cost_delta_ci95": [
+        0.0,
+        0.0
+      ],
+      "rescued": 0,
+      "lost": 0,
+      "fewer_guesses_or_rescued": 0,
+      "more_guesses_or_lost": 0,
+      "same_cost": 500,
+      "joint_success_mean_guess_delta": 0.0,
+      "cost_difference_histogram": {
+        "0": 500
+      },
+      "win_difference_histogram": {
+        "0": 500
+      },
+      "paired_win_exact_binomial_p": 1.0
+    }
+  ],
+  "audit": [
+    {
+      "length": 4,
+      "policy": "answers_only",
+      "changed_games": 28,
+      "first_divergences_with_completed_exact_search": 28
+    },
+    {
+      "length": 4,
+      "policy": "unrestricted",
+      "changed_games": 65,
+      "first_divergences_with_completed_exact_search": 65
+    },
+    {
+      "length": 5,
+      "policy": "answers_only",
+      "changed_games": 34,
+      "first_divergences_with_completed_exact_search": 34
+    },
+    {
+      "length": 5,
+      "policy": "unrestricted",
+      "changed_games": 48,
+      "first_divergences_with_completed_exact_search": 48
+    },
+    {
+      "length": 6,
+      "policy": "answers_only",
+      "changed_games": 32,
+      "first_divergences_with_completed_exact_search": 32
+    },
+    {
+      "length": 6,
+      "policy": "unrestricted",
+      "changed_games": 14,
+      "first_divergences_with_completed_exact_search": 14
+    },
+    {
+      "length": 7,
+      "policy": "answers_only",
+      "changed_games": 16,
+      "first_divergences_with_completed_exact_search": 16
+    },
+    {
+      "length": 7,
+      "policy": "unrestricted",
+      "changed_games": 2,
+      "first_divergences_with_completed_exact_search": 2
+    },
+    {
+      "length": 8,
+      "policy": "answers_only",
+      "changed_games": 4,
+      "first_divergences_with_completed_exact_search": 4
+    },
+    {
+      "length": 8,
+      "policy": "unrestricted",
+      "changed_games": 9,
+      "first_divergences_with_completed_exact_search": 5
+    }
+  ],
+  "opening_words": {
+    "4": [
+      "sale"
+    ],
+    "5": [
+      "lares"
+    ],
+    "6": [
+      "tories"
+    ],
+    "7": [
+      "saltier"
+    ],
+    "8": [
+      "pantries"
+    ]
+  },
+  "workload_fingerprints": {
+    "4": "1b70758db422ac52b1530b4fefd9974531685e91e6e744a10ac8107948bf122d",
+    "5": "634e7c89a0e5ef9bdb050e5b6ea90f80ec6c753bc119cc545a62957177ce21ec",
+    "6": "62438cd8d45acfd8d0385eebf98a553b9313f992b3d9eaf2e8f06d4d85d75b64",
+    "7": "321229cf3dc74648a6173d77146edded0d393850a4930a10112857de9f61cd1e",
+    "8": "ce7aea1dfab3137d4dff13e3cb31569c705bb84b30fadf07812431032ffcebf0"
+  },
+  "regressions": {
+    "cases": 6,
+    "unrestricted_solved": {
+      "entropy": 6,
+      "adaptive-no-exact": 6,
+      "adaptive": 6
+    },
+    "nontrivial_two_attempt_states_cover_all_3980_guesses": true,
+    "synthetic_allowed_guesses_in_full_scan_test": 1033,
+    "original_pilot_and_previous_evaluation_excluded": true
+  },
+  "limitations": [
+    "Broad English uniform-answer model; no independent official answer coverage.",
+    "Fresh sample offset 510 excludes the prior pilot and 2,500-answer evaluation.",
+    "Aggregate results weight lengths equally.",
+    "Frozen pre-endgame decisions remove clock drift from paired comparisons; exact work and fallback share their envelope with the no-exact control.",
+    "Latency statistics exclude reused decisions and are not path-weighted app timings.",
+    "A first endgame divergence may follow completed exact search or budget-limited resumed widening; the layer comparison includes its time allocation.",
+    "These fresh cases differ from the previous evaluation; old-vs-new aggregate percentages are not a paired estimate of the fix."
+  ]
+}

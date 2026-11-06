@@ -197,13 +197,14 @@ pub fn analyze(
     Ok(result)
 }
 
-fn metrics(v: &Vocabulary, ids: &[usize], g: usize) -> Recommendation {
-    let mut buckets = [0usize; 6561];
+fn metrics(v: &Vocabulary, ids: &[usize], g: usize, two_turn: bool) -> Recommendation {
+    let mut storage = [0usize; 6561];
+    let buckets = &mut storage[..3usize.pow(v.words[g].word.len() as u32)];
     for &a in ids {
         buckets[pattern(v.words[a].word.as_bytes(), v.words[g].word.as_bytes()) as usize] += 1;
     }
     let n = ids.len() as f64;
-    let green = 3usize.pow(v.words[g].word.len() as u32) - 1;
+    let green = buckets.len() - 1;
     let information_bits = buckets
         .iter()
         .filter(|&&c| c > 0)
@@ -218,14 +219,104 @@ fn metrics(v: &Vocabulary, ids: &[usize], g: usize) -> Recommendation {
         .filter(|(i, _)| *i != green)
         .map(|(_, &c)| (c * c) as f64 / n)
         .sum();
-    let immediate_win_probability = if ids.contains(&g) { 1.0 / n } else { 0.0 };
+    let immediate_win_probability = buckets[green] as f64 / n;
+    // Each non-winning feedback bucket permits one winning final answer guess.
+    // Reuse the same complete partition pass as entropy and remaining-count metrics.
+    let wins = if two_turn {
+        buckets.iter().filter(|&&count| count > 0).count()
+    } else {
+        0
+    };
     Recommendation {
         word: v.words[g].word.clone(),
         information_bits,
         expected_remaining,
         immediate_win_probability,
-        solve_probability: None,
-        penalized_expected_cost: None,
+        solve_probability: two_turn.then_some(wins as f64 / n),
+        penalized_expected_cost: two_turn
+            .then_some((3 * ids.len() - wins - buckets[green]) as f64 / n),
+    }
+}
+
+/// Completed per-guess scores survive a yield to exact search. Resuming never
+/// changes the coverage ordering or repeats the seed evaluations.
+struct Ranking<'a> {
+    vocabulary: &'a Vocabulary,
+    answers: &'a [usize],
+    guesses: &'a [usize],
+    two_turn: bool,
+    next: usize,
+    best: Option<(usize, Recommendation)>,
+    answer: Option<(usize, Recommendation)>,
+}
+impl Ranking<'_> {
+    fn better(
+        &self,
+        g: usize,
+        rec: &Recommendation,
+        old: &Option<(usize, Recommendation)>,
+    ) -> bool {
+        old.as_ref().is_none_or(|(old_id, old)| {
+            let order = if self.two_turn {
+                rec.solve_probability
+                    .unwrap()
+                    .total_cmp(&old.solve_probability.unwrap())
+                    .then_with(|| {
+                        old.penalized_expected_cost
+                            .unwrap()
+                            .total_cmp(&rec.penalized_expected_cost.unwrap())
+                    })
+            } else {
+                rec.information_bits
+                    .total_cmp(&old.information_bits)
+                    .then_with(|| old.expected_remaining.total_cmp(&rec.expected_remaining))
+            };
+            order.is_gt() || (order.is_eq() && tie(self.vocabulary, g, *old_id).is_lt())
+        })
+    }
+    fn advance(&mut self, end: usize, caller: &Control, phase: &Control) -> Result<(), String> {
+        while self.next < end.min(self.guesses.len()) {
+            caller.check().map_err(str::to_owned)?;
+            // Produce one complete fallback score even for an extremely small local
+            // budget. Thereafter check time/cancellation between every guess.
+            if self.next > 0 && phase.check().is_err() {
+                break;
+            }
+            let g = self.guesses[self.next];
+            let rec = metrics(self.vocabulary, self.answers, g, self.two_turn);
+            if rec.immediate_win_probability > 0.0 && self.better(g, &rec, &self.answer) {
+                self.answer = Some((g, rec.clone()));
+            }
+            if self.better(g, &rec, &self.best) {
+                self.best = Some((g, rec));
+            }
+            self.next += 1;
+        }
+        caller.check().map_err(str::to_owned)
+    }
+    fn widen(
+        &mut self,
+        initial_batch: usize,
+        caller: &Control,
+        phase: &Control,
+    ) -> Result<(), String> {
+        let mut batch = initial_batch;
+        while self.next < self.guesses.len() {
+            let end = self.next.saturating_add(batch).min(self.guesses.len());
+            self.advance(end, caller, phase)?;
+            if self.next < end {
+                break;
+            }
+            batch = batch.saturating_mul(2);
+        }
+        Ok(())
+    }
+    fn publish(&self, result: &mut Analysis) {
+        result.strategic = self.best.as_ref().map(|(_, rec)| rec.clone());
+        result.answer = self.answer.as_ref().map(|(_, rec)| rec.clone());
+        result.evaluated_guesses = self.next;
+        result.guess_space_complete = self.next == self.guesses.len();
+        result.optimal_for_profile = self.two_turn && result.guess_space_complete;
     }
 }
 
@@ -404,6 +495,72 @@ impl Exact<'_> {
     }
 }
 
+fn exact_search(
+    v: &Vocabulary,
+    r: &AnalysisRequest,
+    ids: &[usize],
+    guesses: &[usize],
+    control: &Control,
+    result: &mut Analysis,
+) -> bool {
+    // Exact search has its own tie ordering; never reorder the resumable ranking.
+    let mut exact_guesses = guesses.to_vec();
+    if control
+        .sort_by(&mut exact_guesses, |&a, &b| tie(v, a, b))
+        .is_err()
+    {
+        return false;
+    }
+    let mut root = ids.to_vec();
+    root.sort_unstable();
+    let positions = root.iter().enumerate().map(|(i, &a)| (a, i)).collect();
+    let Ok((reduced, matrix)) =
+        reduce_guesses(v, &exact_guesses, &root, control, r.budget.cache_bytes)
+    else {
+        return false;
+    };
+    let mut exact = Exact {
+        v,
+        guesses: reduced,
+        control,
+        root_positions: positions,
+        matrix,
+        width: root.len(),
+        memo: HashMap::new(),
+        states: 0,
+        max_states: r.budget.max_states,
+        answers_only: r.guess_policy == GuessPolicy::AnswersOnly,
+    };
+    let actions = exact.actions(&root, r.attempts_remaining);
+    result.expanded_states = exact.states;
+    let Ok(actions) = actions else {
+        return false;
+    };
+    let mut strategic: Option<Action> = None;
+    let mut answer: Option<Action> = None;
+    for action in actions {
+        if strategic.is_none_or(|old| action.1.better(old.1)) {
+            strategic = Some(action);
+        }
+        if ids.contains(&action.0) && answer.is_none_or(|old| action.1.better(old.1)) {
+            answer = Some(action);
+        }
+    }
+    let make = |(g, value): Action| {
+        let mut rec = metrics(v, ids, g, false);
+        rec.solve_probability = Some(value.wins as f64 / ids.len() as f64);
+        rec.penalized_expected_cost = Some(value.cost as f64 / ids.len() as f64);
+        rec
+    };
+    result.strategic = strategic.map(make);
+    result.answer = answer.map(make);
+    result.optimal_for_profile = true;
+    result.guess_space_complete = true;
+    result.method = "optimal_for_profile".into();
+    result.evaluated_guesses = guesses.len();
+    true
+}
+
 pub fn recommend(
     v: &Vocabulary,
     r: &AnalysisRequest,
@@ -412,6 +569,10 @@ pub fn recommend(
     result: &mut Analysis,
 ) -> Result<(), String> {
     let start = Instant::now();
+    caller.check().map_err(str::to_owned)?;
+    if r.budget.initial_batch == 0 || r.budget.max_states == 0 {
+        return Err("Search batch and state budgets must be positive".into());
+    }
     if ids.is_empty() || r.attempts_remaining == 0 {
         result.method = "no_next_guess".into();
         return Ok(());
@@ -431,10 +592,12 @@ pub fn recommend(
             .map(|(i, _)| i)
             .collect()
     };
-    guesses.sort_by(|&a, &b| tie(v, a, b));
+    caller
+        .sort_by(&mut guesses, |&a, &b| tie(v, a, b))
+        .map_err(str::to_owned)?;
     if ids.len() == 1 || r.attempts_remaining == 1 {
         let g = ids[0];
-        let mut rec = metrics(v, ids, g);
+        let mut rec = metrics(v, ids, g, false);
         rec.solve_probability = Some(1.0 / ids.len() as f64);
         rec.penalized_expected_cost = Some((2 * ids.len() - 1) as f64 / ids.len() as f64);
         result.strategic = Some(rec.clone());
@@ -444,6 +607,7 @@ pub fn recommend(
         result.guess_space_complete = true;
         result.evaluated_guesses = ids.len();
         result.recommendation_ms = start.elapsed().as_secs_f64() * 1000.0;
+        caller.check().map_err(str::to_owned)?;
         return Ok(());
     }
     // Coverage ordering includes positional and distinct-letter coverage, including probe words.
@@ -473,166 +637,66 @@ pub fn recommend(
         }
         score
     };
-    guesses.sort_by(|&a, &b| coverage(b).cmp(&coverage(a)).then_with(|| tie(v, a, b)));
+    caller
+        .sort_by(&mut guesses, |&a, &b| {
+            coverage(b).cmp(&coverage(a)).then_with(|| tie(v, a, b))
+        })
+        .map_err(str::to_owned)?;
     // Ensure an answer recommendation exists even if the ranking deadline is very small.
     if let Some(pos) = guesses.iter().position(|&g| g == ids[0]) {
         guesses.swap(0, pos);
     }
-    let answer_set: HashSet<_> = ids.iter().copied().collect();
-    let mut evaluated = 0;
-    let mut best: Option<(usize, Recommendation)> = None;
-    let mut answer: Option<(usize, Recommendation)> = None;
-    // Reserve half the interactive budget for exact search when eligible.
-    let exact_eligible =
-        r.strategy == Strategy::Adaptive && ids.len() <= r.budget.endgame_candidates;
-    let heuristic_end = if exact_eligible && r.budget.timeout_ms > 0 {
-        Some(start + Duration::from_millis(r.budget.timeout_ms / 2))
-    } else {
-        None
+    let endgame = r.strategy == Strategy::Adaptive
+        && ids.len() <= r.budget.endgame_candidates
+        && r.attempts_remaining > 2;
+    let try_exact = endgame && r.budget.exact_endgame;
+    let soft_control = |multiple: u64| {
+        if r.budget.full_search {
+            control.clone()
+        } else {
+            control.with_earlier_deadline(
+                start + Duration::from_millis(r.budget.target_ms.saturating_mul(multiple)),
+            )
+        }
     };
-    for &g in &guesses {
-        if evaluated > 0
-            && (control.check().is_err() || heuristic_end.is_some_and(|t| Instant::now() >= t))
-        {
-            break;
-        }
-        caller.check().map_err(str::to_owned)?;
-        let mut rec = metrics(v, ids, g);
-        if r.attempts_remaining == 2 && r.strategy == Strategy::Adaptive {
-            let mut buckets = HashSet::new();
-            for &a in ids {
-                if a != g {
-                    buckets.insert(pattern(
-                        v.words[a].word.as_bytes(),
-                        v.words[g].word.as_bytes(),
-                    ));
-                }
-            }
-            let wins = buckets.len() + usize::from(answer_set.contains(&g));
-            rec.solve_probability = Some(wins as f64 / ids.len() as f64);
-            rec.penalized_expected_cost = Some(
-                (3 * ids.len() - wins - usize::from(answer_set.contains(&g))) as f64
-                    / ids.len() as f64,
-            );
-        }
-        let better = |old: &Option<(usize, Recommendation)>| {
-            old.as_ref().is_none_or(|(old_id, old)| {
-                let order = if r.attempts_remaining == 2 && r.strategy == Strategy::Adaptive {
-                    rec.solve_probability
-                        .unwrap()
-                        .total_cmp(&old.solve_probability.unwrap())
-                        .then_with(|| {
-                            old.penalized_expected_cost
-                                .unwrap()
-                                .total_cmp(&rec.penalized_expected_cost.unwrap())
-                        })
-                } else {
-                    rec.information_bits
-                        .total_cmp(&old.information_bits)
-                        .then_with(|| old.expected_remaining.total_cmp(&rec.expected_remaining))
-                };
-                order.is_gt() || (order.is_eq() && tie(v, g, *old_id).is_lt())
-            })
-        };
-        if answer_set.contains(&g) && better(&answer) {
-            answer = Some((g, rec.clone()));
-        }
-        if better(&best) {
-            best = Some((g, rec));
-        }
-        evaluated += 1;
-        // A batch is a widening increment, never a permanent shortlist limit.
-        if exact_eligible && evaluated >= r.budget.initial_batch {
-            break;
-        }
-        if !r.budget.full_search
-            && evaluated % r.budget.initial_batch == 0
-            && start.elapsed().as_millis() >= u128::from(r.budget.target_ms)
-        {
-            break;
-        }
+    let mut ranking = Ranking {
+        vocabulary: v,
+        answers: ids,
+        guesses: &guesses,
+        two_turn: r.strategy == Strategy::Adaptive && r.attempts_remaining == 2,
+        next: 0,
+        best: None,
+        answer: None,
+    };
+    // A seed batch is only a yield point when an exact attempt actually follows.
+    // Two-turn scoring, ablations, and full scans always keep widening.
+    if try_exact && !r.budget.full_search {
+        ranking.advance(r.budget.initial_batch, caller, &soft_control(1))?;
+    } else {
+        ranking.widen(
+            r.budget.initial_batch,
+            caller,
+            &soft_control(if endgame { 2 } else { 1 }),
+        )?;
     }
-    result.strategic = best.map(|(_, rec)| rec);
-    result.answer = answer.map(|(_, rec)| rec);
-    result.evaluated_guesses = evaluated;
-    result.guess_space_complete = evaluated == guesses.len();
-    result.method = if r.attempts_remaining == 2 && r.strategy == Strategy::Adaptive {
+    ranking.publish(result);
+    result.method = if ranking.two_turn {
         "two_turn_search"
     } else {
         "entropy_heuristic"
     }
     .into();
-    result.optimal_for_profile = r.attempts_remaining == 2
-        && r.strategy == Strategy::Adaptive
-        && result.guess_space_complete;
-    if exact_eligible
-        && r.budget.exact_endgame
-        && r.attempts_remaining > 2
-        && control.check().is_ok()
-    {
-        // Interactive endgames get twice the soft latency target. The hard ceiling
-        // still applies; offline full searches can spend the entire supplied budget.
-        let exact_control = if r.budget.full_search || r.budget.timeout_ms == 0 {
-            control.clone()
-        } else {
-            control.with_earlier_deadline(
-                start + Duration::from_millis(r.budget.target_ms.saturating_mul(2).max(1)),
-            )
-        };
-        guesses.sort_by(|&a, &b| tie(v, a, b));
-        let mut root = ids.to_vec();
-        root.sort_unstable();
-        let positions = root.iter().enumerate().map(|(i, &a)| (a, i)).collect();
-        let full_guess_count = guesses.len();
-        let Ok((guesses, matrix)) =
-            reduce_guesses(v, &guesses, &root, &exact_control, r.budget.cache_bytes)
-        else {
-            caller.check().map_err(str::to_owned)?;
-            result.method = "budget_limited_heuristic".into();
-            result.recommendation_ms = start.elapsed().as_secs_f64() * 1000.0;
-            return Ok(());
-        };
-        let mut exact = Exact {
-            v,
-            guesses,
-            control: &exact_control,
-            root_positions: positions,
-            matrix,
-            width: root.len(),
-            memo: HashMap::new(),
-            states: 0,
-            max_states: r.budget.max_states,
-            answers_only: r.guess_policy == GuessPolicy::AnswersOnly,
-        };
-        if let Ok(actions) = exact.actions(&root, r.attempts_remaining) {
-            let mut strategic: Option<Action> = None;
-            let mut candidate: Option<Action> = None;
-            for action in actions {
-                if strategic.is_none_or(|old| action.1.better(old.1)) {
-                    strategic = Some(action);
-                }
-                if answer_set.contains(&action.0)
-                    && candidate.is_none_or(|old| action.1.better(old.1))
-                {
-                    candidate = Some(action);
-                }
-            }
-            let make = |(g, value): Action| {
-                let mut rec = metrics(v, ids, g);
-                rec.solve_probability = Some(value.wins as f64 / ids.len() as f64);
-                rec.penalized_expected_cost = Some(value.cost as f64 / ids.len() as f64);
-                rec
-            };
-            result.strategic = strategic.map(make);
-            result.answer = candidate.map(make);
-            result.optimal_for_profile = true;
-            result.guess_space_complete = true;
-            result.method = "optimal_for_profile".into();
-            result.evaluated_guesses = full_guess_count;
-        } else {
+    if try_exact {
+        // Share the same two-target endgame envelope with its no-exact ablation.
+        // Exact work uses at most the first target, leaving time for fallback
+        // widening if the state, memory-intake, or time budget is exhausted.
+        let complete = exact_search(v, r, ids, &guesses, &soft_control(1), result);
+        caller.check().map_err(str::to_owned)?;
+        if !complete {
+            ranking.widen(r.budget.initial_batch, caller, &soft_control(2))?;
+            ranking.publish(result);
             result.method = "budget_limited_heuristic".into();
         }
-        result.expanded_states = exact.states;
     }
     caller.check().map_err(str::to_owned)?;
     result.recommendation_ms = start.elapsed().as_secs_f64() * 1000.0;

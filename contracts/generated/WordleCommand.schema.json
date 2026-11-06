@@ -196,10 +196,12 @@
         },
         "full_search": {
           "default": false,
+          "description": "Bypass soft phase targets, retaining caller/hard deadlines and state limits.",
           "type": "boolean"
         },
         "initial_batch": {
           "default": 256,
+          "description": "Initial seed/widening increment, never a permanent guess shortlist.",
           "format": "uint",
           "minimum": 0,
           "type": "integer"
@@ -212,6 +214,7 @@
         },
         "target_ms": {
           "default": 100,
+          "description": "Ordinary ranking target. Deeper adaptive endgames share twice this budget:\nexact work yields after the first target so fallback ranking can resume.",
           "format": "uint64",
           "minimum": 0,
           "type": "integer"
