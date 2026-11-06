@@ -152,6 +152,9 @@ pub struct SessionSnapshot {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(default, deny_unknown_fields)]
 pub struct SearchBudget {
+    /// Disable only multi-step endgame search, retaining its heuristic fallback.
+    /// Used for matched ablations; the interactive default remains enabled.
+    pub exact_endgame: bool,
     pub timeout_ms: u64,
     pub initial_batch: usize,
     pub endgame_candidates: usize,
@@ -163,6 +166,7 @@ pub struct SearchBudget {
 impl Default for SearchBudget {
     fn default() -> Self {
         Self {
+            exact_endgame: true,
             timeout_ms: 2000,
             initial_batch: 256,
             endgame_candidates: 12,

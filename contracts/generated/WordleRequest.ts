@@ -24,6 +24,7 @@ export type Mark = "gray" | "yellow" | "green";
 export type SearchBudget = {
   "cache_bytes"?: number;
   "endgame_candidates"?: number;
+  "exact_endgame"?: boolean;
   "full_search"?: boolean;
   "initial_batch"?: number;
   "max_states"?: number;

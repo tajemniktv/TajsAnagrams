@@ -12,6 +12,7 @@ Use `cargo xtask wordle-bench --help` for native evaluation. For measured runs:
 ```text
 cargo run --release -p xtask -- wordle-bench --samples 20 --output .codex/temp/wordle/evaluation.json
 cargo run --release -p xtask -- wordle-bench --split tuning --samples 10 --endgames 8,12,20 --batches 128,256 --cache-bytes 0,8388608 --output .codex/temp/wordle/tuning.json
+cargo run --release -p xtask -- wordle-bench --samples 500 --skip 10 --strategies entropy,adaptive-no-exact,adaptive --paired-heuristics --output .codex/temp/wordle/paired.json
 ```
 
 Reports identify
@@ -26,3 +27,20 @@ optimal results. Per-turn records retain candidate counts, latency and search
 outcomes. The 100 ms soft target permits up to twice that time for interactive
 endgames; `--full` bypasses the soft target, while the specified hard deadline and
 state budget still apply. `--timeout-ms 0 --full` enables offline full evaluation.
+
+For endgame attribution, compare `adaptive` with `adaptive-no-exact`: the latter
+disables only multi-step exact search, preserving the heuristic fallback batch
+and the two-attempt win-probability rule. `--paired-heuristics` memoizes identical
+candidate-set/horizon decisions and shares pre-endgame decisions whose algorithms
+are identical. This prevents wall-clock shortlist drift from creating apparent
+exact-search improvements before exact search was eligible. Exact results are
+never shared with the ablation. This freezes the sampled policy for quality
+comparison; latency percentiles contain only fresh computations and are therefore
+not a path-weighted latency estimate. Per-turn records identify shared/local reuse.
+The report checkpoints after each condition; `complete: true` identifies the final
+report. Vocabulary coverage remains relative to the supplied reference/pool.
+`--skip 10` excludes the first ten hash-ordered evaluation answers per length,
+used in the initial pilot. The versioned
+[paired benchmark summary](benchmark-summary.v1.json) retains aggregate outcomes,
+paired effect histograms, confidence intervals, and source/workload fingerprints;
+raw answer/guess traces remain local.

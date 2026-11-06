@@ -308,6 +308,34 @@ fn budget_fallback_never_claims_exact_and_cancellation_is_an_error() {
     control.cancel();
     assert!(analyze(&v, &r, &control, |_| {}).is_err());
 }
+
+#[test]
+fn endgame_ablation_retains_adaptive_two_turn_rules_and_heuristic_fallback() {
+    let answers = "bound\nfound\nhound\nmound\npound\nround\nsound\nwound";
+    let v = vocab(&format!("{answers}\nswamp"), Some(answers));
+    let request = AnalysisRequest {
+        attempts_remaining: 3,
+        budget: SearchBudget {
+            exact_endgame: false,
+            timeout_ms: 0,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let result = run(&v, &request);
+    assert_eq!(result.expanded_states, 0);
+    assert_eq!(result.method, "entropy_heuristic");
+    assert!(!result.optimal_for_profile);
+    let two = run(
+        &v,
+        &AnalysisRequest {
+            attempts_remaining: 2,
+            ..request
+        },
+    );
+    assert_eq!(two.strategic.unwrap().solve_probability, Some(5.0 / 8.0));
+    assert!(two.optimal_for_profile);
+}
 #[test]
 fn external_pinned_feedback_fixtures() {
     for (i, line) in include_str!("../../../tests/wordle/fixtures/tests.txt")

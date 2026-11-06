@@ -107,6 +107,11 @@
           "minimum": 0,
           "type": "integer"
         },
+        "exact_endgame": {
+          "default": true,
+          "description": "Disable only multi-step endgame search, retaining its heuristic fallback.\nUsed for matched ablations; the interactive default remains enabled.",
+          "type": "boolean"
+        },
         "full_search": {
           "default": false,
           "type": "boolean"
@@ -160,6 +165,7 @@
       "default": {
         "cache_bytes": 8388608,
         "endgame_candidates": 12,
+        "exact_endgame": true,
         "full_search": false,
         "initial_batch": 256,
         "max_states": 50000,

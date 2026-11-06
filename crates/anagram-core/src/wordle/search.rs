@@ -565,7 +565,11 @@ pub fn recommend(
     result.optimal_for_profile = r.attempts_remaining == 2
         && r.strategy == Strategy::Adaptive
         && result.guess_space_complete;
-    if exact_eligible && r.attempts_remaining > 2 && control.check().is_ok() {
+    if exact_eligible
+        && r.budget.exact_endgame
+        && r.attempts_remaining > 2
+        && control.check().is_ok()
+    {
         // Interactive endgames get twice the soft latency target. The hard ceiling
         // still applies; offline full searches can spend the entire supplied budget.
         let exact_control = if r.budget.full_search || r.budget.timeout_ms == 0 {
