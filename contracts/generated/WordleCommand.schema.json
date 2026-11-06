@@ -59,6 +59,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "partial_history": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PartialHistoryRow"
+          },
+          "type": "array"
+        },
         "strategy": {
           "$ref": "#/$defs/Strategy",
           "default": "adaptive"
@@ -165,6 +172,33 @@
         "practice"
       ],
       "type": "string"
+    },
+    "PartialHistoryRow": {
+      "additionalProperties": false,
+      "properties": {
+        "feedback": {
+          "description": "None means unknown, never gray. Only known feedback constrains candidates.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Mark"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "word": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "word",
+        "feedback"
+      ],
+      "type": "object"
     },
     "ProfileKind": {
       "enum": [

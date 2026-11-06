@@ -89,6 +89,90 @@ fn duplicate_oracle_and_replay_for_every_supported_length() {
     );
 }
 #[test]
+fn partial_feedback_matches_only_known_tiles_against_the_independent_oracle() {
+    for length in 4..=8 {
+        let words = binary_words(length);
+        let v = vocab(&words.join("\n"), None);
+        let all = (1usize << length) - 1;
+        let mut masks = vec![0, all, 0b10101010 & all];
+        for i in 0..length {
+            masks.extend([1 << i, all ^ (1 << i)]);
+        }
+        masks.sort_unstable();
+        masks.dedup();
+        for guess in [&words[0], &words[words.len() / 3], &words[words.len() - 1]] {
+            for answer in [&words[0], &words[words.len() / 2], &words[words.len() - 1]] {
+                let observed = oracle(answer, guess);
+                for &mask in &masks {
+                    let partial: Vec<_> = observed
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &mark)| (mask & (1 << i) != 0).then_some(mark))
+                        .collect();
+                    let request = AnalysisRequest {
+                        length,
+                        partial_history: vec![PartialHistoryRow {
+                            word: guess.clone(),
+                            feedback: partial.clone(),
+                        }],
+                        ..Default::default()
+                    };
+                    let (_, ids) = filter(&v, &request, &Control::default()).unwrap();
+                    let actual: std::collections::BTreeSet<_> =
+                        ids.iter().map(|&id| v.words[id].word.clone()).collect();
+                    let expected: std::collections::BTreeSet<_> = words
+                        .iter()
+                        .filter(|candidate| {
+                            oracle(candidate, guess)
+                                .iter()
+                                .zip(&partial)
+                                .all(|(&mark, known)| known.is_none_or(|known| known == mark))
+                        })
+                        .cloned()
+                        .collect();
+                    assert_eq!(
+                        actual, expected,
+                        "length {length}, guess {guess}, mask {mask}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn partial_duplicate_gray_does_not_exclude_an_unknown_positive_duplicate() {
+    let v = vocab("apple\nalley\nallay\nample", None);
+    let request = AnalysisRequest {
+        partial_history: vec![PartialHistoryRow {
+            word: "alley".into(),
+            feedback: vec![None, None, Some(Mark::Gray), None, None],
+        }],
+        ..Default::default()
+    };
+    let (a, _) = filter(&v, &request, &Control::default()).unwrap();
+    assert!(a.candidates.contains(&"apple".into()));
+    assert!(!a.candidates.contains(&"allay".into()));
+    let mut invalid = request.clone();
+    invalid.partial_history[0].feedback.pop();
+    assert!(filter(&v, &invalid, &Control::default()).is_err());
+    invalid = request.clone();
+    invalid.partial_history = (0..13)
+        .map(|_| request.partial_history[0].clone())
+        .collect();
+    assert!(filter(&v, &invalid, &Control::default()).is_err());
+    let mut conflicting = request;
+    conflicting.constraints.fixed = vec![None, None, Some('l')];
+    assert_eq!(
+        filter(&v, &conflicting, &Control::default())
+            .unwrap()
+            .0
+            .diagnostic
+            .as_deref(),
+        Some("contradictory_clues")
+    );
+}
+#[test]
 fn importer_validates_original_bytes_and_profile_identity() {
     let c = Control::default();
     assert!(

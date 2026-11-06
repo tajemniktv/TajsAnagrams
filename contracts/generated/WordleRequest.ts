@@ -21,6 +21,11 @@ export type LetterBound = {
 
 export type Mark = "gray" | "yellow" | "green";
 
+export type PartialHistoryRow = {
+  "feedback": Array<(Mark) | (null)>;
+  "word": string;
+};
+
 export type SearchBudget = {
   "cache_bytes"?: number;
   "endgame_candidates"?: number;
@@ -43,5 +48,6 @@ export type WordleRequest = {
   "length"?: number;
   "limit"?: number;
   "offset"?: number;
+  "partial_history"?: Array<PartialHistoryRow>;
   "strategy"?: Strategy;
 };

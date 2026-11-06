@@ -92,6 +92,33 @@
       ],
       "type": "string"
     },
+    "PartialHistoryRow": {
+      "additionalProperties": false,
+      "properties": {
+        "feedback": {
+          "description": "None means unknown, never gray. Only known feedback constrains candidates.",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Mark"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "word": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "word",
+        "feedback"
+      ],
+      "type": "object"
+    },
     "SearchBudget": {
       "additionalProperties": false,
       "properties": {
@@ -212,6 +239,13 @@
       "format": "uint",
       "minimum": 0,
       "type": "integer"
+    },
+    "partial_history": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/PartialHistoryRow"
+      },
+      "type": "array"
     },
     "strategy": {
       "$ref": "#/$defs/Strategy",

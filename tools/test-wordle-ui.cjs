@@ -10,7 +10,7 @@ function harness(mode='play'){
   const source=fs.readFileSync(path.join(__dirname,'../apps/desktop/src/Wordle.svelte'),'utf8').split('<script lang="ts">')[1].split('</script>')[0].replace(/^\s*import .*;$/gm,'');
   const state=Object.assign(x=>x,{snapshot:structuredClone}),derived=Object.assign(x=>x,{by:fn=>fn()});
   const context=vm.createContext({$state:state,$derived:derived,$bindable:x=>x,$props:()=>({settings:{wordle:preferences},visible:true,frequencyAvailable:false}),$effect:()=>{},untrack:fn=>fn(),onMount:()=>{},structuredClone,document:{querySelector:()=>null},requestAnimationFrame:fn=>fn(),setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),bridge:{wordleStart:async command=>{commands.push(structuredClone(command));statuses.push(deferred());return commands.length;},wordleStatus:()=>statuses.at(-1).promise,wordleCancel:async id=>{cancelled.push(id);},wordlePreferences:async()=>{}},message:String});
-  const expose=`globalThis.api={accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,completeFeedback,tileClick,setFeedback,editRow,cancelEdit,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
+  const expose=`globalThis.api={accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,effectiveRows,partialHistory,tileClick,setFeedback,editRow,selectRow,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
   vm.runInContext(ts.transpileModule(source+'\n'+expose,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context);
   return {api:context.api,commands,statuses,cancelled,
     update(){for(const [id,t] of [...timers])if(t.ms===90){timers.delete(id);t.fn();}},
@@ -50,7 +50,7 @@ test('complete feedback is analyzed live, then Enter commits it exactly once',as
   const h=harness();enterWord(h);markRow(h);
   assert.equal(h.api.board.history.length,0);assert.equal(h.api.effectiveHistory(h.api.board).length,1);
   h.update();await flush();assert.equal(h.commands.length,1);assert.equal(h.commands[0].request.history[0].word,'apple');assert.equal(h.commands[0].request.attempts_remaining,5);
-  await h.api.submit();assert.equal(h.api.board.history.length,1);assert.equal(h.api.effectiveHistory(h.api.board).length,1);assert.equal(h.api.board.draft,'');
+  await h.api.submit();assert.equal(h.api.board.entries[0].word,'APPLE');assert.equal(h.api.board.activeRow,1);assert.equal(h.api.effectiveHistory(h.api.board).length,1);assert.equal(h.api.board.draft,'');
 });
 test('typing an unmarked draft does not cancel an analysis of unchanged clues',async()=>{
   const h=harness();const pending=h.api.run('analyze');await flush();enterWord(h);
@@ -64,11 +64,38 @@ test('edits during analysis cancel and coalesce; stale responses never overwrite
   assert.equal(h.api.board.analysis,null);assert.equal(h.commands.length,2);assert.equal(h.commands[1].request.history.length,0);
   h.complete({analysis:{candidate_count:7}},1);await flush();assert.equal(h.api.board.analysis.candidate_count,7);
 });
-test('editing an old word temporarily removes its old feedback; cancel restores it',()=>{
-  const h=harness();h.api.board.history.push({word:'apple',feedback:Array(5).fill('gray')});
-  h.api.editRow(0);assert.equal(h.api.effectiveHistory(h.api.board).length,1);
-  h.api.typeKey('O');assert.equal(h.api.effectiveHistory(h.api.board).length,0);
-  h.api.cancelEdit();assert.equal(h.api.effectiveHistory(h.api.board)[0].word,'apple');
+test('switching rows saves words and feedback without Enter or replaying feedback',()=>{
+  const h=harness();enterWord(h);markRow(h);h.api.tileClick(1,0);
+  assert.equal(h.api.board.entries[0].word,'APPLE');assert.equal(h.api.board.activeRow,1);
+  enterWord(h,'STONE');h.api.tileClick(1,2);h.api.tileClick(0,2);
+  assert.equal(h.api.board.draft,'APPLE');assert.ok(h.api.board.marks.every(m=>m==='gray'));
+  h.api.tileClick(1,4);assert.equal(h.api.board.draft,'STONE');assert.equal(h.api.board.marks[2],'gray');assert.equal(h.api.board.marks[4],null);
+});
+test('right clicking a future empty row never clones the word or creates null history entries',async()=>{
+  const h=harness();enterWord(h,'WARES');markRow(h);h.api.tileClick(4,1,-1);
+  assert.equal(h.api.board.activeRow,4);assert.equal(h.api.board.draft,'');assert.ok(h.api.board.marks.every(m=>m===null));
+  h.api.tileClick(4,2,-1);h.update();await flush();
+  const request=JSON.parse(JSON.stringify(h.commands.at(-1).request));
+  assert.equal(request.history.length,1);assert.equal(request.history[0].word,'wares');assert.equal(request.partial_history.length,0);
+  assert.ok(request.history.every(row=>row&&typeof row.word==='string'));
+});
+test('invalid row and column events leave selection and drafts untouched',()=>{
+  const h=harness();enterWord(h);const before=JSON.stringify(h.api.board);
+  for(const index of [-1,6,99,NaN]){h.api.editRow(index);h.api.tileClick(index,0,-1);}
+  for(const column of [-1,5,NaN])h.api.tileClick(0,column,-1);
+  assert.equal(JSON.stringify(h.api.board),before);
+});
+test('one known tile filters live and survives row switching; unset is sent as unknown',async()=>{
+  const h=harness();enterWord(h);h.api.tileClick(0,2);h.api.selectRow(3);h.api.selectRow(0);
+  assert.equal(h.api.board.draft,'APPLE');assert.equal(h.api.board.marks[2],'gray');assert.equal(h.api.board.marks[0],null);
+  h.update();await flush();const request=h.commands[0].request;
+  assert.equal(request.history.length,0);assert.equal(request.partial_history.length,1);
+  assert.equal(request.partial_history[0].feedback[0],null);assert.equal(request.partial_history[0].feedback[2],'gray');assert.equal(request.attempts_remaining,5);
+});
+test('unfinished word fragments and their exact positions survive row switching',()=>{
+  const h=harness();enterWord(h,'AP');h.api.selectRow(2);enterWord(h,'ST');h.api.selectRow(0);
+  assert.equal(h.api.board.draft,'AP');assert.equal(h.api.effectiveRows(h.api.board).length,0);
+  h.api.selectRow(2);assert.equal(h.api.board.draft,'ST');
 });
 test('using a recommendation fills the board and leaves submission to the user',()=>{
   const h=harness();h.api.useWord('apple');assert.equal(h.api.board.draft,'APPLE');assert.equal(h.api.board.cursor,0);
@@ -76,7 +103,7 @@ test('using a recommendation fills the board and leaves submission to the user',
 });
 test('Use word preserves completed live feedback and fills the next row',()=>{
   const h=harness();enterWord(h);markRow(h);h.api.useWord('crane');
-  assert.equal(h.api.board.history.length,1);assert.equal(h.api.board.history[0].word,'apple');
+  assert.equal(h.api.board.entries[0].word,'APPLE');assert.equal(h.api.board.activeRow,1);
   assert.equal(h.api.board.draft,'CRANE');assert.ok(h.api.board.marks.every(m=>m===null));
   assert.equal(h.api.effectiveHistory(h.api.board).length,1);assert.equal(h.commands.length,0);
 });

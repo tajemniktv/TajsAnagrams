@@ -70,7 +70,7 @@ fn shared_request_and_progress_fixtures_match_rust_deserialization() {
         ("GenerateRequest", 5),
         ("SolveRequest", 1),
         ("JobStatus", 1),
-        ("WordleRequest", 4),
+        ("WordleRequest", 7),
     ] {
         assert_eq!(
             checked.get(schema),

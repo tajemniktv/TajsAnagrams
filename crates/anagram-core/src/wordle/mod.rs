@@ -22,6 +22,14 @@ pub struct HistoryRow {
     pub feedback: Vec<Mark>,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PartialHistoryRow {
+    pub word: String,
+    /// None means unknown, never gray. Only known feedback constrains candidates.
+    pub feedback: Vec<Option<Mark>>,
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ProfileKind {
@@ -188,6 +196,7 @@ pub struct AnalysisRequest {
     pub length: usize,
     pub attempts_remaining: usize,
     pub history: Vec<HistoryRow>,
+    pub partial_history: Vec<PartialHistoryRow>,
     pub constraints: Constraints,
     pub budget: SearchBudget,
     pub guess_policy: GuessPolicy,
@@ -201,6 +210,7 @@ impl Default for AnalysisRequest {
             length: 5,
             attempts_remaining: 6,
             history: vec![],
+            partial_history: vec![],
             constraints: Constraints::default(),
             budget: SearchBudget::default(),
             guess_policy: GuessPolicy::Unrestricted,

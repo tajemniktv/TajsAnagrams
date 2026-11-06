@@ -90,6 +90,28 @@ fn desktop_publishes_the_full_candidate_pool_for_scroll_and_search() {
     app.shutdown();
 }
 #[test]
+fn play_accepts_partial_feedback_and_practice_ignores_external_partial_clues() {
+    let (_temp, app) = setup();
+    let mut c = command(Mode::Play, SessionAction::Filter);
+    c.request.partial_history = vec![PartialHistoryRow {
+        word: "alley".into(),
+        feedback: vec![Some(Mark::Green), None, Some(Mark::Gray), None, None],
+    }];
+    app.wordle_start(c.clone()).unwrap();
+    let s = wait(&app);
+    assert!(s.error.is_none(), "{:?}", s.error);
+    assert_eq!(s.analysis.unwrap().candidates, vec!["apple"]);
+    c.mode = Mode::Practice;
+    c.action = SessionAction::NewPractice;
+    app.wordle_start(c).unwrap();
+    let s = wait(&app);
+    assert!(s.error.is_none(), "{:?}", s.error);
+    assert_eq!(s.analysis.unwrap().candidate_count, 5);
+    assert!(s.history.is_empty());
+    assert!(s.revealed_answer.is_none());
+    app.shutdown();
+}
+#[test]
 fn practice_secret_stays_native_and_invalid_guesses_do_not_consume_attempts() {
     let (_temp, app) = setup();
     app.wordle_start(command(Mode::Practice, SessionAction::NewPractice))

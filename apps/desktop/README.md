@@ -10,11 +10,14 @@ Use Ctrl+Plus / Ctrl+Minus to adjust text/UI zoom and Ctrl+0 to reset it.
 
 Select **Wordle** for Play Along, Instant Solver, or Practice. Lengths 4–8 and
 attempt limits 1–12 are supported. Changing game configuration starts a new puzzle.
-In Play Along, type directly into the board and press Enter to finish the word.
-Left click cycles tile feedback forward; right click cycles backward. Completed
-feedback updates the assistant automatically; Enter moves to the next row. Unset
-tiles are not gray. Select a tile to replace its letter; Delete clears that tile,
-and Backspace removes the word's last letter. Historical edits replay filtering.
+In Play Along, type directly into the board. Select another row to continue;
+words and feedback are saved automatically, including unfinished entries. Returning
+to a row selects it without changing its feedback. On the active row, left click
+cycles feedback forward and right click cycles backward. Known feedback updates
+the assistant immediately; unset tiles remain unknown, not gray. Enter is an
+optional shortcut to finish a word or move to the next row. Select a tile to replace
+its letter; Delete clears that tile, and Backspace removes the word's last letter.
+Historical edits replay filtering.
 **Use word** fills the active row without submitting it. The keyboard stays below
 the board, with a vertical feedback palette to its left.
 

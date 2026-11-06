@@ -159,7 +159,7 @@ fn execute(
         vocabulary(app, command, settings, control)?
     };
     if !practice
-        && !command.request.history.is_empty()
+        && (!command.request.history.is_empty() || !command.request.partial_history.is_empty())
         && previous
             .as_ref()
             .is_some_and(|s| s.vocabulary.profile.fingerprint != v.profile.fingerprint)
@@ -220,6 +220,7 @@ fn execute(
             _ => {}
         }
         command.request.history = session.history.clone();
+        command.request.partial_history.clear();
         command.request.constraints = Default::default();
         command.request.attempts_remaining = if session.finished {
             0

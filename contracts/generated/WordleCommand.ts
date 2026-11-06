@@ -9,6 +9,7 @@ export type AnalysisRequest = {
   "length"?: number;
   "limit"?: number;
   "offset"?: number;
+  "partial_history"?: Array<PartialHistoryRow>;
   "strategy"?: Strategy;
 };
 
@@ -34,6 +35,11 @@ export type LetterBound = {
 export type Mark = "gray" | "yellow" | "green";
 
 export type Mode = "play" | "instant" | "practice";
+
+export type PartialHistoryRow = {
+  "feedback": Array<(Mark) | (null)>;
+  "word": string;
+};
 
 export type ProfileKind = "broad" | "common" | "custom";
 

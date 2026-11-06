@@ -94,6 +94,9 @@
   },
   { "schema": "WordleRequest", "valid": true, "value": { "length": 5, "history": [{"word":"apple","feedback":["green","gray","yellow","gray","green"]}] } },
   { "schema": "WordleRequest", "valid": false, "value": { "history": [{"word":"apple","feedback":[null]}] } },
+  { "schema": "WordleRequest", "valid": true, "value": { "partial_history": [{"word":"alley","feedback":[null,null,"gray",null,null]}] } },
+  { "schema": "WordleRequest", "valid": false, "value": { "partial_history": [null] } },
+  { "schema": "WordleRequest", "valid": false, "value": { "partial_history": [{"word":"apple","feedback":["unset"]}] } },
   { "schema": "WordleRequest", "valid": false, "value": { "secret_answer": "apple" } },
   { "schema": "WordleRequest", "valid": false, "value": { "strategy": "unknown" } }
 

@@ -13,7 +13,11 @@ pub fn filter(
     let start = Instant::now();
     if !(4..=8).contains(&request.length)
         || request.attempts_remaining > 12
-        || request.history.len() > 12
+        || request
+            .history
+            .len()
+            .saturating_add(request.partial_history.len())
+            > 12
         || request.limit > 100
     {
         return Err("Use 4–8 letters, 0–12 remaining attempts, at most 12 history rows and 100 results per page".into());
@@ -61,7 +65,15 @@ pub fn filter(
     }
     let mut rows = Vec::new();
     let mut notices = Vec::new();
-    for row in &request.history {
+    let feedback_rows = request
+        .history
+        .iter()
+        .map(|row| PartialHistoryRow {
+            word: row.word.clone(),
+            feedback: row.feedback.iter().copied().map(Some).collect(),
+        })
+        .chain(request.partial_history.iter().cloned());
+    for row in feedback_rows {
         let word = validate_word(&row.word)?;
         if word.len() != n || row.feedback.len() != n {
             return Err(
@@ -74,9 +86,13 @@ pub fn filter(
                 word.to_uppercase()
             ));
         }
-        let (mut matched, mut gray) = ([0usize; 26], [false; 26]);
+        let (mut matched, mut gray, mut unknown) = ([0usize; 26], [false; 26], [0usize; 26]);
         for (i, (&b, &mark)) in word.as_bytes().iter().zip(&row.feedback).enumerate() {
             let letter = (b - b'a') as usize;
+            let Some(mark) = mark else {
+                unknown[letter] += 1;
+                continue;
+            };
             if mark == Mark::Green {
                 if fixed[i].is_some_and(|old| old != b) {
                     contradiction = true;
@@ -94,10 +110,29 @@ pub fn filter(
         for i in 0..26 {
             minimum[i] = minimum[i].max(matched[i]);
             if gray[i] {
-                maximum[i] = maximum[i].min(matched[i]);
+                maximum[i] = maximum[i].min(matched[i] + unknown[i]);
             }
         }
-        rows.push((word, row_pattern(&row.feedback)));
+        let complete: Option<Vec<Mark>> = row.feedback.iter().copied().collect();
+        let exact = complete.as_deref().map(row_pattern);
+        let known: Vec<(u16, u16)> = row
+            .feedback
+            .iter()
+            .enumerate()
+            .filter_map(|(i, mark)| {
+                mark.map(|mark| {
+                    (
+                        3u16.pow(i as u32),
+                        match mark {
+                            Mark::Gray => 0,
+                            Mark::Yellow => 1,
+                            Mark::Green => 2,
+                        },
+                    )
+                })
+            })
+            .collect();
+        rows.push((word, exact, known));
     }
     let mut fixed_counts = [0usize; 26];
     for (i, ch) in fixed.iter().enumerate() {
@@ -131,10 +166,17 @@ pub fn filter(
             if (0..26).any(|i| counts[i] < minimum[i] || counts[i] > maximum[i]) {
                 continue;
             }
-            if rows
-                .iter()
-                .all(|(guess, code)| pattern(word, guess.as_bytes()) == *code)
-            {
+            if rows.iter().all(|(guess, exact, known)| {
+                let actual = pattern(word, guess.as_bytes());
+                exact.map_or_else(
+                    || {
+                        known
+                            .iter()
+                            .all(|&(power, mark)| actual / power % 3 == mark)
+                    },
+                    |code| actual == code,
+                )
+            }) {
                 ids.push(id);
             }
         }

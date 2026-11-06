@@ -6,9 +6,12 @@
   import type { HistoryRow, Mark } from '../../../contracts/generated/WordleSnapshot';
   type Mode = 'play' | 'instant' | 'practice';
   type Profile = 'broad' | 'common' | 'custom';
+  type Entry = {word:string; feedback:(Mark|null)[]; ready:boolean};
+  type FeedbackRow = {word:string; feedback:(Mark|null)[]};
   interface Board {
     length:number; attempts:number; profile:Profile; history:HistoryRow[];
-    draft:string; marks:(Mark|null)[]; editing:number|null; cursor:number|null; ready:boolean;
+    entries:(Entry|null)[]; activeRow:number;
+    draft:string; marks:(Mark|null)[]; cursor:number|null; ready:boolean;
     fixed:string; forbidden:string[]; bounds:string; remaining:number;
     analysis:WordleAnalysis|null; analyzedClues:string|null; error:string;
     finished:boolean; revealed:string|null; started:boolean; hints:number; revision:number;
@@ -17,7 +20,7 @@
   let prefs = $state<Required<WordlePreferences>>(untrack(()=>({length:5,attempts:6,mode:'play',play_profile:'broad',instant_profile:'broad',practice_profile:'common',answers_path:'',guesses_path:'',...structuredClone($state.snapshot(settings.wordle))})));
   let mode = $state<Mode>(prefs.mode);
   function make(profile:Profile):Board {
-    return {length:prefs.length,attempts:prefs.attempts,profile,history:[],draft:'',marks:Array(prefs.length).fill(null),editing:null,cursor:0,ready:false,fixed:'.'.repeat(prefs.length),forbidden:Array(prefs.length).fill(''),bounds:'',remaining:prefs.attempts,analysis:null,analyzedClues:null,error:'',finished:false,revealed:null,started:false,hints:0,revision:0};
+    return {length:prefs.length,attempts:prefs.attempts,profile,history:[],entries:Array(prefs.attempts).fill(null),activeRow:0,draft:'',marks:Array(prefs.length).fill(null),cursor:0,ready:false,fixed:'.'.repeat(prefs.length),forbidden:Array(prefs.length).fill(''),bounds:'',remaining:prefs.attempts,analysis:null,analyzedClues:null,error:'',finished:false,revealed:null,started:false,hints:0,revision:0};
   }
   let boards = $state<Record<Mode,Board>>({play:make(prefs.play_profile),instant:make(prefs.instant_profile),practice:make(untrack(()=>frequencyAvailable)?prefs.practice_profile:'broad')});
   let b = $derived(boards[mode]);
@@ -26,24 +29,24 @@
   const profiles = {broad:'Broad English',common:'Common English',custom:'Custom lists'};
   const percent = (n:number) => `${(100*n).toLocaleString(undefined,{maximumSignificantDigits:3})}%`;
   const validWord = (board:Board) => new RegExp(`^[a-z]{${board.length}}$`,'i').test(board.draft);
-  const completeFeedback = (board:Board) => validWord(board) && board.ready && board.marks.every(mark=>mark!==null);
-  function effectiveHistory(board:Board):HistoryRow[] {
-    const rows = $state.snapshot(board.history);
-    const row = completeFeedback(board) ? {word:board.draft.toLowerCase(),feedback:[...board.marks] as Mark[]} : null;
-    if(board.editing!==null) {
-      if(row) rows[board.editing]=row;
-      else rows.splice(board.editing,1);
-    } else if(row && rows.length<board.attempts) rows.push(row);
-    return rows;
+  function effectiveRows(board:Board):FeedbackRow[] {
+    return Array.from({length:board.attempts},(_,i)=>i===board.activeRow
+      ? {word:board.draft,feedback:board.marks,ready:board.ready}
+      : board.entries[i]??null)
+      .filter((row):row is Entry=>!!row&&new RegExp(`^[a-z]{${board.length}}$`,'i').test(row.word)&&(row.ready||row.feedback.some(mark=>mark!==null)))
+      .map(row=>({word:row.word.toLowerCase(),feedback:[...row.feedback]}));
   }
-  const clueKey = (board:Board) => JSON.stringify([board.fixed,board.forbidden,board.bounds,board.remaining,effectiveHistory(board)]);
+  function effectiveHistory(board:Board):HistoryRow[] {
+    return effectiveRows(board).filter(row=>row.feedback.every(mark=>mark!==null)).map(row=>({word:row.word,feedback:row.feedback as Mark[]}));
+  }
+  const partialHistory = (board:Board) => effectiveRows(board).filter(row=>row.feedback.some(mark=>mark===null));
+  const clueKey = (board:Board) => JSON.stringify([board.fixed,board.forbidden,board.bounds,board.remaining,effectiveRows(board)]);
   let stale = $derived(mode!=='practice' && b.analysis!==null && b.analyzedClues!==clueKey(b));
   let marked = $derived(b.marks.filter(mark=>mark!==null).length);
   let recommendations = $derived(b.analysis ? [b.analysis.strategic,b.analysis.answer].filter((r,i,a):r is Recommendation=>!!r&&(i===0||r.word!==a[0]?.word)) : []);
   let keyMarks = $derived.by(()=>{
     const out:Record<string,Mark>={}, rank={gray:0,yellow:1,green:2};
-    const rows:{word:string;feedback:(Mark|null)[]}[]=b.history.filter((_,i)=>i!==b.editing);
-    if(validWord(b))rows.push({word:b.draft,feedback:b.marks});
+    const rows:FeedbackRow[]=mode==='practice'?b.history:effectiveRows(b);
     for(const row of rows) [...row.word].forEach((letter,i)=>{const key=letter.toUpperCase(),mark=row.feedback[i];if(mark&&(!out[key]||rank[mark]>rank[out[key]]))out[key]=mark;});
     return out;
   });
@@ -92,8 +95,9 @@
     const board=boards[target];board.error='';
     try{
       const history=target==='practice'?$state.snapshot(board.history):effectiveHistory(board);
+      const partial_history=target==='practice'?[]:partialHistory(board);
       const finished=history.some(row=>row.feedback.every(mark=>mark==='green'));
-      const command:WordleCommand={mode:target,action,revision:board.revision+1,profile:board.profile,attempts:board.attempts,answers_path:prefs.answers_path,guesses_path:prefs.guesses_path,word:board.draft,request:{length:board.length,attempts_remaining:target==='instant'?board.remaining:finished?0:Math.max(0,board.attempts-history.length),history,constraints:constraints(board,target),offset:0,limit:100}};
+      const command:WordleCommand={mode:target,action,revision:board.revision+1,profile:board.profile,attempts:board.attempts,answers_path:prefs.answers_path,guesses_path:prefs.guesses_path,word:board.draft,request:{length:board.length,attempts_remaining:target==='instant'?board.remaining:finished?0:Math.max(0,board.attempts-history.length-partial_history.length),history,partial_history,constraints:constraints(board,target),offset:0,limit:100}};
       board.revision++;active=true;pendingMode=target;pendingClues=clueKey(board);pendingAction=action;
       pendingId=await bridge.wordleStart(command);await refresh();
     }catch(e){board.error=message(e);active=false;drain();}
@@ -129,15 +133,16 @@
   async function reset(){
     if(active)return;clearTimeout(updateTimer);queued=null;
     const previous=b;
-    boards[mode]={...make(previous.profile),length:previous.length,attempts:previous.attempts,marks:Array(previous.length).fill(null),fixed:'.'.repeat(previous.length),forbidden:Array(previous.length).fill(''),remaining:previous.attempts,revision:previous.revision};
+    boards[mode]={...make(previous.profile),length:previous.length,attempts:previous.attempts,entries:Array(previous.attempts).fill(null),marks:Array(previous.length).fill(null),fixed:'.'.repeat(previous.length),forbidden:Array(previous.length).fill(''),remaining:previous.attempts,revision:previous.revision};
     showCandidates=false;search='';setupOpen=false;await savePrefs();if(mode!=='practice')await run('analyze');focusBoard();
   }
   function focusBoard(){requestAnimationFrame(()=>boardArea?.focus({preventScroll:true}));}
   function changeDraft(value:string){b.draft=value.toUpperCase();b.marks=Array(b.length).fill(null);b.ready=false;b.error='';if(mode!=='practice')changed();}
   function typeKey(key:string){
-    if(mode==='instant'||(b.finished&&b.editing===null)||(mode==='practice'&&(!b.started||active)))return;
+    if(mode==='instant'||(mode==='practice'&&(b.finished||!b.started||active)))return;
     if(key==='ENTER'){void submit();return;}
     if(key==='LEFT'||key==='RIGHT'){b.cursor=Math.max(0,Math.min(b.length-1,(b.cursor??b.length)+(key==='LEFT'?-1:1)));return;}
+    if((key==='UP'||key==='DOWN')&&mode==='play'){selectRow(Math.max(0,Math.min(b.attempts-1,b.activeRow+(key==='UP'?-1:1))));return;}
     if(key==='BACKSPACE'){
       const last=b.draft.trimEnd().length-1;
       if(last>=0){changeDraft(b.draft.slice(0,last).trimEnd());b.cursor=last;}
@@ -154,39 +159,52 @@
     }
   }
   function editRow(index:number){
-    if(mode==='practice')return;const row=b.history[index];
-    b.editing=index;b.draft=row.word.toUpperCase();b.marks=[...row.feedback];b.ready=true;b.cursor=0;focusBoard();
+    selectRow(index);
+  }
+  function saveRow(finish=false){
+    if(!Number.isInteger(b.activeRow)||b.activeRow<0||b.activeRow>=b.attempts)return;
+    b.ready=b.ready||(finish&&validWord(b));
+    b.entries[b.activeRow]=b.draft.trim()?{word:b.draft,feedback:[...b.marks],ready:b.ready}:null;
+  }
+  function selectRow(index:number){
+    if(mode==='practice'||!Number.isInteger(index)||index<0||index>=b.attempts)return;
+    if(index!==b.activeRow){
+      saveRow(true);b.activeRow=index;
+      const row=b.entries[index];b.draft=row?.word??'';b.marks=row?[...row.feedback]:Array(b.length).fill(null);b.ready=row?.ready??false;
+      b.cursor=0;changed();
+    }
+    focusBoard();
   }
   function setFeedback(mark:Mark|null){if(mode==='practice'||!validWord(b))return;b.ready=true;b.marks[b.cursor??0]=mark;changed();focusBoard();}
   function tileClick(row:number,column:number,direction=1){
-    if(mode==='practice'){b.cursor=column;focusBoard();return;}
-    if(row!==b.history.length&&row!==b.editing)editRow(row);b.cursor=column;
+    if(!Number.isInteger(row)||row<0||row>=b.attempts||!Number.isInteger(column)||column<0||column>=b.length)return;
+    if(mode==='practice'){if(row!==b.history.length||active||b.finished)return;b.cursor=column;focusBoard();return;}
+    if(row!==b.activeRow){selectRow(row);b.cursor=column;return;}
+    b.cursor=column;
     if(validWord(b)){const index=marks.indexOf(b.marks[column]);setFeedback(marks[(index+direction+marks.length)%marks.length]);}focusBoard();
   }
   async function removeRow(){
-    if(b.editing===null)return;b.history.splice(b.editing,1);b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;
-    b.finished=b.history.some(row=>row.feedback.every(mark=>mark==='green'))||b.history.length>=b.attempts;changed();focusBoard();
+    if(mode==='practice')return;b.entries[b.activeRow]=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;b.finished=false;changed();focusBoard();
   }
   async function submit(){
-    if(b.finished&&b.editing===null)return;
+    if(mode==='practice'&&b.finished)return;
     if(!validWord(b)){b.error=`Enter ${b.length} English letters.`;return;}
-    if(mode==='practice'){await run('guess');return;}b.ready=true;
-    if(b.marks.some(mark=>mark===null)){b.error='';focusBoard();return;}
+    if(mode==='practice'){await run('guess');return;}
+    if(!b.ready){b.ready=true;saveRow();changed();focusBoard();return;}
     commitFeedback();focusBoard();
   }
   function commitFeedback(){
-    if(!completeFeedback(b))return false;
-    const row:HistoryRow={word:b.draft.toLowerCase(),feedback:[...b.marks] as Mark[]};
-    if(b.editing===null){if(b.history.length>=b.attempts)return false;b.history.push(row);}else b.history[b.editing]=row;
-    b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;
-    b.finished=b.history.some(row=>row.feedback.every(mark=>mark==='green'))||b.history.length>=b.attempts;changed();return true;
+    if(!validWord(b))return false;
+    saveRow(true);selectRow(Math.min(b.attempts-1,b.activeRow+1));changed();return true;
   }
-  function cancelEdit(){b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;changed();focusBoard();}
   function useWord(word:string){
     if(mode==='instant')return;
     // A live recommendation follows the completed row. Preserve that feedback
     // before filling the next row; never replace the clues that produced it.
-    if(completeFeedback(b)&&(!commitFeedback()||b.finished))return;
+    if(validWord(b)&&b.ready){
+      const next=Array.from({length:b.attempts},(_,i)=>i).find(i=>i!==b.activeRow&&!b.entries[i]);
+      if(next===undefined)return;saveRow(true);selectRow(next);
+    }
     changeDraft(word);b.cursor=0;focusBoard();
   }
   function nextHint(){b.hints++;if(b.hints>=2)void run('analyze');}
@@ -198,7 +216,7 @@
     if(!visible||mode==='instant'||event.ctrlKey||event.altKey||event.metaKey||document.querySelector('dialog[open]'))return;
     const target=event.target as HTMLElement;if(target.closest('input,textarea,select,summary'))return;
     if(event.key==='Enter'&&target.closest('button'))return;
-    const aliases:Record<string,string>={Enter:'ENTER',Backspace:'BACKSPACE',Delete:'DELETE',ArrowLeft:'LEFT',ArrowRight:'RIGHT'};
+    const aliases:Record<string,string>={Enter:'ENTER',Backspace:'BACKSPACE',Delete:'DELETE',ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN'};
     if(aliases[event.key]||/^[a-z]$/i.test(event.key)){event.preventDefault();typeKey(aliases[event.key]??event.key);}
   }
   onMount(()=>{document.addEventListener('keydown',keydown);return()=>{disposed=true;clearTimeout(poll);clearTimeout(updateTimer);document.removeEventListener('keydown',keydown);};});
@@ -244,30 +262,30 @@
           <h3>Excluded from positions</h3><div class="constraint-positions forbidden" style={`--letters:${b.length}`}>{#each b.forbidden as _,i}<label><span>{i+1}</span><input value={b.forbidden[i]} oninput={event=>{b.forbidden[i]=event.currentTarget.value;changed();}} aria-label={`Forbidden letters at position ${i+1}`} spellcheck="false"/></label>{/each}</div>
           <label>Letter counts<textarea rows="3" value={b.bounds} oninput={event=>{b.bounds=event.currentTarget.value;changed();}} placeholder={'e 1 2\ns 0 0'}></textarea><span class="hint">Letter, minimum, optional maximum. “s 0 0” excludes S.</span></label>
           <label>Attempts remaining<input type="number" min="0" max="12" value={b.remaining} oninput={event=>{b.remaining=Number(event.currentTarget.value);changed();}}/></label><button class="primary" type="submit">Update matches</button>
-          <details class="instant-history"><summary>Previous feedback{b.history.length?` (${b.history.length})`:''}</summary>
-            {#each b.history as row,i}<button type="button" class="history-word" onclick={()=>editRow(i)}>{row.word.toUpperCase()} <span class="hint">Edit</span></button>{/each}
-            <label>{b.editing===null?'Add a previous guess':`Edit guess ${b.editing+1}`}<input value={b.draft} oninput={event=>changeDraft(event.currentTarget.value)} maxlength={b.length} spellcheck="false" autocomplete="off"/></label>
+          <details class="instant-history"><summary>Previous feedback ({effectiveRows(b).length})</summary>
+            {#each b.entries as row,i}{#if row}<button type="button" class="history-word" onclick={()=>editRow(i)}>Row {i+1}: {row.word.toUpperCase()} <span class="hint">Edit</span></button>{/if}{/each}
+            <label>Guess in row {b.activeRow+1}<input value={b.draft} oninput={event=>changeDraft(event.currentTarget.value)} maxlength={b.length} spellcheck="false" autocomplete="off"/></label>
             <div class="instant-feedback" style={`--letters:${b.length}`}>{#each b.marks as mark,i}<button type="button" class={`wordle-tile ${mark??''}`} disabled={!validWord(b)} aria-label={`Feedback at position ${i+1}: ${mark??'unset'}`} onclick={()=>{b.cursor=i;setFeedback(marks[(marks.indexOf(mark)+1)%marks.length]);}} oncontextmenu={event=>{event.preventDefault();b.cursor=i;setFeedback(marks[(marks.indexOf(mark)+marks.length-1)%marks.length]);}}>{b.draft[i]?.toUpperCase()??''}</button>{/each}</div>
-            <p class="hint">Mark every tile. Completed feedback updates matches immediately.</p><div class="actions"><button type="button" disabled={!completeFeedback(b)} onclick={submit}>{b.editing===null?'Add row':'Save row'}</button>{#if b.editing!==null}<button type="button" onclick={removeRow}>Remove row</button><button type="button" onclick={cancelEdit}>Cancel edit</button>{/if}</div>
+            <p class="hint">Known feedback updates matches immediately. Unset tiles are ignored.</p><div class="actions"><button type="button" disabled={!validWord(b)} onclick={()=>{commitFeedback();}}>Next row</button>{#if b.draft}<button type="button" onclick={removeRow}>Clear row</button>{/if}</div>
           </details>
         </form>
       {:else}
-        <div class="wordle-game"><div class="board-heading"><h3>Your board</h3><span class="muted">{b.history.length} / {b.attempts} guesses</span></div>
+        <div class="wordle-game"><div class="board-heading"><h3>Your board</h3><span class="muted">{mode==='practice'?b.history.length:effectiveRows(b).length} / {b.attempts} guesses</span></div>
           <div class="board-stage" class:practice={mode==='practice'} style={`--board-width:calc(${b.length} * var(--tile-size) + ${(b.length-1)*6}px)`}>
-            {#if mode==='play'}<div class="feedback-palette" role="group" aria-label="Feedback for selected tile"><span class="hint">Feedback</span>{#each marks as mark}<button class={mark??'unset'} aria-pressed={b.marks[b.cursor??0]===mark} disabled={!validWord(b)||(b.finished&&b.editing===null)} onclick={()=>setFeedback(mark)}>{mark==='green'?'● Green':mark==='yellow'?'◆ Yellow':mark==='gray'?'× Gray':'Unset'}</button>{/each}</div>{/if}
+            {#if mode==='play'}<div class="feedback-palette" role="group" aria-label="Feedback for selected tile"><span class="hint">Feedback</span>{#each marks as mark}<button class={mark??'unset'} aria-pressed={b.marks[b.cursor??0]===mark} disabled={!validWord(b)} onclick={()=>setFeedback(mark)}>{mark==='green'?'● Green':mark==='yellow'?'◆ Yellow':mark==='gray'?'× Gray':'Unset'}</button>{/each}</div>{/if}
             <div class="wordle-board" role="grid" aria-rowcount={b.attempts} aria-colcount={b.length} tabindex="0" bind:this={boardArea} aria-label="Wordle board. Type letters, Delete clears the selected tile, Backspace removes the last letter, Enter finishes the row.">
               {#each Array.from({length:b.attempts},(_,i)=>i) as rowIndex}
-                {@const old=b.history[rowIndex]}{@const draft=b.editing===rowIndex||(b.editing===null&&rowIndex===b.history.length&&!b.finished)}
+                {@const old=mode==='practice'?b.history[rowIndex]:b.entries[rowIndex]}{@const draft=mode==='practice'?rowIndex===b.history.length&&!b.finished:rowIndex===b.activeRow}
                 <div class="wordle-row" role="row" class:active-row={draft} style={`--letters:${b.length}`}>
                   {#each Array.from({length:b.length},(_,i)=>i) as i}{@const letter=draft?b.draft[i]?.trim():old?.word[i]}{@const mark=draft?b.marks[i]:old?.feedback[i]}
-                    <button role="gridcell" aria-selected={draft&&i===b.cursor} class={`wordle-tile ${mark??''}`} class:selected={draft&&i===b.cursor} disabled={(mode==='practice'&&(!draft||active))||(!draft&&!old)} aria-label={`Row ${rowIndex+1}, position ${i+1}: ${letter?.toUpperCase()||'empty'}, ${mark??'unset'}`} onclick={()=>tileClick(rowIndex,i)} oncontextmenu={event=>{event.preventDefault();if(mode==='play')tileClick(rowIndex,i,-1);}}>{letter?.toUpperCase()??''}<span aria-hidden="true">{mark==='green'?'●':mark==='yellow'?'◆':mark==='gray'?'×':''}</span></button>
+                    <button role="gridcell" aria-selected={draft&&i===b.cursor} class={`wordle-tile ${mark??''}`} class:selected={draft&&i===b.cursor} disabled={mode==='practice'&&(!draft||active||b.finished)} aria-label={`Row ${rowIndex+1}, position ${i+1}: ${letter?.toUpperCase()||'empty'}, ${mark??'unset'}`} onclick={()=>tileClick(rowIndex,i)} oncontextmenu={event=>{event.preventDefault();if(mode==='play')tileClick(rowIndex,i,-1);}}>{letter?.toUpperCase()??''}<span aria-hidden="true">{mark==='green'?'●':mark==='yellow'?'◆':mark==='gray'?'×':''}</span></button>
                   {/each}
                 </div>
               {/each}
             </div>
-            <p class="board-help" aria-live="polite">{b.finished&&b.editing===null?(b.revealed?`Answer: ${b.revealed.toUpperCase()}`:'Puzzle finished. Select a previous row to edit it.'):mode==='practice'?'Type a word. Press Enter to guess.':b.ready?(marked===b.length?'Feedback applied. Press Enter for the next row.':`${marked} of ${b.length} marked. Left click: next state. Right click: previous.`):'Type into the board. Press Enter, then mark the feedback.'}</p>
+            <p class="board-help" aria-live="polite">{mode==='practice'?(b.finished?`Answer: ${b.revealed?.toUpperCase()??''}`:'Type a word. Press Enter to guess.'):b.ready?`${marked} of ${b.length} marked. Feedback is live; click another row to continue.`:'Type into the board, mark known feedback, and select any row. Changes are saved.'}</p>
             <div class="wordle-keyboard" role="group" aria-label="On-screen keyboard">{#each ['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'] as row}<div>{#if row==='ZXCVBNM'}<button onclick={()=>{typeKey('ENTER');focusBoard();}}>Enter</button>{/if}{#each [...row] as key}<button class={keyMarks[key]??''} onclick={()=>{typeKey(key);focusBoard();}} aria-label={`${key}${keyMarks[key]?`, ${keyMarks[key]}`:''}`}>{key}</button>{/each}{#if row==='ZXCVBNM'}<button onclick={()=>{typeKey('BACKSPACE');focusBoard();}} aria-label="Backspace">⌫</button>{/if}</div>{/each}</div>
-            {#if mode==='play'}<div class="board-actions">{#if b.editing!==null}<button onclick={removeRow}>Remove row</button><button onclick={cancelEdit}>Cancel edit</button>{:else if b.history.length}<button onclick={()=>editRow(b.history.length-1)}>Edit previous guess</button>{/if}</div>{/if}
+            {#if mode==='play'}<div class="board-actions">{#if b.draft}<button onclick={removeRow}>Clear row</button>{/if}<button disabled={b.activeRow===0} onclick={()=>selectRow(b.activeRow-1)}>Previous row</button><button disabled={b.activeRow===b.attempts-1} onclick={()=>selectRow(b.activeRow+1)}>Next row</button></div>{/if}
           </div>
         </div>
       {/if}
