@@ -231,6 +231,10 @@ fn execute(
     }
     let (mut analysis, ids) = wordle::filter(&v, &command.request, control)?;
     session.candidates = ids.iter().map(|&i| v.words[i].word.clone()).collect();
+    // Desktop lists scroll and search the full filtered pool. The core's paged
+    // contract remains useful to other consumers, but must not truncate this UI.
+    analysis.candidates = session.candidates.clone();
+    analysis.offset = 0;
     let make = |analysis: Analysis, active| SessionSnapshot {
         id,
         revision: command.revision,

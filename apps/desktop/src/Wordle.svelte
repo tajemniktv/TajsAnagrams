@@ -6,146 +6,288 @@
   import type { HistoryRow, Mark } from '../../../contracts/generated/WordleSnapshot';
   type Mode = 'play' | 'instant' | 'practice';
   type Profile = 'broad' | 'common' | 'custom';
-  interface Board { length:number; attempts:number; profile:Profile; history:HistoryRow[]; draft:string; marks:(Mark|null)[]; editing:number|null; fixed:string; forbidden:string[]; bounds:string; remaining:number; analysis:WordleAnalysis|null; analyzedClues:string|null; error:string; finished:boolean; revealed:string|null; started:boolean; assistance:boolean; revision:number; }
+  interface Board {
+    length:number; attempts:number; profile:Profile; history:HistoryRow[];
+    draft:string; marks:(Mark|null)[]; editing:number|null; cursor:number|null; ready:boolean;
+    fixed:string; forbidden:string[]; bounds:string; remaining:number;
+    analysis:WordleAnalysis|null; analyzedClues:string|null; error:string;
+    finished:boolean; revealed:string|null; started:boolean; hints:number; revision:number;
+  }
   let {settings, visible, frequencyAvailable, active = $bindable(false)}: {settings:Settings; visible:boolean; frequencyAvailable:boolean; active?:boolean} = $props();
   let prefs = $state<Required<WordlePreferences>>(untrack(()=>({length:5,attempts:6,mode:'play',play_profile:'broad',instant_profile:'broad',practice_profile:'common',answers_path:'',guesses_path:'',...structuredClone($state.snapshot(settings.wordle))})));
   let mode = $state<Mode>(prefs.mode);
-  function make(profile:Profile):Board {return {length:prefs.length,attempts:prefs.attempts,profile,history:[],draft:'',marks:Array(prefs.length).fill(null),editing:null,fixed:'.'.repeat(prefs.length),forbidden:Array(prefs.length).fill(''),bounds:'',remaining:prefs.attempts,analysis:null,analyzedClues:null,error:'',finished:false,revealed:null,started:false,assistance:false,revision:0};}
+  function make(profile:Profile):Board {
+    return {length:prefs.length,attempts:prefs.attempts,profile,history:[],draft:'',marks:Array(prefs.length).fill(null),editing:null,cursor:0,ready:false,fixed:'.'.repeat(prefs.length),forbidden:Array(prefs.length).fill(''),bounds:'',remaining:prefs.attempts,analysis:null,analyzedClues:null,error:'',finished:false,revealed:null,started:false,hints:0,revision:0};
+  }
   let boards = $state<Record<Mode,Board>>({play:make(prefs.play_profile),instant:make(prefs.instant_profile),practice:make(untrack(()=>frequencyAvailable)?prefs.practice_profile:'broad')});
   let b = $derived(boards[mode]);
-  let pendingId = $state(0); let pendingMode = $state<Mode>('play'); let poll:ReturnType<typeof setTimeout>; let disposed=false;
-  let showCandidates=$state(false); let historyOpen=$state(false); let selected=$state(0); let guessInput:HTMLInputElement; let pendingClues:string|null=null;
-  const marks:(Mark|null)[]=[null,'gray','yellow','green'];
+  const marks:(Mark|null)[] = [null,'gray','yellow','green'];
   const names = {play:'Play Along',instant:'Instant Solver',practice:'Practice'};
+  const profiles = {broad:'Broad English',common:'Common English',custom:'Custom lists'};
   const percent = (n:number) => `${(100*n).toLocaleString(undefined,{maximumSignificantDigits:3})}%`;
-  const clueKey = (board:Board) => JSON.stringify([board.fixed,board.forbidden,board.bounds,board.remaining,board.history]);
-  let stale=$derived(mode==='instant' && b.analysis!==null && b.analyzedClues!==clueKey(b));
-  let marked=$derived(b.marks.filter(mark=>mark!==null).length);
-  let recommendations=$derived(b.analysis ? [b.analysis.strategic,b.analysis.answer].filter((r,i,a):r is Recommendation => !!r && (i===0 || r.word!==a[0]?.word)) : []);
-  let keyMarks=$derived.by(()=>{const out:Record<string,Mark>={};const rank={gray:0,yellow:1,green:2};for(const row of b.history){[...row.word].forEach((letter,i)=>{const key=letter.toUpperCase(), mark=row.feedback[i];if(mark && (!out[key] || rank[mark]>rank[out[key]]))out[key]=mark;});}return out;});
+  const validWord = (board:Board) => new RegExp(`^[a-z]{${board.length}}$`,'i').test(board.draft);
+  const completeFeedback = (board:Board) => validWord(board) && board.ready && board.marks.every(mark=>mark!==null);
+  function effectiveHistory(board:Board):HistoryRow[] {
+    const rows = $state.snapshot(board.history);
+    const row = completeFeedback(board) ? {word:board.draft.toLowerCase(),feedback:[...board.marks] as Mark[]} : null;
+    if(board.editing!==null) {
+      if(row) rows[board.editing]=row;
+      else rows.splice(board.editing,1);
+    } else if(row && rows.length<board.attempts) rows.push(row);
+    return rows;
+  }
+  const clueKey = (board:Board) => JSON.stringify([board.fixed,board.forbidden,board.bounds,board.remaining,effectiveHistory(board)]);
+  let stale = $derived(mode!=='practice' && b.analysis!==null && b.analyzedClues!==clueKey(b));
+  let marked = $derived(b.marks.filter(mark=>mark!==null).length);
+  let recommendations = $derived(b.analysis ? [b.analysis.strategic,b.analysis.answer].filter((r,i,a):r is Recommendation=>!!r&&(i===0||r.word!==a[0]?.word)) : []);
+  let keyMarks = $derived.by(()=>{
+    const out:Record<string,Mark>={}, rank={gray:0,yellow:1,green:2};
+    const rows:{word:string;feedback:(Mark|null)[]}[]=b.history.filter((_,i)=>i!==b.editing);
+    if(validWord(b))rows.push({word:b.draft,feedback:b.marks});
+    for(const row of rows) [...row.word].forEach((letter,i)=>{const key=letter.toUpperCase(),mark=row.feedback[i];if(mark&&(!out[key]||rank[mark]>rank[out[key]]))out[key]=mark;});
+    return out;
+  });
+  let boardArea = $state<HTMLDivElement>();
+  let showCandidates = $state(false), setupOpen = $state(false);
+  let search = $state(''), sort = $state('frequency'), scrollTop = $state(0), candidateHeight = $state(380);
+  let candidateViewport = $state<HTMLDivElement>();
+  function candidateWords():string[] {
+    const words=(b.analysis?.candidates??[]).filter(word=>word.includes(search.trim().toLowerCase()));
+    if(sort==='az') words.sort();
+    else if(sort==='za') words.sort().reverse();
+    else if(sort==='distinct') words.sort((a,c)=>new Set(c).size-new Set(a).size||a.localeCompare(c));
+    return words;
+  }
+  let filtered = $derived.by(candidateWords);
+  let firstVisible = $derived(Math.max(0,Math.floor((scrollTop-38)/38)-5));
+  let lastVisible = $derived(Math.min(filtered.length,firstVisible+Math.ceil(candidateHeight/38)+12));
+  function resetScroll(){scrollTop=0;if(candidateViewport)candidateViewport.scrollTop=0;}
+  $effect(()=>{void filtered;untrack(resetScroll);});
 
-  async function savePrefs() {prefs.length=b.length;prefs.attempts=b.attempts;prefs.mode=mode;prefs.play_profile=boards.play.profile;prefs.instant_profile=boards.instant.profile;prefs.practice_profile=boards.practice.profile;try{await bridge.wordlePreferences($state.snapshot(prefs));settings.wordle=$state.snapshot(prefs);}catch(e){b.error=message(e);}}
-  async function switchMode(next:Mode) {mode=next;selected=0;showCandidates=next==='instant';await savePrefs();if(!b.analysis && !active && mode!=='practice')await run('analyze');}
-  function constraints() {
-    if(mode!=='instant') return {fixed:[],forbidden_positions:[],counts:[]};
-    if(b.fixed.length!==b.length || !/^[a-z.]+$/i.test(b.fixed))throw new Error(`Fixed letters need ${b.length} letters or dots.`);
-    const counts=b.bounds.split('\n').filter(line=>line.trim()).map(line=>{const fields=line.trim().split(/\s+/);if(fields.length<2 || fields.length>3 || !/^[a-z]$/i.test(fields[0]) || !fields.slice(1).every(n=>/^\d+$/.test(n)))throw new Error('Letter counts: one letter, minimum, optional maximum per line.');return {letter:fields[0],min:Number(fields[1]),max:fields[2]===undefined?null:Number(fields[2])};});
-    return {fixed:[...b.fixed].map(ch=>ch==='.'?null:ch.toLowerCase()),forbidden_positions:b.forbidden,counts};
+  let pendingId=0, pendingMode:Mode='play', pendingClues:string|null=null, pendingAction:WordleCommand['action']='analyze';
+  let queued:Mode|null=null, poll:ReturnType<typeof setTimeout>, updateTimer:ReturnType<typeof setTimeout>, disposed=false;
+  async function savePrefs(){
+    prefs.length=b.length;prefs.attempts=b.attempts;prefs.mode=mode;
+    prefs.play_profile=boards.play.profile;prefs.instant_profile=boards.instant.profile;prefs.practice_profile=boards.practice.profile;
+    try{await bridge.wordlePreferences($state.snapshot(prefs));settings.wordle=$state.snapshot(prefs);}catch(e){b.error=message(e);}
   }
-  async function run(action:WordleCommand['action']) {
-    if(active)return;
-    const target=mode, board=boards[target];board.error='';
-    try {
-      const command:WordleCommand={mode:target,action,revision:board.revision+1,profile:board.profile,attempts:board.attempts,answers_path:prefs.answers_path,guesses_path:prefs.guesses_path,word:board.draft,request:{length:board.length,attempts_remaining:target==='instant'?board.remaining:Math.max(0,board.attempts-board.history.length),history:$state.snapshot(board.history),constraints:constraints(),offset:0,limit:100}};
-      if(target==='play' && board.finished)command.request.attempts_remaining=0;
-      board.revision++;active=true;pendingMode=target;pendingClues=target==='instant'?clueKey(board):null;pendingId=await bridge.wordleStart(command);await refresh();
-    }catch(e){board.error=message(e);active=false;}
+  async function switchMode(next:Mode){
+    mode=next;showCandidates=false;search='';sort='frequency';await savePrefs();
+    if(next!=='practice' && (!b.analysis||stale)) await run('analyze');
   }
-  function accept(snapshot:WordleSnapshot,target:Mode,analyzedClues?:string|null) {
+  function constraints(board:Board=b,target:Mode=mode){
+    if(target!=='instant')return {fixed:[],forbidden_positions:[],counts:[]};
+    if(board.fixed.length!==board.length||!/^[a-z.]+$/i.test(board.fixed))throw new Error(`Fixed positions need ${board.length} letters or empty positions.`);
+    const counts=board.bounds.split('\n').filter(line=>line.trim()).map(line=>{
+      const fields=line.trim().split(/\s+/);
+      if(fields.length<2||fields.length>3||!/^[a-z]$/i.test(fields[0])||!fields.slice(1).every(n=>/^\d+$/.test(n)))throw new Error('Letter counts: one letter, minimum, optional maximum per line.');
+      return {letter:fields[0],min:Number(fields[1]),max:fields[2]===undefined?null:Number(fields[2])};
+    });
+    return {fixed:[...board.fixed].map(ch=>ch==='.'?null:ch.toLowerCase()),forbidden_positions:board.forbidden,counts};
+  }
+  function drain(){if(!disposed&&!active&&queued){const target=queued;queued=null;void run('analyze',target);}}
+  async function run(action:WordleCommand['action'],target:Mode=mode){
+    if(disposed)return;
+    if(active){if(action==='analyze'){queued=target;void bridge.wordleCancel(pendingId).catch(()=>{});}return;}
+    const board=boards[target];board.error='';
+    try{
+      const history=target==='practice'?$state.snapshot(board.history):effectiveHistory(board);
+      const finished=history.some(row=>row.feedback.every(mark=>mark==='green'));
+      const command:WordleCommand={mode:target,action,revision:board.revision+1,profile:board.profile,attempts:board.attempts,answers_path:prefs.answers_path,guesses_path:prefs.guesses_path,word:board.draft,request:{length:board.length,attempts_remaining:target==='instant'?board.remaining:finished?0:Math.max(0,board.attempts-history.length),history,constraints:constraints(board,target),offset:0,limit:100}};
+      board.revision++;active=true;pendingMode=target;pendingClues=clueKey(board);pendingAction=action;
+      pendingId=await bridge.wordleStart(command);await refresh();
+    }catch(e){board.error=message(e);active=false;drain();}
+  }
+  function accept(snapshot:WordleSnapshot,target:Mode,analyzedClues?:string|null){
     const board=boards[target];if(snapshot.revision!==board.revision)return;
     if(snapshot.analysis&&!snapshot.error){board.analysis=snapshot.analysis;if(analyzedClues!==undefined)board.analyzedClues=analyzedClues;}
-    if(snapshot.error)board.analysis=null;
-    if(target==='practice' && (snapshot.analysis||snapshot.error)){board.history=snapshot.history;board.finished=snapshot.finished;board.revealed=snapshot.revealed_answer??null;board.started=!!snapshot.analysis;}
     if(snapshot.error)board.error=snapshot.error;
+    if(target==='practice'&&(snapshot.analysis||snapshot.error)){
+      board.history=snapshot.history;board.finished=snapshot.finished;board.revealed=snapshot.revealed_answer??null;board.started=!!snapshot.analysis;
+    }
   }
-  async function refresh() {
+  async function refresh(){
     if(disposed)return;
-    try {const snapshot=await bridge.wordleStatus();if(disposed || snapshot.id!==pendingId)return;accept(snapshot,pendingMode,pendingClues);active=snapshot.active;if(active)poll=setTimeout(refresh,60);else if(!snapshot.error && pendingMode==='practice'){boards.practice.draft='';boards.practice.marks=Array(boards.practice.length).fill(null);}}
-    catch(e){boards[pendingMode].error=message(e);active=false;}
+    try{
+      const snapshot=await bridge.wordleStatus();if(disposed||snapshot.id!==pendingId)return;
+      accept(snapshot,pendingMode,pendingClues);active=snapshot.active;
+      if(active)poll=setTimeout(refresh,60);
+      else{
+        if(!snapshot.error&&pendingMode==='practice'){const board=boards.practice;board.draft='';board.cursor=0;board.marks=Array(board.length).fill(null);board.ready=false;if(pendingAction==='guess')board.hints=0;if(mode==='practice')focusBoard();}
+        drain();
+      }
+    }catch(e){boards[pendingMode].error=message(e);active=false;drain();}
   }
-  async function reset() {
-    if(active)return;
-    const previous=b;boards[mode]={...make(previous.profile),length:previous.length,attempts:previous.attempts,marks:Array(previous.length).fill(null),fixed:'.'.repeat(previous.length),forbidden:Array(previous.length).fill(''),remaining:previous.attempts,revision:previous.revision};
-    selected=0;historyOpen=false;showCandidates=mode==='instant';await savePrefs();
-    await run(mode==='practice'?'new_practice':'analyze');
+  function changed(){
+    const key=clueKey(b);
+    b.error='';
+    if((active&&pendingMode===mode&&pendingClues===key)||(!active&&b.analysis&&b.analyzedClues===key))return;
+    b.revision++;b.error='';queued=mode;clearTimeout(updateTimer);
+    if(active)void bridge.wordleCancel(pendingId).catch(()=>{});
+    updateTimer=setTimeout(drain,90);
   }
-  function changeDraft(value:string) {b.draft=value.toUpperCase();b.marks=Array(b.length).fill(null);}
-  function typeKey(key:string) {if(active || b.finished || (mode==='practice' && !b.started))return;if(mode==='instant')historyOpen=true;if(key==='ENTER'){void submit();return;}if(key==='BACKSPACE'){changeDraft(b.draft.slice(0,-1));return;}if(/^[a-z]$/i.test(key) && b.draft.length<b.length)changeDraft(b.draft+key);}
-  function editRow(index:number) {if(mode==='practice'||active)return;const row=b.history[index];b.editing=index;b.draft=row.word.toUpperCase();b.marks=[...row.feedback];selected=0;guessInput?.focus();}
-  async function removeRow() {if(b.editing===null)return;b.history.splice(b.editing,1);b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.finished=b.history.some(row=>row.feedback.every(m=>m==='green'));await run(mode==='practice'?'filter':'analyze');}
-  async function submit() {
-    if(active || b.finished && b.editing===null)return;
-    if(!new RegExp(`^[a-z]{${b.length}}$`,'i').test(b.draft)){b.error=`Enter ${b.length} English letters.`;return;}
-    if(mode==='practice'){await run('guess');return;}
-    if(b.marks.some(mark=>mark===null)){b.error='Mark every tile before applying the feedback.';return;}
-    const row:HistoryRow={word:b.draft.toLowerCase(),feedback:b.marks as Mark[]};
-    if(b.editing===null){if(b.history.length>=b.attempts){b.error='No attempts left. Edit an earlier row or start a new puzzle.';return;}b.history.push(row);}else b.history[b.editing]=row;
-    b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.finished=b.history.some(row=>row.feedback.every(mark=>mark==='green'));await run('analyze');
+  async function reset(){
+    if(active)return;clearTimeout(updateTimer);queued=null;
+    const previous=b;
+    boards[mode]={...make(previous.profile),length:previous.length,attempts:previous.attempts,marks:Array(previous.length).fill(null),fixed:'.'.repeat(previous.length),forbidden:Array(previous.length).fill(''),remaining:previous.attempts,revision:previous.revision};
+    showCandidates=false;search='';setupOpen=false;await savePrefs();if(mode!=='practice')await run('analyze');focusBoard();
   }
-  function useWord(word:string){changeDraft(word);if(mode==='instant')historyOpen=true;requestAnimationFrame(()=>guessInput?.focus());}
-  async function page(offset:number){try{const target=mode, revision=b.revision;const snapshot=await bridge.wordlePage(target,offset);if(boards[target].revision===revision)accept(snapshot,target);}catch(e){b.error=message(e);}}
-  async function choose(which:'answers_path'|'guesses_path'){try{const path=await bridge.choose('dictionary');if(path){prefs[which]=path;await savePrefs();}}catch(e){b.error=message(e);}}
-  function keydown(event:KeyboardEvent){if(!visible || event.ctrlKey || event.altKey || event.metaKey || document.querySelector('dialog[open]'))return;const target=event.target as HTMLElement;if(target.closest('input,textarea,select'))return;if(event.key==='Enter'&&target.closest('button,summary'))return;if(event.key==='Backspace'||event.key==='Enter'||/^[a-z]$/i.test(event.key)){event.preventDefault();typeKey(event.key);}}
-  onMount(()=>{document.addEventListener('keydown',keydown);return()=>{disposed=true;clearTimeout(poll);document.removeEventListener('keydown',keydown);};});
+  function focusBoard(){requestAnimationFrame(()=>boardArea?.focus({preventScroll:true}));}
+  function changeDraft(value:string){b.draft=value.toUpperCase();b.marks=Array(b.length).fill(null);b.ready=false;b.error='';if(mode!=='practice')changed();}
+  function typeKey(key:string){
+    if(mode==='instant'||(b.finished&&b.editing===null)||(mode==='practice'&&(!b.started||active)))return;
+    if(key==='ENTER'){void submit();return;}
+    if(key==='LEFT'||key==='RIGHT'){b.cursor=Math.max(0,Math.min(b.length-1,(b.cursor??b.length)+(key==='LEFT'?-1:1)));return;}
+    if(key==='BACKSPACE'){
+      const last=b.draft.trimEnd().length-1;
+      if(last>=0){changeDraft(b.draft.slice(0,last).trimEnd());b.cursor=last;}
+      return;
+    }
+    if(key==='DELETE'){
+      if(b.cursor!==null&&b.cursor<b.draft.length)changeDraft((b.draft.slice(0,b.cursor)+' '+b.draft.slice(b.cursor+1)).trimEnd());
+      return;
+    }
+    if(/^[a-z]$/i.test(key)){
+      const hole=b.draft.indexOf(' '),i=b.cursor??(hole>=0?hole:b.draft.length);if(i>=b.length)return;
+      const letters=b.draft.padEnd(b.length,' ').split('');letters[i]=key.toUpperCase();
+      changeDraft(letters.join('').trimEnd());b.cursor=i+1<b.length?i+1:null;
+    }
+  }
+  function editRow(index:number){
+    if(mode==='practice')return;const row=b.history[index];
+    b.editing=index;b.draft=row.word.toUpperCase();b.marks=[...row.feedback];b.ready=true;b.cursor=0;focusBoard();
+  }
+  function setFeedback(mark:Mark|null){if(mode==='practice'||!validWord(b))return;b.ready=true;b.marks[b.cursor??0]=mark;changed();focusBoard();}
+  function tileClick(row:number,column:number,direction=1){
+    if(mode==='practice'){b.cursor=column;focusBoard();return;}
+    if(row!==b.history.length&&row!==b.editing)editRow(row);b.cursor=column;
+    if(validWord(b)){const index=marks.indexOf(b.marks[column]);setFeedback(marks[(index+direction+marks.length)%marks.length]);}focusBoard();
+  }
+  async function removeRow(){
+    if(b.editing===null)return;b.history.splice(b.editing,1);b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;
+    b.finished=b.history.some(row=>row.feedback.every(mark=>mark==='green'))||b.history.length>=b.attempts;changed();focusBoard();
+  }
+  async function submit(){
+    if(b.finished&&b.editing===null)return;
+    if(!validWord(b)){b.error=`Enter ${b.length} English letters.`;return;}
+    if(mode==='practice'){await run('guess');return;}b.ready=true;
+    if(b.marks.some(mark=>mark===null)){b.error='';focusBoard();return;}
+    commitFeedback();focusBoard();
+  }
+  function commitFeedback(){
+    if(!completeFeedback(b))return false;
+    const row:HistoryRow={word:b.draft.toLowerCase(),feedback:[...b.marks] as Mark[]};
+    if(b.editing===null){if(b.history.length>=b.attempts)return false;b.history.push(row);}else b.history[b.editing]=row;
+    b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;
+    b.finished=b.history.some(row=>row.feedback.every(mark=>mark==='green'))||b.history.length>=b.attempts;changed();return true;
+  }
+  function cancelEdit(){b.editing=null;b.draft='';b.marks=Array(b.length).fill(null);b.cursor=0;b.ready=false;changed();focusBoard();}
+  function useWord(word:string){
+    if(mode==='instant')return;
+    // A live recommendation follows the completed row. Preserve that feedback
+    // before filling the next row; never replace the clues that produced it.
+    if(completeFeedback(b)&&(!commitFeedback()||b.finished))return;
+    changeDraft(word);b.cursor=0;focusBoard();
+  }
+  function nextHint(){b.hints++;if(b.hints>=2)void run('analyze');}
+  async function choose(which:'answers_path'|'guesses_path'){
+    try{const path=await bridge.choose('dictionary');if(path){prefs[which]=path;await savePrefs();}}catch(e){b.error=message(e);}
+  }
+  function setFixed(index:number,value:string){const ch=value.replace(/[^a-z]/gi,'').slice(-1).toLowerCase()||'.';b.fixed=b.fixed.slice(0,index)+ch+b.fixed.slice(index+1);changed();}
+  function keydown(event:KeyboardEvent){
+    if(!visible||mode==='instant'||event.ctrlKey||event.altKey||event.metaKey||document.querySelector('dialog[open]'))return;
+    const target=event.target as HTMLElement;if(target.closest('input,textarea,select,summary'))return;
+    if(event.key==='Enter'&&target.closest('button'))return;
+    const aliases:Record<string,string>={Enter:'ENTER',Backspace:'BACKSPACE',Delete:'DELETE',ArrowLeft:'LEFT',ArrowRight:'RIGHT'};
+    if(aliases[event.key]||/^[a-z]$/i.test(event.key)){event.preventDefault();typeKey(aliases[event.key]??event.key);}
+  }
+  onMount(()=>{document.addEventListener('keydown',keydown);return()=>{disposed=true;clearTimeout(poll);clearTimeout(updateTimer);document.removeEventListener('keydown',keydown);};});
   let opened=false;
-  $effect(()=>{if(visible&&!opened){opened=true;untrack(()=>{showCandidates=mode==='instant';if(mode!=='practice')void run('analyze');});}});
+  $effect(()=>{if(visible&&!opened){opened=true;untrack(()=>{if(mode!=='practice')void run('analyze');});}});
 </script>
 
-<section class="wordle-shell" aria-label="Wordle assistant">
-  <div class="wordle-heading"><div><h2>Wordle</h2><p class="muted">{mode==='play'?'Enter feedback from your game.':mode==='instant'?'Find words from the clues you know.':'Play a local puzzle. Ask for help when you want it.'}</p></div><nav class="actions" aria-label="Wordle modes">{#each ['play','instant','practice'] as value}<button aria-pressed={mode===value} onclick={()=>switchMode(value as Mode)}>{names[value as Mode]}</button>{/each}</nav></div>
-  <div class="wordle-config" aria-label="Puzzle setup">
-    <label>Letters<select disabled={active} value={b.length} onchange={event=>{b.length=Number(event.currentTarget.value);void reset();}}>{#each [4,5,6,7,8] as length}<option value={length}>{length}</option>{/each}</select></label>
-    <label>Attempts<select disabled={active} value={b.attempts} onchange={event=>{b.attempts=Number(event.currentTarget.value);void reset();}}>{#each Array.from({length:12},(_,i)=>i+1) as attempts}<option value={attempts}>{attempts}</option>{/each}</select></label>
-    <label class="profile-select">Vocabulary<select disabled={active} value={b.profile} onchange={event=>{b.profile=event.currentTarget.value as Profile;void reset();}}><option value="broad">Broad English</option><option value="common">Common English · frequency-derived</option><option value="custom">Custom lists</option></select></label>
-    <button class:primary={mode==='practice'&&!b.started} disabled={active} onclick={reset}>{mode==='practice'?'New game':'New puzzle'}</button>
-    {#if active}<button onclick={()=>bridge.wordleCancel(pendingId)}>Cancel</button>{/if}
+{#snippet explanation(rec:Recommendation)}
+  <dl class="wordle-metrics"><div><dt>Information gain</dt><dd>{rec.information_bits.toFixed(2)} bits</dd></div><div><dt>Expected answers left</dt><dd>{rec.expected_remaining.toFixed(1)}</dd></div><div><dt>Immediate win</dt><dd>{percent(rec.immediate_win_probability)}</dd></div>{#if rec.solve_probability!=null}<div><dt>Solve within attempts</dt><dd>{percent(rec.solve_probability)}</dd></div>{/if}</dl>
+{/snippet}
+{#snippet candidates()}
+  <div class="candidate-tools"><label>Search words<input type="search" bind:value={search} placeholder="Contains letters…"/></label><label>Sort<select bind:value={sort}><option value="frequency">{b.analysis?.profile.frequency_available?'Frequency':'Dictionary order'}</option><option value="az">A to Z</option><option value="za">Z to A</option><option value="distinct">Different letters</option></select></label></div>
+  <p class="hint">{filtered.length.toLocaleString()} {search?'matching':'remaining'} words{sort==='frequency'?(b.analysis?.profile.frequency_available?' · corpus frequency order':' · frequency data unavailable'):''}</p>
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex (The scroll region must support keyboard scrolling.) -->
+  <div class="candidate-scroll" bind:this={candidateViewport} bind:clientHeight={candidateHeight} onscroll={event=>scrollTop=event.currentTarget.scrollTop} role="region" aria-label="Candidate words" tabindex="0">
+    <table aria-rowcount={filtered.length+1}><thead><tr><th scope="col">Word</th><th scope="col">Different letters</th>{#if mode!=='instant'}<th scope="col"><span class="sr-only">Action</span></th>{/if}</tr></thead><tbody>
+      {#if firstVisible>0}<tr aria-hidden="true" class="candidate-spacer"><td colspan={mode==='instant'?2:3} style={`height:${Math.min(firstVisible,filtered.length)*38}px`}></td></tr>{/if}
+      {#each filtered.slice(firstVisible,lastVisible) as word,i}<tr aria-rowindex={firstVisible+i+2}><td class="candidate-word">{word.toUpperCase()}</td><td>{new Set(word).size}</td>{#if mode!=='instant'}<td><button disabled={stale||b.finished} onclick={()=>useWord(word)} aria-label={`Use ${word.toUpperCase()}`}>Use</button></td>{/if}</tr>{/each}
+      {#if lastVisible<filtered.length}<tr aria-hidden="true" class="candidate-spacer"><td colspan={mode==='instant'?2:3} style={`height:${(filtered.length-lastVisible)*38}px`}></td></tr>{/if}
+    </tbody></table>{#if filtered.length===0}<p class="candidate-empty">{search?'No words match this search.':'No matching words.'}</p>{/if}
   </div>
-  <p class="hint">Changing length, attempts, or vocabulary starts a new puzzle.</p>
-  {#if b.profile==='custom'}<div class="wordle-custom"><label>Answer list<div class="path-field"><input readonly value={prefs.answers_path}/><button disabled={active} onclick={()=>choose('answers_path')}>Choose…</button></div></label><label>Allowed guesses <span>(optional; answers are always allowed)</span><div class="path-field"><input readonly value={prefs.guesses_path}/><button disabled={active} onclick={()=>choose('guesses_path')}>Choose…</button></div></label></div>{/if}
+{/snippet}
+
+<section class="wordle-shell" aria-label="Wordle assistant">
+  <div class="wordle-heading"><div><h2>Wordle</h2><p class="muted">{mode==='play'?'Your puzzle, with a little help.':mode==='instant'?'Find words from the clues you know.':'A local puzzle. Help when you want it.'}</p></div><nav class="wordle-modes" aria-label="Wordle modes">{#each ['play','instant','practice'] as value}<button aria-pressed={mode===value} onclick={()=>switchMode(value as Mode)}>{names[value as Mode]}</button>{/each}</nav></div>
+  <div class="wordle-toolbar">
+    <details class="wordle-setup" bind:open={setupOpen}><summary>{b.length} letters <span>·</span> {b.attempts} attempts <span>·</span> {profiles[b.profile]}</summary><div class="wordle-config">
+      <label>Word length<select disabled={active} value={b.length} onchange={event=>{b.length=Number(event.currentTarget.value);void reset();}}>{#each [4,5,6,7,8] as length}<option value={length}>{length} letters</option>{/each}</select></label>
+      <label>Attempts<select disabled={active} value={b.attempts} onchange={event=>{b.attempts=Number(event.currentTarget.value);void reset();}}>{#each Array.from({length:12},(_,i)=>i+1) as attempts}<option value={attempts}>{attempts}</option>{/each}</select></label>
+      <label>Vocabulary<select disabled={active} value={b.profile} onchange={event=>{b.profile=event.currentTarget.value as Profile;void reset();}}><option value="broad">Broad English</option><option value="common">Common English · frequency-derived</option><option value="custom">Custom lists</option></select></label><p class="hint">Changing these options starts a new puzzle.</p>
+    </div></details><button disabled={active} onclick={reset}>+ New {mode==='practice'?'game':'puzzle'}</button>
+  </div>
+  {#if b.profile==='custom'}<div class="wordle-custom"><label>Answer list<div class="path-field"><input readonly value={prefs.answers_path}/><button disabled={active} onclick={()=>choose('answers_path')}>Choose…</button></div></label><label>Allowed guesses <span>(optional)</span><div class="path-field"><input readonly value={prefs.guesses_path}/><button disabled={active} onclick={()=>choose('guesses_path')}>Choose…</button></div></label></div>{/if}
   {#if b.error}<div class="error" role="alert">{b.error}</div>{/if}
-  <div class="wordle-columns" class:instant={mode==='instant'}>
-    <div class="wordle-game">
+  {#if mode==='practice'&&!b.started}
+    <div class="practice-start"><div class="practice-preview" aria-hidden="true">{#each [...'READY'] as letter}<span>{letter}</span>{/each}</div><h3>Ready for a new puzzle?</h3><p>{b.length} letters. {b.attempts} guesses. Feedback is automatic.</p><button class="primary" disabled={active} onclick={()=>{void run('new_practice');focusBoard();}}>Start game</button><p class="hint">Use the keyboard or type directly into the board. Hints stay hidden until you ask.</p></div>
+  {:else}
+    <div class="wordle-columns" class:instant={mode==='instant'}>
       {#if mode==='instant'}
         <form class="wordle-constraints" onsubmit={event=>{event.preventDefault();void run('analyze');}}>
-          <h3>Your clues</h3>
-          <div class="pair"><label>Fixed letters<input disabled={active} bind:value={b.fixed} placeholder={'.'.repeat(b.length)} maxlength={b.length} aria-label="Fixed letters; dot for unknown"/></label><label>Attempts remaining<input disabled={active} type="number" min="0" max="12" bind:value={b.remaining}/></label></div>
-          <p class="hint">Use a dot for each unknown position.</p>
-          <label>Forbidden letters by position<div class="position-inputs">{#each b.forbidden as _,i}<input disabled={active} bind:value={b.forbidden[i]} aria-label={`Forbidden letters at position ${i+1}`} placeholder={`${i+1}`}/>{/each}</div></label>
-          <details class="wordle-count-editor"><summary>Letter counts{b.bounds.trim()?' (set)':' (optional)'}</summary><label>Minimum and maximum<textarea disabled={active} rows="2" bind:value={b.bounds} placeholder={'e 1 2\ns 0 0'}></textarea><span class="hint">One letter, minimum, optional maximum per line. “s 0 0” excludes S.</span></label></details>
-          <div class="actions"><button type="submit" class="primary" disabled={active}>Find matching words</button>{#if stale}<span class="hint">Clues changed</span>{/if}</div>
+          <h3>Known positions</h3><p class="hint">Put a letter in each position you know.</p>
+          <div class="constraint-positions" style={`--letters:${b.length}`}>{#each Array.from({length:b.length},(_,i)=>i) as i}<label><span>{i+1}</span><input aria-label={`Fixed letter at position ${i+1}`} value={b.fixed[i]==='.'?'':b.fixed[i]} oninput={event=>setFixed(i,event.currentTarget.value)} maxlength="1" placeholder="·" autocomplete="off" spellcheck="false"/></label>{/each}</div>
+          <h3>Excluded from positions</h3><div class="constraint-positions forbidden" style={`--letters:${b.length}`}>{#each b.forbidden as _,i}<label><span>{i+1}</span><input value={b.forbidden[i]} oninput={event=>{b.forbidden[i]=event.currentTarget.value;changed();}} aria-label={`Forbidden letters at position ${i+1}`} spellcheck="false"/></label>{/each}</div>
+          <label>Letter counts<textarea rows="3" value={b.bounds} oninput={event=>{b.bounds=event.currentTarget.value;changed();}} placeholder={'e 1 2\ns 0 0'}></textarea><span class="hint">Letter, minimum, optional maximum. “s 0 0” excludes S.</span></label>
+          <label>Attempts remaining<input type="number" min="0" max="12" value={b.remaining} oninput={event=>{b.remaining=Number(event.currentTarget.value);changed();}}/></label><button class="primary" type="submit">Update matches</button>
+          <details class="instant-history"><summary>Previous feedback{b.history.length?` (${b.history.length})`:''}</summary>
+            {#each b.history as row,i}<button type="button" class="history-word" onclick={()=>editRow(i)}>{row.word.toUpperCase()} <span class="hint">Edit</span></button>{/each}
+            <label>{b.editing===null?'Add a previous guess':`Edit guess ${b.editing+1}`}<input value={b.draft} oninput={event=>changeDraft(event.currentTarget.value)} maxlength={b.length} spellcheck="false" autocomplete="off"/></label>
+            <div class="instant-feedback" style={`--letters:${b.length}`}>{#each b.marks as mark,i}<button type="button" class={`wordle-tile ${mark??''}`} disabled={!validWord(b)} aria-label={`Feedback at position ${i+1}: ${mark??'unset'}`} onclick={()=>{b.cursor=i;setFeedback(marks[(marks.indexOf(mark)+1)%marks.length]);}} oncontextmenu={event=>{event.preventDefault();b.cursor=i;setFeedback(marks[(marks.indexOf(mark)+marks.length-1)%marks.length]);}}>{b.draft[i]?.toUpperCase()??''}</button>{/each}</div>
+            <p class="hint">Mark every tile. Completed feedback updates matches immediately.</p><div class="actions"><button type="button" disabled={!completeFeedback(b)} onclick={submit}>{b.editing===null?'Add row':'Save row'}</button>{#if b.editing!==null}<button type="button" onclick={removeRow}>Remove row</button><button type="button" onclick={cancelEdit}>Cancel edit</button>{/if}</div>
+          </details>
         </form>
-      {/if}
-      <details class="wordle-history" class:compact={mode==='instant'} open={mode!=='instant'||historyOpen} ontoggle={event=>{if(mode==='instant')historyOpen=event.currentTarget.open;}}>
-        <summary>Feedback history <span class="muted">{b.history.length?`${b.history.length} ${b.history.length===1?'row':'rows'}`:'Add previous guesses'}</span></summary>
-      <div class="wordle-board" style={`--board-width:${b.length*46+(b.length-1)*5}px`} aria-label="Guess history">
-        {#each Array.from({length:mode==='instant'?Math.min(b.history.length+1,b.attempts):b.attempts},(_,i)=>i) as rowIndex}
-          {@const old=b.history[rowIndex]}
-          {@const draft=b.editing===rowIndex || (b.editing===null && rowIndex===b.history.length && !b.finished)}
-          <div class="wordle-row" style={`--letters:${b.length}`}>
-            {#each Array.from({length:b.length},(_,i)=>i) as i}
-              {@const letter=draft?b.draft[i]:old?.word[i]}
-              {@const mark=draft?b.marks[i]:old?.feedback[i]}
-              <button class={`wordle-tile ${mark??''}`} class:selected={draft&&i===selected&&mode!=='practice'} disabled={active || mode==='practice' || (!draft&&!old)} aria-label={`Row ${rowIndex+1}, position ${i+1}: ${letter?.toUpperCase()??'empty'}, ${mark??'unset'}`} onclick={()=>{if(draft){selected=i;if(b.draft.length===b.length)b.marks[i]=marks[(marks.indexOf(b.marks[i])+1)%marks.length];}else editRow(rowIndex);}}>{letter?.toUpperCase()??''}<span>{mark==='green'?'●':mark==='yellow'?'◆':mark==='gray'?'×':''}</span></button>
-            {/each}
+      {:else}
+        <div class="wordle-game"><div class="board-heading"><h3>Your board</h3><span class="muted">{b.history.length} / {b.attempts} guesses</span></div>
+          <div class="board-stage" class:practice={mode==='practice'} style={`--board-width:calc(${b.length} * var(--tile-size) + ${(b.length-1)*6}px)`}>
+            {#if mode==='play'}<div class="feedback-palette" role="group" aria-label="Feedback for selected tile"><span class="hint">Feedback</span>{#each marks as mark}<button class={mark??'unset'} aria-pressed={b.marks[b.cursor??0]===mark} disabled={!validWord(b)||(b.finished&&b.editing===null)} onclick={()=>setFeedback(mark)}>{mark==='green'?'● Green':mark==='yellow'?'◆ Yellow':mark==='gray'?'× Gray':'Unset'}</button>{/each}</div>{/if}
+            <div class="wordle-board" role="grid" aria-rowcount={b.attempts} aria-colcount={b.length} tabindex="0" bind:this={boardArea} aria-label="Wordle board. Type letters, Delete clears the selected tile, Backspace removes the last letter, Enter finishes the row.">
+              {#each Array.from({length:b.attempts},(_,i)=>i) as rowIndex}
+                {@const old=b.history[rowIndex]}{@const draft=b.editing===rowIndex||(b.editing===null&&rowIndex===b.history.length&&!b.finished)}
+                <div class="wordle-row" role="row" class:active-row={draft} style={`--letters:${b.length}`}>
+                  {#each Array.from({length:b.length},(_,i)=>i) as i}{@const letter=draft?b.draft[i]?.trim():old?.word[i]}{@const mark=draft?b.marks[i]:old?.feedback[i]}
+                    <button role="gridcell" aria-selected={draft&&i===b.cursor} class={`wordle-tile ${mark??''}`} class:selected={draft&&i===b.cursor} disabled={(mode==='practice'&&(!draft||active))||(!draft&&!old)} aria-label={`Row ${rowIndex+1}, position ${i+1}: ${letter?.toUpperCase()||'empty'}, ${mark??'unset'}`} onclick={()=>tileClick(rowIndex,i)} oncontextmenu={event=>{event.preventDefault();if(mode==='play')tileClick(rowIndex,i,-1);}}>{letter?.toUpperCase()??''}<span aria-hidden="true">{mark==='green'?'●':mark==='yellow'?'◆':mark==='gray'?'×':''}</span></button>
+                  {/each}
+                </div>
+              {/each}
+            </div>
+            <p class="board-help" aria-live="polite">{b.finished&&b.editing===null?(b.revealed?`Answer: ${b.revealed.toUpperCase()}`:'Puzzle finished. Select a previous row to edit it.'):mode==='practice'?'Type a word. Press Enter to guess.':b.ready?(marked===b.length?'Feedback applied. Press Enter for the next row.':`${marked} of ${b.length} marked. Left click: next state. Right click: previous.`):'Type into the board. Press Enter, then mark the feedback.'}</p>
+            <div class="wordle-keyboard" role="group" aria-label="On-screen keyboard">{#each ['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'] as row}<div>{#if row==='ZXCVBNM'}<button onclick={()=>{typeKey('ENTER');focusBoard();}}>Enter</button>{/if}{#each [...row] as key}<button class={keyMarks[key]??''} onclick={()=>{typeKey(key);focusBoard();}} aria-label={`${key}${keyMarks[key]?`, ${keyMarks[key]}`:''}`}>{key}</button>{/each}{#if row==='ZXCVBNM'}<button onclick={()=>{typeKey('BACKSPACE');focusBoard();}} aria-label="Backspace">⌫</button>{/if}</div>{/each}</div>
+            {#if mode==='play'}<div class="board-actions">{#if b.editing!==null}<button onclick={removeRow}>Remove row</button><button onclick={cancelEdit}>Cancel edit</button>{:else if b.history.length}<button onclick={()=>editRow(b.history.length-1)}>Edit previous guess</button>{/if}</div>{/if}
           </div>
-        {/each}
+        </div>
+      {/if}
+      <div class="wordle-assistant" class:instant-results={mode==='instant'} aria-busy={active}>
+        <div class="assistant-heading"><h3>{mode==='instant'?'Matching words':'Assistant'}</h3>{#if active}<span class="hint" role="status">Updating…</span>{/if}</div>
+        {#if mode==='practice'&&b.hints<2&&!b.finished}
+          <div class="practice-help"><h4>{b.history.length?'Keep going':'Make your first guess'}</h4><p>{b.history.length} of {b.attempts} guesses used. Your feedback is on the board.</p>{#if b.hints===1}<p class="general-hint">{b.history.length?'Keep green letters in place, move yellow letters, and try new letters in the remaining positions.':'Start with a familiar word using several different letters and a mix of vowels and consonants.'}</p>{/if}<button class="primary" disabled={active} onclick={nextHint}>{b.hints===0?'Get a hint':'Suggest a word'}</button><p class="hint">{b.hints===0?'First, a little guidance. A word suggestion only if you ask again.':'Ready for a more specific hint?'}</p></div>
+        {:else}
+          {#if stale}<p class="wordle-stale" role="status">{active?'Updating the assistant…':'Results are from the previous clues.'}</p>{/if}
+          {#if b.analysis}
+            {#if b.analysis.diagnostic}<div class="error">{b.analysis.diagnostic==='contradictory_clues'?'The clues conflict. Check positions, counts, and feedback.':'No words match this profile. Check the feedback or choose a broader vocabulary.'}</div>{/if}
+            {#if recommendations[0]&&mode!=='instant'}{@const rec=recommendations[0]}<article class="wordle-primary"><p class="muted">Suggested guess</p><div class="suggested-tiles" aria-label={rec.word.toUpperCase()}>{#each [...rec.word] as letter}<span aria-hidden="true">{letter.toUpperCase()}</span>{/each}</div><button class="primary" disabled={stale||b.finished||active} onclick={()=>useWord(rec.word)}>Use word</button><p class="hint">{rec.immediate_win_probability>0?'Also a possible answer.':'Explore letters to distinguish the remaining answers.'}</p></article>{/if}
+            <p class="wordle-count"><strong>{b.analysis.candidate_count.toLocaleString()}</strong> possible {b.analysis.candidate_count===1?'answer':'answers'}</p><p class="hint">{b.analysis.profile.name} · equally likely answers · {b.analysis.attempts_remaining} attempts left</p>
+            {#each b.analysis.notices as notice}<p class="hint">{notice}</p>{/each}
+            {#if mode==='instant'}{@render candidates()}{:else}<details class="candidate-details" bind:open={showCandidates}><summary>Remaining words</summary>{#if showCandidates}{@render candidates()}{/if}</details>{/if}
+            <details class="wordle-details"><summary>Detailed guess analysis</summary><p class="hint">{b.analysis.optimal_for_profile?'Optimal for this profile':b.analysis.method==='no_next_guess'?'No next guess':b.analysis.method==='two_turn_search'?'Two-attempt search':'Heuristic suggestion'}</p>{#each recommendations as rec,i}<div class="analysis-guess"><h4>{i===0?'Strategic guess':'Possible answer'}: {rec.word.toUpperCase()}</h4>{@render explanation(rec)}</div>{/each}<p class="hint path">Vocabulary: {b.analysis.profile.fingerprint}</p><p class="hint">{b.analysis.evaluated_guesses} guesses evaluated · {b.analysis.guess_space_complete?'full guess space covered':'guess space partly evaluated'}<br/>{b.analysis.expanded_states} search states · ranking {b.analysis.recommendation_ms.toFixed(0)} ms<br/>{b.analysis.profile.frequency_available?'Corpus frequency breaks ties.':'Frequency data is unavailable.'} Answer probabilities are uniform.</p></details>
+          {:else}<p class="muted">{active?'Finding possible answers…':'Enter the clues you know to find matching words.'}</p>{/if}
+        {/if}
+        {#if mode==='practice'&&b.started&&!b.finished}<details class="wordle-details"><summary>Finish this game</summary><button disabled={active} onclick={()=>run('reveal')}>Reveal answer</button></details>{/if}
       </div>
-      {#if b.revealed}<div class="wordle-outcome" role="status">{b.history.at(-1)?.word===b.revealed?'Solved':'Answer'}: <strong>{b.revealed.toUpperCase()}</strong></div>{/if}
-      <form onsubmit={event=>{event.preventDefault();void submit();}} class="wordle-entry">
-        <label>{b.editing===null?'Guess':`Edit row ${b.editing+1}`}<input bind:this={guessInput} value={b.draft} oninput={event=>changeDraft(event.currentTarget.value)} maxlength={b.length} disabled={active || (b.finished&&b.editing===null) || (mode==='practice'&&!b.started)} spellcheck="false" autocomplete="off" aria-label="Guess"/></label>
-        {#if mode!=='practice'}<p class="hint">{b.draft.length===b.length?`${marked} of ${b.length} tiles marked. Select a tile or set its feedback below.`:'Enter a word, then mark each tile with your game’s feedback.'}</p><div class="feedback-palette" aria-label={`Set feedback for tile ${selected+1}`}>{#each marks as mark}<button type="button" class={mark??'unset'} aria-pressed={b.marks[selected]===mark} disabled={active||b.draft.length!==b.length} onclick={()=>{b.marks[selected]=mark;selected=Math.min(selected+1,b.length-1);}}>{mark==='green'?'● Green':mark==='yellow'?'◆ Yellow':mark==='gray'?'× Gray':'Unset'}</button>{/each}</div>{/if}
-        <div class="actions"><button type="submit" class="primary" disabled={active || b.draft.length!==b.length || (mode!=='practice'&&marked!==b.length) || (b.finished&&b.editing===null) || (mode==='practice'&&!b.started)}>{mode==='practice'?'Guess':b.editing===null?'Apply feedback':'Save row'}</button>{#if b.editing!==null}<button type="button" disabled={active} onclick={removeRow}>Remove row</button><button type="button" onclick={()=>{b.editing=null;changeDraft('');}}>Cancel edit</button>{/if}</div>
-      </form>
-      <details class="wordle-keyboard-toggle" class:compact={mode==='instant'} open={mode!=='instant'}><summary>On-screen keyboard</summary><div class="wordle-keyboard" aria-label="On-screen keyboard">{#each ['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'] as row}<div>{#if row==='ZXCVBNM'}<button disabled={active} onclick={()=>typeKey('ENTER')}>Enter</button>{/if}{#each [...row] as key}<button class={keyMarks[key]??''} disabled={active} onclick={()=>typeKey(key)} aria-label={`${key}${keyMarks[key]?`, ${keyMarks[key]}`:''}`}>{key}</button>{/each}{#if row==='ZXCVBNM'}<button disabled={active} onclick={()=>typeKey('BACKSPACE')} aria-label="Backspace">⌫</button>{/if}</div>{/each}</div></details>
-      </details>
     </div>
-    <div class="wordle-assistant" aria-live="polite">
-      <h3>{mode==='practice'?'Assistant':mode==='instant'?'Matching words':'Your next move'}</h3>
-      {#if mode==='practice' && b.started && !b.finished}<div class="actions"><button disabled={active} onclick={()=>{b.assistance=true;void run('analyze');}}>Suggest a guess</button><button disabled={active} onclick={()=>run('reveal')}>Reveal answer</button></div>{/if}
-      {#if b.analysis}
-        {#if stale}<p class="wordle-stale" role="status">Results are from your previous clues. Select Find matching words to update.</p>{/if}
-        <p class="wordle-count">{b.analysis.candidate_count.toLocaleString()} <span>possible {b.analysis.candidate_count===1?'answer':'answers'}</span></p>
-        <p class="muted">{b.analysis.profile.name} · equally likely answers · {b.analysis.attempts_remaining} attempts left</p>
-        {#if b.analysis.diagnostic}<div class="error">{b.analysis.diagnostic==='contradictory_clues'?'The clues conflict. Check fixed positions, counts, and feedback.':'No words match this profile. Check the feedback or start a new puzzle with a broader answer list.'}</div>{/if}
-        {#each b.analysis.notices as notice}<p class="hint">{notice}</p>{/each}
-        {#if mode!=='practice'||b.assistance||b.finished}
-          <p class="wordle-method">{active?'Calculating suggestions…':b.analysis.optimal_for_profile?'Optimal for this profile':b.analysis.method==='no_next_guess'?'No next guess':b.analysis.method==='two_turn_search'?'Two-attempt search':'Heuristic suggestion'}</p>
-          {#each recommendations as rec,i}<article class="wordle-suggestion"><p class="muted">{i===0?'Suggested guess':'Possible answer'}{recommendations.length===1?' · possible answer':''}</p><div><strong>{rec.word.toUpperCase()}</strong><button disabled={active||b.finished||stale} onclick={()=>useWord(rec.word)}>Use word</button></div><details class="wordle-explanation"><summary>Why this guess?</summary><dl><div><dt>Information gain</dt><dd>{rec.information_bits.toFixed(2)} bits</dd></div><div><dt>Expected answers left</dt><dd>{rec.expected_remaining.toFixed(1)}</dd></div><div><dt>Immediate win</dt><dd>{percent(rec.immediate_win_probability)}</dd></div>{#if rec.solve_probability!=null}<div><dt>Solve within attempts</dt><dd>{percent(rec.solve_probability)}</dd></div>{/if}</dl></details></article>{/each}
-        {:else}<p class="muted">Suggestions and word lists stay hidden until you ask for help.</p>{/if}
-        <button class="wordle-list-toggle" aria-expanded={showCandidates} onclick={()=>{showCandidates=!showCandidates;if(mode==='practice')b.assistance=true;}}>{showCandidates?'Hide':'Browse'} remaining words</button>
-        {#if showCandidates}<div class="wordle-word-list">{#each b.analysis.candidates as word}<button disabled={active||b.finished||stale} onclick={()=>useWord(word)}>{word.toUpperCase()}</button>{/each}</div>{#if b.analysis.candidate_count>100}<div class="actions wordle-pagination"><button disabled={active||stale||b.analysis.offset===0} onclick={()=>page(Math.max(0,(b.analysis?.offset??0)-100))}>Previous</button><span class="muted">{b.analysis.offset+1}–{Math.min(b.analysis.offset+100,b.analysis.candidate_count)}</span><button disabled={active||stale||b.analysis.offset+100>=b.analysis.candidate_count} onclick={()=>page((b.analysis?.offset??0)+100)}>Next</button></div>{/if}{/if}
-        <details class="wordle-provenance"><summary>Vocabulary and search details</summary><p class="hint path">Fingerprint: {b.analysis.profile.fingerprint}</p><p class="hint">{b.analysis.profile.allowed_guesses.toLocaleString()} allowed guesses · {b.analysis.profile.eligible_answers.toLocaleString()} eligible answers across lengths<br/>Frequency {b.analysis.profile.frequency_available?'used for tie-breaking':'unavailable'} · {b.analysis.evaluated_guesses} guesses evaluated<br/>{b.analysis.guess_space_complete?'Full allowed guess space covered':'Guess space not fully evaluated'} · {b.analysis.expanded_states} search states<br/>Filtering {b.analysis.filtering_ms.toFixed(0)} ms · ranking {b.analysis.recommendation_ms.toFixed(0)} ms</p></details>
-      {:else}<p class="muted">{mode==='practice'?'Choose a profile and start a new game.':'Start a new puzzle or enter the feedback you already have.'}</p>{/if}
-    </div>
-  </div>
+  {/if}
 </section>

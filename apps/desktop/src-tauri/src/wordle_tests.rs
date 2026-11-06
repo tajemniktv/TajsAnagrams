@@ -62,6 +62,34 @@ fn wordle_needs_no_anagram_corpora_and_keeps_its_results_separate() {
     app.shutdown();
 }
 #[test]
+fn desktop_publishes_the_full_candidate_pool_for_scroll_and_search() {
+    let (temp, app) = setup();
+    let words: Vec<String> = (0..350)
+        .map(|mut n| {
+            (0..5)
+                .map(|_| {
+                    let ch = char::from(b'a' + (n % 26) as u8);
+                    n /= 26;
+                    ch
+                })
+                .collect()
+        })
+        .collect();
+    fs::write(temp.path().join("dictionary.txt"), words.join("\n")).unwrap();
+    let mut c = command(Mode::Instant, SessionAction::Filter);
+    c.request.limit = 1;
+    c.request.offset = 100;
+    app.wordle_start(c).unwrap();
+    let s = wait(&app);
+    assert!(s.error.is_none(), "{:?}", s.error);
+    let a = s.analysis.unwrap();
+    assert_eq!(a.candidate_count, 350);
+    assert_eq!(a.candidates.len(), 350);
+    assert_eq!(a.offset, 0);
+    assert!(words.iter().all(|word| a.candidates.contains(word)));
+    app.shutdown();
+}
+#[test]
 fn practice_secret_stays_native_and_invalid_guesses_do_not_consume_attempts() {
     let (_temp, app) = setup();
     app.wordle_start(command(Mode::Practice, SessionAction::NewPractice))

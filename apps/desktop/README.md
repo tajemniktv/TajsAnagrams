@@ -10,11 +10,20 @@ Use Ctrl+Plus / Ctrl+Minus to adjust text/UI zoom and Ctrl+0 to reset it.
 
 Select **Wordle** for Play Along, Instant Solver, or Practice. Lengths 4–8 and
 attempt limits 1–12 are supported. Changing game configuration starts a new puzzle.
-In Play Along, type a guess, mark every tile, then apply feedback. Unset tiles are
-not gray. Click a historical row to correct it; subsequent candidate filtering is
-replayed. **Use word** fills the draft without submitting it. Instant Solver also
-accepts fixed/forbidden positions and letter-count bounds. Practice calculates its
-own feedback and keeps suggestions/word lists hidden until requested.
+In Play Along, type directly into the board and press Enter to finish the word.
+Left click cycles tile feedback forward; right click cycles backward. Completed
+feedback updates the assistant automatically; Enter moves to the next row. Unset
+tiles are not gray. Select a tile to replace its letter; Delete clears that tile,
+and Backspace removes the word's last letter. Historical edits replay filtering.
+**Use word** fills the active row without submitting it. The keyboard stays below
+the board, with a vertical feedback palette to its left.
+
+Instant Solver uses visual fixed/forbidden positions, letter-count bounds, optional
+previous feedback, and a searchable, sortable candidate table. Candidate lists
+scroll through the entire filtered pool without paging. Large lists render only
+their visible rows. Practice calculates its own feedback on Enter; its first hint
+offers general guidance, and a second request suggests a word. Candidate counts,
+word lists, and recommendations stay hidden until that second request or game end.
 
 Broad English uses the full configured dictionary as its answer pool. Common
 English uses the same allowed guesses and frequency-derived answers (Zipf ≥4).
