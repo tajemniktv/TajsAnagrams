@@ -89,6 +89,26 @@ one exists; settings and corpora are not replaced during rollback.
 Development: `pnpm --dir apps/desktop tauri dev`. A browser-only Vite page cannot
 solve: desktop IPC deliberately has no mocked or browser-local fallback.
 
+## Frontend regression tests
+
+From the repository root, install the locked frontend dependencies with
+`pnpm --dir apps/desktop install --frozen-lockfile`, then run
+`node --test tools/test-build-policy.cjs tools/test-desktop-ui.cjs tools/test-wordle-ui.cjs`.
+These cover asynchronous component state and keyboard event guards.
+
+For rendered Wordle regressions, run these commands from `apps/desktop`:
+
+```sh
+pnpm exec playwright install --with-deps --only-shell chromium
+pnpm run test:browser
+```
+
+The `wordle-browser` CI job runs this same Chromium test at 1280×900. It compiles
+the actual Svelte component and replaces IPC only inside its test Vite server.
+It checks the 96-cell board's tab order, unique IDs, selected-cell announcements,
+arrow navigation, feedback shortcuts, and Practice success/error focus recovery.
+It does not validate native IPC, Windows WebView2, or screen-reader announcements.
+
 ## Data and execution
 
 ### Developer review (opt-in)

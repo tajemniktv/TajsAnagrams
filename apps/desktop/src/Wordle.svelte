@@ -80,6 +80,7 @@
 
   let pendingId=0, pendingMode:Mode='play', pendingClues:string|null=null, pendingAction:WordleCommand['action']='analyze';
   let practiceStartFocus:Element|null=null;
+  let practiceStartButton = $state<HTMLButtonElement>();
   let queued:Mode|null=null, poll:ReturnType<typeof setTimeout>, updateTimer:ReturnType<typeof setTimeout>, disposed=false;
   async function savePrefs(){
     prefs.length=b.length;prefs.attempts=b.attempts;prefs.mode=mode;
@@ -105,15 +106,16 @@
     if(disposed)return;
     if(active){if(action==='analyze'){queued=target;void bridge.wordleCancel(pendingId).catch(()=>{});}return;}
     const board=boards[target];board.error='';
+    const startOrigin=action==='new_practice'&&target==='practice'?document.activeElement:null;
     try{
       const history=target==='practice'?$state.snapshot(board.history):effectiveHistory(board);
       const partial_history=target==='practice'?[]:partialHistory(board);
       const finished=history.some(row=>row.feedback.every(mark=>mark==='green'));
       const command:WordleCommand={mode:target,action,revision:board.revision+1,profile:board.profile,attempts:board.attempts,answers_path:prefs.answers_path,guesses_path:prefs.guesses_path,word:board.draft,request:{length:board.length,attempts_remaining:target==='instant'?board.remaining:finished?0:Math.max(0,board.attempts-history.length-partial_history.length),history,partial_history,constraints:constraints(board,target),offset:0,limit:100}};
-      practiceStartFocus=action==='new_practice'?document.activeElement:null;
+      practiceStartFocus=startOrigin;
       board.revision++;active=true;pendingMode=target;pendingClues=clueKey(board);pendingAction=action;
       pendingId=await bridge.wordleStart(command);await refresh();
-    }catch(e){board.error=message(e);active=false;drain();}
+    }catch(e){board.error=message(e);active=false;if(startOrigin)restorePracticeStart(startOrigin);drain();}
   }
   function accept(snapshot:WordleSnapshot,target:Mode,analyzedClues?:string|null){
     const board=boards[target];if(snapshot.revision!==board.revision)return;
@@ -131,9 +133,10 @@
       if(active)poll=setTimeout(refresh,60);
       else{
         if(!snapshot.error&&pendingMode==='practice'){const board=boards.practice;board.draft='';board.cursor=0;board.marks=Array(board.length).fill(null);board.ready=false;if(pendingAction==='guess')board.hints=0;if(pendingAction==='new_practice'&&mode==='practice')focusBoard(practiceStartFocus);}
+        if(snapshot.error&&pendingMode==='practice'&&pendingAction==='new_practice')restorePracticeStart(practiceStartFocus);
         drain();
       }
-    }catch(e){boards[pendingMode].error=message(e);active=false;drain();}
+    }catch(e){boards[pendingMode].error=message(e);active=false;if(pendingMode==='practice'&&pendingAction==='new_practice')restorePracticeStart(practiceStartFocus);drain();}
   }
   function changed(){
     const key=clueKey(b);
@@ -155,7 +158,13 @@
     requestAnimationFrame(()=>{
       // Starting Practice disables and then removes its button, leaving body
       // focused. Restore the board only if no other control has taken focus.
-      if(visible&&mode===targetMode&&mode!=='instant'&&!document.querySelector('dialog[open]')&&(document.activeElement===origin||document.activeElement===document.body))boardArea?.focus({preventScroll:true});
+      if(!disposed&&visible&&mode===targetMode&&mode!=='instant'&&!document.querySelector('dialog[open]')&&(document.activeElement===origin||document.activeElement===document.body))boardArea?.focus({preventScroll:true});
+    });
+  }
+  function restorePracticeStart(origin:Element|null){
+    if(!origin||origin!==practiceStartButton)return;
+    requestAnimationFrame(()=>{
+      if(!disposed&&visible&&mode==='practice'&&origin===practiceStartButton&&!practiceStartButton.disabled&&!document.querySelector('dialog[open]')&&(document.activeElement===origin||document.activeElement===document.body))practiceStartButton.focus({preventScroll:true});
     });
   }
   function changeDraft(value:string){b.draft=value.toUpperCase();b.marks=Array(b.length).fill(null);b.ready=false;b.error='';if(mode!=='practice')changed();}
@@ -289,7 +298,7 @@
   {#if b.profile==='custom'}<div class="wordle-custom"><label>Answer list<div class="path-field"><input readonly value={prefs.answers_path}/><button disabled={active} onclick={()=>choose('answers_path')}>Choose…</button></div></label><label>Allowed guesses <span>(optional)</span><div class="path-field"><input readonly value={prefs.guesses_path}/><button disabled={active} onclick={()=>choose('guesses_path')}>Choose…</button></div></label></div>{/if}
   {#if b.error}<div class="error" role="alert">{b.error}</div>{/if}
   {#if mode==='practice'&&!b.started}
-    <div class="practice-start"><div class="practice-preview" aria-hidden="true">{#each [...'READY'] as letter}<span>{letter}</span>{/each}</div><h3>Ready for a new puzzle?</h3><p>{b.length} letters. {b.attempts} guesses. Feedback is automatic.</p><button class="primary" disabled={active} onclick={()=>{void run('new_practice');}}>Start game</button><p class="hint">Use the keyboard or type directly into the board. Hints stay hidden until you ask.</p></div>
+    <div class="practice-start"><div class="practice-preview" aria-hidden="true">{#each [...'READY'] as letter}<span>{letter}</span>{/each}</div><h3>Ready for a new puzzle?</h3><p>{b.length} letters. {b.attempts} guesses. Feedback is automatic.</p><button class="primary" bind:this={practiceStartButton} disabled={active} onclick={()=>{void run('new_practice');}}>Start game</button><p class="hint">Use the keyboard or type directly into the board. Hints stay hidden until you ask.</p></div>
   {:else}
     <div class="wordle-columns" class:instant={mode==='instant'}>
       {#if mode==='instant'}

@@ -7,18 +7,20 @@
     "dev": "vite --host 127.0.0.1",
     "build": "node ../../tools/build-frontend.mjs",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test:browser": "node --test ../../tools/test-wordle-browser.mjs",
     "tauri": "tauri"
   },
   "dependencies": {
-    "@lucide/svelte": "^1.55.0",
-    "@tauri-apps/api": "^2.12.3",
+    "@lucide/svelte": "^1.69.0",
+    "@tauri-apps/api": "^2.12.4",
     "svelte": "^5.57.2"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
-    "@tauri-apps/cli": "^2.12.2",
-    "svelte-check": "^4.7.6",
+    "@tauri-apps/cli": "^2.12.4",
+    "playwright": "1.56.1",
+    "svelte-check": "^4.7.7",
     "typescript": "^6.0.3",
-    "vite": "^8.3.4"
+    "vite": "^8.3.6"
   }
 }
