@@ -59,7 +59,9 @@
     for(const row of rows) [...row.word].forEach((letter,i)=>{const key=letter.toUpperCase(),mark=row.feedback[i];if(mark&&(!out[key]||rank[mark]>rank[out[key]]))out[key]=mark;});
     return out;
   });
+  const boardId = $props.id();
   let boardArea = $state<HTMLDivElement>();
+  const tileId = (row:number,column:number) => `${boardId}-tile-${row}-${column}`;
   let showCandidates = $state(false), setupOpen = $state(false);
   let search = $state(''), sort = $state('frequency'), scrollTop = $state(0), candidateHeight = $state(380);
   let candidateViewport = $state<HTMLDivElement>();
@@ -77,6 +79,7 @@
   $effect(()=>{void filtered;untrack(resetScroll);});
 
   let pendingId=0, pendingMode:Mode='play', pendingClues:string|null=null, pendingAction:WordleCommand['action']='analyze';
+  let practiceStartFocus:Element|null=null;
   let queued:Mode|null=null, poll:ReturnType<typeof setTimeout>, updateTimer:ReturnType<typeof setTimeout>, disposed=false;
   async function savePrefs(){
     prefs.length=b.length;prefs.attempts=b.attempts;prefs.mode=mode;
@@ -107,6 +110,7 @@
       const partial_history=target==='practice'?[]:partialHistory(board);
       const finished=history.some(row=>row.feedback.every(mark=>mark==='green'));
       const command:WordleCommand={mode:target,action,revision:board.revision+1,profile:board.profile,attempts:board.attempts,answers_path:prefs.answers_path,guesses_path:prefs.guesses_path,word:board.draft,request:{length:board.length,attempts_remaining:target==='instant'?board.remaining:finished?0:Math.max(0,board.attempts-history.length-partial_history.length),history,partial_history,constraints:constraints(board,target),offset:0,limit:100}};
+      practiceStartFocus=action==='new_practice'?document.activeElement:null;
       board.revision++;active=true;pendingMode=target;pendingClues=clueKey(board);pendingAction=action;
       pendingId=await bridge.wordleStart(command);await refresh();
     }catch(e){board.error=message(e);active=false;drain();}
@@ -126,7 +130,7 @@
       accept(snapshot,pendingMode,pendingClues);active=snapshot.active;
       if(active)poll=setTimeout(refresh,60);
       else{
-        if(!snapshot.error&&pendingMode==='practice'){const board=boards.practice;board.draft='';board.cursor=0;board.marks=Array(board.length).fill(null);board.ready=false;if(pendingAction==='guess')board.hints=0;if(mode==='practice')focusBoard();}
+        if(!snapshot.error&&pendingMode==='practice'){const board=boards.practice;board.draft='';board.cursor=0;board.marks=Array(board.length).fill(null);board.ready=false;if(pendingAction==='guess')board.hints=0;if(pendingAction==='new_practice'&&mode==='practice')focusBoard(practiceStartFocus);}
         drain();
       }
     }catch(e){boards[pendingMode].error=message(e);active=false;drain();}
@@ -141,17 +145,26 @@
   }
   async function reset(){
     if(active)return;clearTimeout(updateTimer);queued=null;
+    const origin=document.activeElement,targetMode=mode;
     const previous=b;
     boards[mode]={...make(previous.profile),length:previous.length,attempts:previous.attempts,entries:Array(previous.attempts).fill(null),marks:Array(previous.length).fill(null),fixed:'.'.repeat(previous.length),forbidden:Array(previous.length).fill(''),remaining:previous.attempts,revision:previous.revision};
-    showCandidates=false;search='';setupOpen=false;await savePrefs();if(mode!=='practice')await run('analyze');focusBoard();
+    showCandidates=false;search='';setupOpen=false;await savePrefs();if(mode!=='practice')await run('analyze');if(mode===targetMode)focusBoard(origin);
   }
-  function focusBoard(){requestAnimationFrame(()=>boardArea?.focus({preventScroll:true}));}
+  function focusBoard(origin:Element|null=document.activeElement){
+    const targetMode=mode;
+    requestAnimationFrame(()=>{
+      // Starting Practice disables and then removes its button, leaving body
+      // focused. Restore the board only if no other control has taken focus.
+      if(visible&&mode===targetMode&&mode!=='instant'&&!document.querySelector('dialog[open]')&&(document.activeElement===origin||document.activeElement===document.body))boardArea?.focus({preventScroll:true});
+    });
+  }
   function changeDraft(value:string){b.draft=value.toUpperCase();b.marks=Array(b.length).fill(null);b.ready=false;b.error='';if(mode!=='practice')changed();}
   function typeKey(key:string){
     if(mode==='instant'||(mode==='practice'&&(b.finished||!b.started||active)))return;
     if(key==='ENTER'){void submit();return;}
+    if(key==='HOME'||key==='END'){b.cursor=key==='HOME'?0:b.length-1;return;}
     if(key==='LEFT'||key==='RIGHT'){b.cursor=Math.max(0,Math.min(b.length-1,(b.cursor??b.length)+(key==='LEFT'?-1:1)));return;}
-    if((key==='UP'||key==='DOWN')&&mode==='play'){selectRow(Math.max(0,Math.min(b.attempts-1,b.activeRow+(key==='UP'?-1:1))));return;}
+    if((key==='UP'||key==='DOWN')&&mode==='play'){const column=b.cursor??0;selectRow(Math.max(0,Math.min(b.attempts-1,b.activeRow+(key==='UP'?-1:1))));b.cursor=column;return;}
     if(key==='BACKSPACE'){
       const last=b.draft.trimEnd().length-1;
       if(last>=0){changeDraft(b.draft.slice(0,last).trimEnd());b.cursor=last;}
@@ -222,13 +235,28 @@
   }
   function setFixed(index:number,value:string){const ch=value.replace(/[^a-z]/gi,'').slice(-1).toLowerCase()||'.';b.fixed=b.fixed.slice(0,index)+ch+b.fixed.slice(index+1);changed();}
   function keydown(event:KeyboardEvent){
-    if(!visible||mode==='instant'||event.ctrlKey||event.altKey||event.metaKey||document.querySelector('dialog[open]'))return;
-    const target=event.target as HTMLElement;if(target.closest('input,textarea,select,summary'))return;
-    if(event.key==='Enter'&&target.closest('button'))return;
-    const aliases:Record<string,string>={Enter:'ENTER',Backspace:'BACKSPACE',Delete:'DELETE',ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN'};
-    if(aliases[event.key]||/^[a-z]$/i.test(event.key)){event.preventDefault();typeKey(aliases[event.key]??event.key);}
+    // The grid owns physical puzzle input. Controls elsewhere keep their native
+    // keys, including letter shortcuts, scrolling, and Enter/Space activation.
+    if(!visible||mode==='instant'||event.defaultPrevented||event.isComposing||event.ctrlKey||event.altKey||event.metaKey||document.querySelector('dialog[open]'))return;
+    if(!boardArea||!boardArea.contains(event.target as Node))return;
+    if(mode==='practice'&&(b.finished||!b.started||active))return;
+    const aliases:Record<string,string>={Enter:'ENTER',Backspace:'BACKSPACE',Delete:'DELETE',ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN',Home:'HOME',End:'END'};
+    if(event.key===' '&&mode==='play'){
+      event.preventDefault();
+      if(validWord(b)){
+        const column=b.cursor??0,index=marks.indexOf(b.marks[column]);
+        setFeedback(marks[(index+(event.shiftKey?-1:1)+marks.length)%marks.length]);
+      }
+      return;
+    }
+    if(aliases[event.key]||/^[a-z]$/i.test(event.key)){
+      event.preventDefault();typeKey(aliases[event.key]??event.key);
+      if(['LEFT','RIGHT','UP','DOWN','HOME','END'].includes(aliases[event.key])){
+        requestAnimationFrame(()=>boardArea?.querySelector(`[id="${tileId(mode==='practice'?b.history.length:b.activeRow,b.cursor??0)}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'}));
+      }
+    }
   }
-  onMount(()=>{document.addEventListener('keydown',keydown);return()=>{disposed=true;clearTimeout(poll);clearTimeout(updateTimer);document.removeEventListener('keydown',keydown);};});
+  onMount(()=>()=>{disposed=true;clearTimeout(poll);clearTimeout(updateTimer);});
   let opened=false;
   $effect(()=>{if(visible&&!opened){opened=true;untrack(()=>{if(mode!=='practice')void run('analyze');});}});
 </script>
@@ -261,7 +289,7 @@
   {#if b.profile==='custom'}<div class="wordle-custom"><label>Answer list<div class="path-field"><input readonly value={prefs.answers_path}/><button disabled={active} onclick={()=>choose('answers_path')}>Choose…</button></div></label><label>Allowed guesses <span>(optional)</span><div class="path-field"><input readonly value={prefs.guesses_path}/><button disabled={active} onclick={()=>choose('guesses_path')}>Choose…</button></div></label></div>{/if}
   {#if b.error}<div class="error" role="alert">{b.error}</div>{/if}
   {#if mode==='practice'&&!b.started}
-    <div class="practice-start"><div class="practice-preview" aria-hidden="true">{#each [...'READY'] as letter}<span>{letter}</span>{/each}</div><h3>Ready for a new puzzle?</h3><p>{b.length} letters. {b.attempts} guesses. Feedback is automatic.</p><button class="primary" disabled={active} onclick={()=>{void run('new_practice');focusBoard();}}>Start game</button><p class="hint">Use the keyboard or type directly into the board. Hints stay hidden until you ask.</p></div>
+    <div class="practice-start"><div class="practice-preview" aria-hidden="true">{#each [...'READY'] as letter}<span>{letter}</span>{/each}</div><h3>Ready for a new puzzle?</h3><p>{b.length} letters. {b.attempts} guesses. Feedback is automatic.</p><button class="primary" disabled={active} onclick={()=>{void run('new_practice');}}>Start game</button><p class="hint">Use the keyboard or type directly into the board. Hints stay hidden until you ask.</p></div>
   {:else}
     <div class="wordle-columns" class:instant={mode==='instant'}>
       {#if mode==='instant'}
@@ -282,17 +310,17 @@
         <div class="wordle-game"><div class="board-heading"><h3>Your board</h3><span class="muted">{mode==='practice'?b.history.length:effectiveRows(b).length} / {b.attempts} guesses</span></div>
           <div class="board-stage" class:practice={mode==='practice'} style={`--board-width:calc(${b.length} * var(--tile-size) + ${(b.length-1)*6}px)`}>
             {#if mode==='play'}<div class="feedback-palette" role="group" aria-label="Feedback for selected tile"><span class="hint">Feedback</span>{#each marks as mark}<button class={mark??'unset'} aria-pressed={b.marks[b.cursor??0]===mark} disabled={!validWord(b)} onclick={()=>setFeedback(mark)}>{mark==='green'?'● Green':mark==='yellow'?'◆ Yellow':mark==='gray'?'× Gray':'Unset'}</button>{/each}</div>{/if}
-            <div class="wordle-board" role="grid" aria-rowcount={b.attempts} aria-colcount={b.length} tabindex="0" bind:this={boardArea} aria-label="Wordle board. Type letters, Delete clears the selected tile, Backspace removes the last letter, Enter finishes the row.">
+            <div class="wordle-board" role="grid" aria-rowcount={b.attempts} aria-colcount={b.length} tabindex="0" bind:this={boardArea} onkeydown={keydown} aria-activedescendant={mode==='practice'&&b.finished?undefined:tileId(mode==='practice'?b.history.length:b.activeRow,b.cursor??0)} aria-label={`Wordle board. Type letters, Delete clears the selected tile, Backspace removes the last letter, Enter ${mode==='practice'?'submits a guess':'finishes the row'}. Left and Right select tiles; Home and End select the first and last tile.${mode==='play'?' Up and Down select rows. Space cycles feedback; Shift+Space cycles backward.':''}`}>
               {#each Array.from({length:b.attempts},(_,i)=>i) as rowIndex}
                 {@const old=mode==='practice'?b.history[rowIndex]:b.entries[rowIndex]}{@const draft=mode==='practice'?rowIndex===b.history.length&&!b.finished:rowIndex===b.activeRow}
                 <div class="wordle-row" role="row" class:active-row={draft} style={`--letters:${b.length}`}>
                   {#each Array.from({length:b.length},(_,i)=>i) as i}{@const letter=draft?b.draft[i]?.trim():old?.word[i]}{@const mark=draft?b.marks[i]:old?.feedback[i]}
-                    <button role="gridcell" aria-selected={draft&&i===b.cursor} class={`wordle-tile ${mark??''}`} class:selected={draft&&i===b.cursor} disabled={mode==='practice'&&(!draft||active||b.finished)} aria-label={`Row ${rowIndex+1}, position ${i+1}: ${letter?.toUpperCase()||'empty'}, ${mark??'unset'}`} onclick={()=>tileClick(rowIndex,i)} oncontextmenu={event=>{event.preventDefault();if(mode==='play')tileClick(rowIndex,i,-1);}}>{letter?.toUpperCase()??''}<span aria-hidden="true">{mark==='green'?'●':mark==='yellow'?'◆':mark==='gray'?'×':''}</span></button>
+                    <button role="gridcell" id={tileId(rowIndex,i)} tabindex="-1" aria-selected={draft&&i===(b.cursor??0)} class={`wordle-tile ${mark??''}`} class:selected={draft&&i===(b.cursor??0)} disabled={mode==='practice'&&(!draft||active||b.finished)} aria-label={`Row ${rowIndex+1}, position ${i+1}: ${letter?.toUpperCase()||'empty'}, ${mark??'unset'}`} onclick={()=>tileClick(rowIndex,i)} oncontextmenu={event=>{event.preventDefault();if(mode==='play')tileClick(rowIndex,i,-1);}}>{letter?.toUpperCase()??''}<span aria-hidden="true">{mark==='green'?'●':mark==='yellow'?'◆':mark==='gray'?'×':''}</span></button>
                   {/each}
                 </div>
               {/each}
             </div>
-            <p class="board-help" aria-live="polite">{mode==='practice'?(b.finished?`Answer: ${b.revealed?.toUpperCase()??''}`:'Type a word. Press Enter to guess.'):b.ready?`${marked} of ${b.length} marked. Feedback is live; click another row to continue.`:'Type into the board, mark known feedback, and select any row. Changes are saved.'}</p>
+            <p class="board-help" aria-live="polite">{mode==='practice'?(b.finished?`Answer: ${b.revealed?.toUpperCase()??''}`:'Type a word. Press Enter to guess.'):b.ready?`${marked} of ${b.length} marked. Feedback is live; use arrows to select tiles and Space to cycle feedback.`:'Focus the board to type. Use arrows to select tiles and Space to cycle feedback. Changes are saved.'}</p>
             <div class="wordle-keyboard" role="group" aria-label="On-screen keyboard">{#each ['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'] as row}<div>{#if row==='ZXCVBNM'}<button onclick={()=>{typeKey('ENTER');focusBoard();}}>Enter</button>{/if}{#each [...row] as key}<button class={keyMarks[key]??''} onclick={()=>{typeKey(key);focusBoard();}} aria-label={`${key}${keyMarks[key]?`, ${keyMarks[key]}`:''}`}>{key}</button>{/each}{#if row==='ZXCVBNM'}<button onclick={()=>{typeKey('BACKSPACE');focusBoard();}} aria-label="Backspace">⌫</button>{/if}</div>{/each}</div>
             {#if mode==='play'}<div class="board-actions">{#if b.draft}<button onclick={removeRow}>Clear row</button>{/if}<button disabled={b.activeRow===0} onclick={()=>selectRow(b.activeRow-1)}>Previous row</button><button disabled={b.activeRow===b.attempts-1} onclick={()=>selectRow(b.activeRow+1)}>Next row</button></div>{/if}
           </div>
