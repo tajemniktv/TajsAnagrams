@@ -13,6 +13,11 @@ owning Tauri/cookie/plist semver ranges.
 The current lockfile refreshes these packages within those ranges.
 The desktop CI job builds and tests on the declared minimum toolchain.
 
+The November 8 follow-up updates transitive `rustls-webpki` from 0.103.15 to
+0.103.16 for RUSTSEC-2026-0382 (distrusted intermediate certificate acceptance),
+and replaces yanked `clipboard-win` 5.4.1 with 5.4.3. The Dependabot merges alone
+had left the webpki advisory failing. No advisory exemptions were added.
+
 The frontend uses Vite 8 and its matching Svelte plugin 7. TypeScript is kept on
 6.0.3, the latest release supported by svelte-check's normal mode. TypeScript 7
 currently requires a second TypeScript installation and opt-in native checking;

@@ -5,14 +5,22 @@ const ts=require('../apps/desktop/node_modules/typescript');
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};}
 const flush=()=>new Promise(setImmediate);
 function harness(mode='play'){
-  const commands=[],statuses=[],cancelled=[],timers=new Map();let timerId=0;
+  const commands=[],statuses=[],cancelled=[],timers=new Map(),frames=[];let timerId=0;
+  const document={activeElement:null,body:{control:'body'},querySelector:()=>null};
+  const boardArea={contains:target=>target===boardArea||target?.gridCell===true,focus(){document.activeElement=boardArea;},querySelector:()=>null};
+  const props=Object.assign(()=>({settings:{wordle:preferences},visible:true,frequencyAvailable:false}),{id:()=> 'test-wordle'});
   const preferences={length:5,attempts:6,mode,play_profile:'broad',instant_profile:'broad',practice_profile:'broad',answers_path:'',guesses_path:''};
   const source=fs.readFileSync(path.join(__dirname,'../apps/desktop/src/Wordle.svelte'),'utf8').split('<script lang="ts">')[1].split('</script>')[0].replace(/^\s*import .*;$/gm,'');
   const state=Object.assign(x=>x,{snapshot:structuredClone}),derived=Object.assign(x=>x,{by:fn=>fn()});
-  const context=vm.createContext({$state:state,$derived:derived,$bindable:x=>x,$props:()=>({settings:{wordle:preferences},visible:true,frequencyAvailable:false}),$effect:()=>{},untrack:fn=>fn(),onMount:()=>{},structuredClone,document:{querySelector:()=>null},requestAnimationFrame:fn=>fn(),setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),bridge:{wordleStart:async command=>{commands.push(structuredClone(command));statuses.push(deferred());return commands.length;},wordleStatus:()=>statuses.at(-1).promise,wordleCancel:async id=>{cancelled.push(id);},wordlePreferences:async()=>{}},message:String});
-  const expose=`globalThis.api={accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,effectiveRows,partialHistory,missingFeedback,tileClick,setFeedback,editRow,selectRow,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
+  const context=vm.createContext({$state:state,$derived:derived,$bindable:x=>x,$props:props,$effect:()=>{},untrack:fn=>fn(),onMount:()=>{},structuredClone,document,requestAnimationFrame:fn=>frames.push(fn),setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),bridge:{wordleStart:async command=>{commands.push(structuredClone(command));statuses.push(deferred());return commands.length;},wordleStatus:()=>statuses.at(-1).promise,wordleCancel:async id=>{cancelled.push(id);},wordlePreferences:async()=>{}},message:String});
+  const expose=`globalThis.api={attachBoard(element){boardArea=element},setActive(value){active=value},setVisible(value){visible=value},setMode(value){mode=value;b=boards[mode]},focusBoard,accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,effectiveRows,partialHistory,missingFeedback,tileClick,setFeedback,editRow,selectRow,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},attachStart(element){practiceStartButton=element},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
   vm.runInContext(ts.transpileModule(source+'\n'+expose,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context);
-  return {api:context.api,commands,statuses,cancelled,
+  context.api.attachBoard(boardArea);
+  return {api:context.api,commands,statuses,cancelled,document,boardArea,
+    fail(error='Practice failed',i=commands.length-1){statuses[i].reject(new Error(error));},
+    failStart(){context.bridge.wordleStart=async()=>{await flush();throw new Error('Start failed');};},
+    frame(){while(frames.length)frames.shift()();},
+    key(key,options={}){const event={key,target:boardArea,defaultPrevented:false,preventDefault(){this.defaultPrevented=true;},...options};context.api.keydown(event);return event;},
     update(){for(const [id,t] of [...timers])if(t.ms===90){timers.delete(id);t.fn();}},
     complete(data={},i=commands.length-1){statuses[i].resolve({id:i+1,revision:commands[i].revision,active:false,history:[],finished:false,error:null,...data});}};
 }
@@ -141,15 +149,133 @@ test('full candidate search and sorts cover words beyond the old 100-result page
   assert.equal(h.api.view('apple','frequency')[0],'apple');assert.equal(h.api.view('','frequency').length,153);
   assert.equal(h.api.view('','az')[0],'aaaaa');assert.equal(h.api.view('','za')[0],'crane');assert.equal(h.api.view('','distinct')[0],'crane');assert.equal(words[0],'aaaaa');
 });
-test('Instant Solver does not capture letters intended for its constraint form',()=>{
-  const h=harness('instant');let prevented=false;h.api.keydown({key:'a',target:{closest:()=>false},preventDefault(){prevented=true;}});
-  assert.equal(prevented,false);assert.equal(h.api.board.draft,'');
+test('physical keys only edit a focused grid in Play Along and Practice',()=>{
+  for(const mode of ['play','practice']){
+    const h=harness(mode);h.api.board.started=true;
+    for(const control of ['button','summary','input','textarea','select','a','scroll region','contenteditable','page body']){
+      const before=JSON.stringify(h.api.board);
+      for(const key of ['a','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Backspace','Delete','Enter',' ']){
+        assert.equal(h.key(key,{target:{control}}).defaultPrevented,false,`${mode}: ${control} / ${key}`);
+      }
+      assert.equal(JSON.stringify(h.api.board),before);
+    }
+    assert.equal(h.key('a').defaultPrevented,true);assert.equal(h.api.board.draft,'A');
+  }
 });
-test('keyboard arrows and Delete edit the board; Enter on disclosures keeps native behavior',()=>{
-  const h=harness();enterWord(h);let prevented=false;
-  h.api.keydown({key:'ArrowLeft',target:{closest:()=>false},preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(h.api.board.cursor,4);
-  h.api.keydown({key:'Delete',target:{closest:()=>false},preventDefault(){}});assert.equal(h.api.board.draft,'APPL');
-  prevented=false;h.api.keydown({key:'Enter',target:{closest:s=>s==='input,textarea,select,summary'},preventDefault(){prevented=true;}});assert.equal(prevented,false);
+test('Instant Solver, hidden boards, dialogs, modifiers and composition keep native keys',()=>{
+  const h=harness();
+  for(const options of [{ctrlKey:true},{altKey:true},{metaKey:true},{isComposing:true},{defaultPrevented:true}]){
+    const event=h.key('a',options);assert.equal(event.defaultPrevented,options.defaultPrevented??false);assert.equal(h.api.board.draft,'');
+  }
+  h.api.setVisible(false);assert.equal(h.key('a').defaultPrevented,false);h.api.setVisible(true);
+  h.document.querySelector=()=>({open:true});assert.equal(h.key('a').defaultPrevented,false);h.document.querySelector=()=>null;
+  h.api.setMode('instant');assert.equal(h.key('a').defaultPrevented,false);assert.equal(h.api.board.draft,'');
+  h.api.setMode('play');h.key('A',{shiftKey:true});assert.equal(h.api.board.draft,'A');
+  assert.equal(h.key('Tab').defaultPrevented,false);assert.equal(h.key('Escape').defaultPrevented,false);
+});
+test('grid navigation preserves column, drafts and partial feedback on a large board',()=>{
+  const h=harness();h.api.board.length=8;h.api.board.attempts=12;h.api.board.marks=Array(8).fill(null);
+  enterWord(h,'ABCDEFGH');h.key('End');assert.equal(h.api.board.cursor,7);
+  h.key('ArrowRight');assert.equal(h.api.board.cursor,7);
+  h.key(' ');assert.equal(h.api.board.marks[7],'gray');
+  for(let row=1;row<12;row++){h.key('ArrowDown');assert.equal(h.api.board.activeRow,row);assert.equal(h.api.board.cursor,7);}
+  h.key('ArrowDown');assert.equal(h.api.board.activeRow,11);
+  for(let row=10;row>=0;row--)h.key('ArrowUp');
+  assert.equal(h.api.board.draft,'ABCDEFGH');assert.equal(h.api.board.marks[7],'gray');
+  assert.equal(h.api.board.marks[0],null);assert.equal(h.api.partialHistory(h.api.board).length,1);
+  h.key('Home');h.key('ArrowLeft');assert.equal(h.api.board.cursor,0);
+  h.key('ArrowRight');h.key('Delete');assert.equal(h.api.board.draft,'A CDEFGH');
+  h.key('X');assert.equal(h.api.board.draft,'AXCDEFGH');assert.ok(h.api.board.marks.every(mark=>mark===null));
+});
+test('Space cycles feedback at the selected cell, Shift+Space reverses and Enter finishes the row',async()=>{
+  const h=harness();enterWord(h);h.key('Home');h.key('ArrowRight');
+  for(const expected of ['gray','yellow','green',null]){assert.equal(h.key(' ').defaultPrevented,true);assert.equal(h.api.board.marks[1],expected);}
+  h.key(' ',{shiftKey:true});assert.equal(h.api.board.marks[1],'green');assert.equal(h.api.board.marks[0],null);
+  h.key('Enter');await flush();assert.equal(h.api.board.activeRow,1);assert.equal(h.api.board.entries[0].feedback[1],'green');
+  h.key(' ');assert.ok(h.api.board.marks.every(mark=>mark===null));
+});
+test('Practice keeps automatic feedback and ignores input before start, while busy and after finish',()=>{
+  const h=harness('practice');assert.equal(h.key('a').defaultPrevented,false);
+  h.api.board.started=true;enterWord(h);const before=JSON.stringify(h.api.board);
+  assert.equal(h.key(' ').defaultPrevented,false);h.key('ArrowUp');assert.equal(JSON.stringify(h.api.board),before);
+  h.api.setActive(true);assert.equal(h.key('Delete').defaultPrevented,false);h.api.setActive(false);
+  h.api.board.finished=true;assert.equal(h.key('Delete').defaultPrevented,false);
+});
+test('grid wiring binds the keyboard target and exposes cells without a global listener',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../apps/desktop/src/Wordle.svelte'),'utf8');
+  const {parse}=require('../apps/desktop/node_modules/svelte/compiler');
+  const ast=parse(source,{modern:true});let grid,cell;
+  function walk(node){
+    if(!node||typeof node!=='object')return;
+    if(node.type==='RegularElement'){
+      const role=node.attributes.find(a=>a.name==='role')?.value?.[0]?.data;
+      if(role==='grid')grid=node;if(role==='gridcell')cell=node;
+    }
+    for(const value of Object.values(node)){if(Array.isArray(value))value.forEach(walk);else if(value&&typeof value==='object')walk(value);}
+  }
+  walk(ast.fragment);
+  const attr=(node,name)=>node.attributes.find(a=>a.name===name);
+  assert.equal(attr(grid,'tabindex').value[0].data,'0');
+  assert.equal(attr(grid,'this').type,'BindDirective');assert.equal(attr(grid,'this').expression.name,'boardArea');
+  assert.equal(attr(grid,'onkeydown').value.expression.name,'keydown');
+  assert.ok(attr(grid,'aria-activedescendant'));
+  assert.equal(attr(cell,'tabindex').value[0].data,'-1');
+  assert.equal(attr(cell,'id').value.expression.callee.name,'tileId');
+  assert.doesNotMatch(source,/document\.addEventListener\('keydown'/);
+});
+test('keydown from a tile inside the grid edits the board',()=>{
+  const h=harness();assert.equal(h.key('a',{target:{gridCell:true}}).defaultPrevented,true);
+  assert.equal(h.api.board.draft,'A');
+});
+test('mode switches preserve separate drafts; typing elsewhere does not edit either board',()=>{
+  const h=harness();enterWord(h);h.key('Home');h.key(' ');
+  h.api.setMode('practice');h.api.board.started=true;h.key('s');
+  h.api.setMode('instant');assert.equal(h.key('x',{target:{control:'input'}}).defaultPrevented,false);
+  h.api.setMode('play');assert.equal(h.api.board.draft,'APPLE');assert.equal(h.api.board.marks[0],'gray');
+  h.api.setMode('practice');assert.equal(h.api.board.draft,'S');
+});
+test('Practice guess completion does not pull focus from another control',async()=>{
+  const h=harness('practice');h.api.board.started=true;enterWord(h);h.document.activeElement={control:'hint button'};
+  const pending=h.api.submit();await flush();h.complete({analysis:{candidate_count:2}});await pending;h.frame();
+  assert.equal(h.api.board.draft,'');assert.equal(h.api.board.analysis.candidate_count,2);
+  assert.equal(h.document.activeElement.control,'hint button');
+});
+test('Practice start restores focus lost by disabling its button, but respects a new focused control',async()=>{
+  for(const moved of [false,true]){
+    const h=harness('practice'),start={control:'start button'},other={control:'mode button'};
+    h.document.activeElement=start;const pending=h.api.run('new_practice');await flush();
+    h.document.activeElement=moved?other:h.document.body;
+    h.complete({analysis:{candidate_count:2}});await pending;h.frame();
+    assert.equal(h.document.activeElement,moved?other:h.boardArea);
+  }
+});
+test('failed Practice startup restores Start focus for status errors and IPC exceptions',async()=>{
+  for(const failure of ['snapshot','start','status'])for(const moved of [false,true]){
+    const h=harness('practice'),start={disabled:false,focus(){h.document.activeElement=start;}},other={control:'mode button'};
+    h.api.attachStart(start);h.document.activeElement=start;
+    if(failure==='start')h.failStart();
+    const pending=h.api.run('new_practice');await flush();
+    h.document.activeElement=moved?other:h.document.body;
+    if(failure==='snapshot')h.complete({error:'Practice failed'});
+    if(failure==='status')h.fail();
+    await pending;h.frame();
+    assert.equal(h.api.active,false);assert.equal(h.api.board.started,false);assert.match(h.api.board.error,/failed/);
+    assert.equal(h.document.activeElement,moved?other:start,`${failure}, moved=${moved}`);
+  }
+});
+test('failed Practice focus recovery respects mode, visibility, dialogs, disposal and Start binding',async()=>{
+  for(const change of [h=>h.api.setMode('play'),h=>h.api.setVisible(false),h=>h.document.querySelector=()=>({open:true}),h=>h.api.dispose(),h=>h.api.attachStart(undefined),h=>h.start.disabled=true]){
+    const h=harness('practice');h.start={disabled:false,focus(){h.document.activeElement=h.start;}};
+    h.api.attachStart(h.start);h.document.activeElement=h.start;
+    const pending=h.api.run('new_practice');await flush();h.document.activeElement=h.document.body;
+    h.complete({error:'Practice failed'});await pending;change(h);h.frame();
+    assert.equal(h.document.activeElement,h.document.body);
+  }
+});
+test('scheduled board focus never crosses a mode switch, dialog, hidden view or newly focused control',()=>{
+  for(const change of [h=>h.api.setMode('practice'),h=>h.api.setVisible(false),h=>h.document.querySelector=()=>({open:true}),h=>h.document.activeElement={control:'another button'}]){
+    const h=harness();h.api.focusBoard();change(h);const before=h.document.activeElement;h.frame();assert.equal(h.document.activeElement,before);
+  }
 });
 test('late analysis cannot replace an edited revision or another mode',()=>{
   const h=harness();h.api.board.revision=3;h.api.accept({revision:2,analysis:{candidate_count:99},error:'stale'},'play');
