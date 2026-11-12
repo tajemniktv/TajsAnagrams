@@ -3799,7 +3799,7 @@ dependencies = [
  "anagram-data",
  "arboard",
  "flate2",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "hex",
  "reqwest",
  "rfd",
