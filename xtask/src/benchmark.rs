@@ -236,10 +236,7 @@ fn metadata(a: &Args, cases: &Cases, command: &[String]) -> Result<Value> {
     add("unigrams", Path::new(&command[3]))?;
     add(
         "cases",
-        Path::new(
-            a.get("workloads")
-                .unwrap_or(a.value("cases", "tests/quality/cases.v1.json")),
-        ),
+        Path::new(a.get("workloads").unwrap_or(crate::evaluation_cases(a)?)),
     )?;
     add(
         "desktop_defaults_source",
@@ -584,6 +581,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "before",
             "mode",
             "cases",
+            "profile",
             "case-ids",
             "dictionary",
             "dictionaries",
@@ -594,12 +592,12 @@ pub fn command(args: &[String]) -> Result<()> {
             "model",
             "candidate-budget",
             "strategy",
+            "strategies",
             "timeout-ms",
             "guard-ms",
             "repeats",
             "seed",
             "output",
-            "strategies",
             "candidate-budgets",
             "ordering-probe",
             "workloads",
@@ -623,6 +621,7 @@ pub fn command(args: &[String]) -> Result<()> {
             "cases",
             "candidate-budget",
             "strategy",
+            "strategies",
             "shuffle-input",
             "stages",
             "mode",
@@ -692,7 +691,7 @@ pub fn command(args: &[String]) -> Result<()> {
         }
         cases
     } else {
-        quality::load_cases(a.value("cases", "tests/quality/cases.v1.json"))?
+        quality::load_cases(crate::evaluation_cases(&a)?)?
     };
     if a.has("case-ids") {
         let ids = list(&a, "case-ids", "");
@@ -713,6 +712,11 @@ pub fn command(args: &[String]) -> Result<()> {
         command[2] = path.clone();
     }
     let mut manifest = metadata(&a, &cases, &command)?;
+    manifest["evaluation_profile"] = json!(if a.has("workloads") {
+        "explicit_workloads"
+    } else {
+        a.value("profile", if a.has("cases") { "custom" } else { "smoke" })
+    });
     if !dictionaries.is_empty() {
         manifest["dictionary_variants"] = json!(
             dictionaries
@@ -735,6 +739,23 @@ pub fn command(args: &[String]) -> Result<()> {
     let mut file = File::create(&output)?;
     let mut records = vec![];
     let mut rng = Rng::new(a.number("seed", 13)?);
+    if a.has("strategy") && a.has("strategies") {
+        return Err("Choose --strategy or --strategies".into());
+    }
+    let strategies = if a.has("workloads") {
+        vec!["from_workload".to_owned()]
+    } else {
+        list(&a, "strategies", a.value("strategy", "prefix"))
+    };
+    if strategies.is_empty()
+        || strategies.iter().collect::<BTreeSet<_>>().len() != strategies.len()
+        || (!a.has("workloads")
+            && strategies
+                .iter()
+                .any(|s| !["prefix", "diverse"].contains(&s.as_str())))
+    {
+        return Err("Strategies must be unique prefix/diverse treatments".into());
+    }
     let mut requests = BTreeMap::new();
     for c in cases.values() {
         if let Some(request) = overrides.get(&c.id) {
@@ -762,6 +783,10 @@ pub fn command(args: &[String]) -> Result<()> {
         );
     }
     manifest["requests"] = json!(requests);
+    manifest["strategies"] = json!(strategies);
+    manifest["strategy_application"] = json!(
+        "Each scheduled treatment overrides only generation.strategy; exact requests are retained in every capture. Treatments/trials/cases are jointly shuffled; each gets a separate empty/reuse cache."
+    );
     manifest["timeout_ms"] = json!(timeout);
     manifest["guard_ms"] = json!(guard.as_millis());
     manifest["seed"] = json!(a.number("seed", 13)?);
@@ -786,12 +811,22 @@ pub fn command(args: &[String]) -> Result<()> {
     let mut schedule = vec![];
     for trial in 0..repeats {
         for c in cases.values() {
-            schedule.push((c, trial));
+            for strategy in &strategies {
+                schedule.push((c, trial, strategy));
+            }
         }
     }
     rng.shuffle(&mut schedule);
-    for (c, trial) in schedule {
-        let req = &requests[&c.id];
+    for (c, trial, strategy) in schedule {
+        let mut request = requests[&c.id].clone();
+        if !a.has("workloads") {
+            if mode == "generate" {
+                request["strategy"] = json!(strategy);
+            } else {
+                request["generation"]["strategy"] = json!(strategy);
+            }
+        }
+        let req = &request;
         let mut variants = if !dictionaries.is_empty() {
             dictionaries.iter().map(|(id, _, _)| id.as_str()).collect()
         } else if a.has("before") {
@@ -806,7 +841,7 @@ pub fn command(args: &[String]) -> Result<()> {
             let cache = cache_root.path().join(format!(
                 "{}-{trial}-{}.sqlite",
                 hex::encode(sha_prefix(&c.id)),
-                hex::encode(sha_prefix(variant))
+                hex::encode(sha_prefix(&format!("{variant}-{strategy}")))
             ));
             let mut cmd = command.clone();
             let dictionary = dictionaries.iter().find(|(id, _, _)| id == variant);

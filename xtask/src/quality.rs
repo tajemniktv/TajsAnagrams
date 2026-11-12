@@ -921,6 +921,7 @@ pub fn command(args: &[String]) -> Result<()> {
         &[
             "runs",
             "cases",
+            "profile",
             "ranking",
             "preferences",
             "usefulness",
@@ -931,7 +932,8 @@ pub fn command(args: &[String]) -> Result<()> {
         ],
         &[],
     )?;
-    let cases = load_cases(a.value("cases", "tests/quality/cases.v1.json"))?;
+    let cases_path = crate::evaluation_cases(&a)?;
+    let cases = load_cases(cases_path)?;
     if let Some(path) = a.get("stages") {
         if a.has("runs") {
             return Err("Choose --stages or --runs".into());
@@ -958,6 +960,7 @@ pub fn command(args: &[String]) -> Result<()> {
         .map(|p| labels(Some(p), "judgments", &cases))
         .transpose()?;
     let mut out = report(&runs, &cases, &rankings, &prefs, useful.as_deref())?;
+    out["evaluation"] = json!({"profile":a.value("profile",if a.has("cases"){"custom"}else{"smoke"}),"cases":cases_path,"sha256":crate::digest(cases_path)?,"case_count":cases.len()});
     if let Some(path) = a.get("model-judgments") {
         out["model_standalone_usefulness"] =
             accepted_model_reviews(path, &runs, &cases, &rankings)?;

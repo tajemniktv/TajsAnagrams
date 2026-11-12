@@ -69,6 +69,17 @@ fn run(command: &mut Command) -> Result<()> {
 
 #[derive(Default)]
 struct Args(BTreeMap<String, String>);
+fn evaluation_cases(a: &Args) -> Result<&str> {
+    if a.has("profile") && a.has("cases") {
+        return Err("Choose --profile or --cases, not both".into());
+    }
+    match a.get("profile") {
+        Some("smoke") => Ok("tests/quality/cases.v1.json"),
+        Some("development") => Ok("tests/quality/cases.v4.json"),
+        Some(_) => Err("Evaluation profile must be smoke or development".into()),
+        None => Ok(a.value("cases", "tests/quality/cases.v1.json")),
+    }
+}
 impl Args {
     fn parse(args: &[String], options: &[&str], switches: &[&str]) -> Result<Self> {
         let mut values = BTreeMap::new();
@@ -126,6 +137,8 @@ fn check() -> Result<()> {
         "-p",
         "anagram-cli",
         "-p",
+        "anagram-data",
+        "-p",
         "xtask",
     ]))?;
     run(Command::new("cargo").args([
@@ -135,6 +148,8 @@ fn check() -> Result<()> {
         "anagram-core",
         "-p",
         "anagram-cli",
+        "-p",
+        "anagram-data",
         "-p",
         "xtask",
         "--all-targets",
