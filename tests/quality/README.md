@@ -326,6 +326,17 @@ and equal-workload performance evidence. Historical migration JSON is recoverabl
 through the `tests/reference` archive index; the old Python implementation/tests/runners are local-only
 archived source, not executed by current checks.
 
+## Evaluation profiles
+
+`cargo xtask benchmark --profile smoke` selects the historical v1 cases;
+`--profile development` selects the exposed 50-bag v4 set. `cargo xtask quality`
+accepts the same profiles. An explicit `--cases FILE` is a custom profile and
+cannot be combined with `--profile`. Reports record manifest identity and case
+count. Omitting both preserves the small smoke default for compatibility.
+
+Development captures are useful for reproducible regression diagnosis. They do
+not satisfy the independent collection and contextual judging requirements below.
+
 ## Next native baseline protocol
 
 Status: **designed, not yet collected/frozen or accepted as a quality gate**.

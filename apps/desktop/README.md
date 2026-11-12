@@ -6,6 +6,15 @@ Windows WebView2 Runtime is required (present on the development PC).
 
 Use Ctrl+Plus / Ctrl+Minus to adjust text/UI zoom and Ctrl+0 to reset it.
 
+General Settings contains appearance and everyday preferences. Data offers local
+setup, validation and repair. Enable Developer tools for custom source paths,
+raw limits, models, diagnostics and evidence review. Search presets change effort
+without changing allowed word counts, lengths or frequency thresholds.
+
+Anagram phrases are grouped by word count. Copy a phrase, pin up to ten phrases
+for comparison during the current run, or use Refine to require/exclude a word
+on the next search. Scores are secondary and are not cross-group probabilities.
+
 ## Wordle assistant
 
 Select **Wordle** for Play Along, Instant Solver, or Practice. Lengths 4–8 and
@@ -42,11 +51,17 @@ Recommendations distinguish strategic probes from possible answers. Analysis
 shows its vocabulary fingerprint and equal-answer probability assumption.
 Heuristic rankings are not optimality claims. Completed exact search optimizes
 success within remaining attempts, then penalized expected cost, for the selected
-profile. Interactive search has a soft latency target and a two-second ceiling;
+profile. Interactive search has a soft latency target and a two-second local
+recommendation budget, checked between scoring passes; preparation and a full
+guess/answer pass may overrun it. A separate native operation deadline applies;
 unfinished exact searches resume progressively wider heuristic ranking. The seed
 size is a scheduling increment. Profiles do not claim
-official Wordle vocabulary coverage. Preferences persist; puzzle progress survives
-tab/mode switching within the app session only. See
+official Wordle vocabulary coverage. Play Along and Instant Solver resume across
+restarts on this PC. The last vocabulary fingerprint is verified before updating
+recommendations; changed data requires an explicit recheck or new puzzle. Undo
+keeps up to fifty recent edits per mode during the current run. Corrupt or
+incompatible saved drafts show a recoverable notice. Practice is session-only,
+and its hidden answer remains native. See
 [native validation and benchmarks](../../tests/wordle/README.md).
 
 ## Build and run
@@ -60,6 +75,8 @@ in persistent project-root `build` for every build, including successful install
 Local dev/test and release profiles enable incremental compilation; CI disables
 codegen incrementality and restores dependency artifacts instead.
 `-KeepBuildCache` remains accepted for compatibility but is no longer necessary.
+Research-view refresh runs separately with `cargo xtask review`; add
+`-RefreshReview` only when you explicitly want it as a build prerequisite.
 To reclaim disk space deliberately, run
 `cargo clean --target-dir build` (the next build will be cold).
 

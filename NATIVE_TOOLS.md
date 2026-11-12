@@ -1,6 +1,11 @@
 # Native tools and remaining compatibility boundaries
 
 Build `cargo build -p anagram-cli --release` to obtain `build/release/anagram-cli.exe`.
+Shared preparation implementations live in `anagram-data`; the CLI owns argument
+parsing and stdin. Desktop callers use the typed API directly.
+
+Release scripts refresh research views only with `-RefreshReview`. Run
+`cargo xtask review` independently when refreshing local research evidence.
 
 On Windows, `pwsh -File tools/build-release.ps1` builds in the persistent
 `build/cli` cache, smoke-checks the candidate, then publishes to

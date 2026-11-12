@@ -10,13 +10,15 @@ Choose 4–8 English letters and 1–12 attempts. Recommendations distinguish
 strategic probes from possible answers and identify heuristic versus completed
 profile-optimal search. Broad/Common English profiles reuse configured local
 data; custom answer and allowed-guess lists are supported. These profiles do not
-claim to reproduce the official Wordle vocabulary. Puzzle progress is session-only;
-preferences persist. See [Wordle validation](tests/wordle/README.md) for tests and
+claim to reproduce the official Wordle vocabulary. Play Along and Instant Solver
+resume on this PC, with vocabulary identity checked before analysis. Undo is
+available during the current run. Practice games are session-only. See [Wordle validation](tests/wordle/README.md) for tests and
 reproducible policy/latency benchmarks.
 
 - [Desktop app and local builds](apps/desktop/README.md)
 - [Native CLI and data/model tools](NATIVE_TOOLS.md)
 - [Implementation plan and progress](PLAN.md)
+- [Native ownership and contracts](docs/ARCHITECTURE.md)
 - [Native quality evaluation and experiment datasets](tests/quality/README.md)
 
 ## Repository layout
