@@ -73,7 +73,7 @@ fn error(e: rusqlite::Error) -> io::Error {
 }
 
 fn install_progress_handler(
-    connection: &Connection,
+    connection: &mut Connection,
     control: &crate::control::Control,
 ) -> io::Result<()> {
     let callback_control = control.clone();
@@ -110,12 +110,12 @@ impl PhraseIndex {
     ) -> io::Result<Self> {
         control.check_io()?;
         // Deliberately omit URI parsing: a user-supplied filename is a path.
-        let connection = Connection::open_with_flags(
+        let mut connection = Connection::open_with_flags(
             path,
             OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
         )
         .map_err(error)?;
-        install_progress_handler(&connection, control)?;
+        install_progress_handler(&mut connection, control)?;
         // Admission, provenance and every later query see one read snapshot.
         connection.execute_batch("BEGIN").map_err(error)?;
         let mut index = Self {
@@ -303,9 +303,9 @@ impl PhraseCorpus for PhraseIndex {
 mod progress_tests {
     #[test]
     fn sqlite_vm_handler_interrupts_expired_control_deterministically() {
-        let connection = rusqlite::Connection::open_in_memory().unwrap();
+        let mut connection = rusqlite::Connection::open_in_memory().unwrap();
         let control = crate::control::Control::with_deadline(std::time::Instant::now());
-        super::install_progress_handler(&connection, &control).unwrap();
+        super::install_progress_handler(&mut connection, &control).unwrap();
         // Run directly without Rust-side prechecks: only the production VM
         // handler can interrupt this query, independent of machine speed.
         let result = connection.query_row(

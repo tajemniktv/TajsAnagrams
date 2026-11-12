@@ -6,13 +6,13 @@ use crate::{
 use anagram_core::{
     control::Control, policy::DeploymentLimits, provenance::CorpusReadBudget, solve,
 };
+use anagram_data::{Operation, execute};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
-    ffi::OsString,
     fs,
     io::{BufReader, Read, Write},
-    path::Path,
+    path::{Path, PathBuf},
     time::Duration,
 };
 
@@ -57,15 +57,13 @@ impl Desktop {
         self.operation(3600, move |control| match action {
             Action::Validate { corpora, model } => validate_with_limits(&corpora, &model, control, &limits),
             Action::BuildTraining { cases, corpora, options } => {
-                let mut args = vec![OsString::from("ranker-build"), corpora.wordnet.into()];
-                if !corpora.phrase.is_empty() { args.push(corpora.phrase.into()); }
                 let mut bytes = Vec::new();
                 control.reader(fs::File::open(cases).map_err(error)?).take(16 * 1024 * 1024 + 1).read_to_end(&mut bytes).map_err(error)?;
                 if bytes.len() > 16 * 1024 * 1024 { return Err("Cases exceed 16 MiB".into()); }
                 let mut input: Value = serde_json::from_slice(&bytes).map_err(error)?;
                 if let Some(options) = options { if !input.is_array() { return Err("With desktop build controls, select a JSON array of cases".into()); } input = json!({"cases":input,"options":options}); }
                 let bytes = serde_json::to_vec(&input).map_err(error)?;
-                let result = anagram_cli::utilities::run_with_input_and_limits(&args, control, &mut bytes.as_slice(), &limits).map_err(|e| e.message)?;
+                let result = execute(Operation::BuildGroups {wordnet:corpora.wordnet.into(),phrase:(!corpora.phrase.is_empty()).then(||corpora.phrase.into())}, control, &mut bytes.as_slice(), &limits).map_err(|e| e.message)?;
                 if result["groups"].as_array().is_none_or(|g| g.is_empty()) { return Err(format!("No usable training groups: {}", result["skipped"])); }
                 let bytes = serde_json::to_vec_pretty(&result).map_err(error)?;
                 if bytes.len() > 4 * 1024 * 1024 || result["groups"].as_array().is_some_and(|g| g.len() > 1000) {
@@ -82,13 +80,12 @@ impl Desktop {
             }
             Action::RankModel {model, items} => {
                 let mut input = fs::File::open(items).map_err(error)?;
-                anagram_cli::utilities::run_with_input_and_limits(&["ranker-rank".into(),model.into()],control,&mut input,&limits).map_err(|e| e.message)
+                execute(Operation::Rank{model:model.into()},control,&mut input,&limits).map_err(|e| e.message)
             }
-            Action::Dictionary {base,unigrams} => tool_output(&data,"dictionary.txt",vec!["prepare-dictionary".into(),base.into(),unigrams.into()],false,control,&limits),
+            Action::Dictionary {base,unigrams} => tool_output(&data,"dictionary.txt",|output|Operation::Dictionary{base:base.into(),unigrams:unigrams.into(),output},control,&limits),
             Action::Phrases {sources} => {
                 if sources.is_empty() { return Err("Choose at least one title file".into()); }
-                let mut args = vec!["build-phrases".into()]; args.extend(sources.into_iter().map(OsString::from));
-                tool_output(&data,"phrases.db",args,true,control,&limits)
+                tool_output(&data,"phrases.db",|output|Operation::Phrases{output,sources:sources.into_iter().map(PathBuf::from).collect()},control,&limits)
             }
             Action::Prepare { source, wiktionary, wikipedia } => prepare_with_limits(&data, &source, wiktionary, wikipedia, control, &limits),
         })
@@ -98,8 +95,7 @@ impl Desktop {
 fn tool_output(
     data: &Path,
     filename: &str,
-    mut args: Vec<OsString>,
-    output_first: bool,
+    operation: impl FnOnce(PathBuf) -> Operation,
     control: &Control,
     limits: &DeploymentLimits,
 ) -> Result<Value, String> {
@@ -109,14 +105,8 @@ fn tool_output(
         .prefix("tool-")
         .tempdir_in(root)
         .map_err(error)?;
-    let output = stage.path().join(filename).into_os_string();
-    if output_first {
-        args.insert(1, output);
-    } else {
-        args.push(output);
-    }
-    let result = anagram_cli::utilities::run_with_input_and_limits(
-        &args,
+    let result = execute(
+        operation(stage.path().join(filename)),
         control,
         &mut std::io::empty(),
         limits,
@@ -356,13 +346,12 @@ fn prepare_with_limits(
         )?;
     }
     let dictionary = root.join("dictionary.txt");
-    let policy = anagram_cli::utilities::run_with_input_and_limits(
-        &[
-            "prepare-dictionary".into(),
-            root.join("base.txt").into_os_string(),
-            root.join("count_1w.txt").into_os_string(),
-            dictionary.clone().into_os_string(),
-        ],
+    let policy = execute(
+        Operation::Dictionary {
+            base: root.join("base.txt"),
+            unigrams: root.join("count_1w.txt"),
+            output: dictionary.clone(),
+        },
         control,
         &mut std::io::empty(),
         limits,
@@ -431,11 +420,12 @@ fn prepare_with_limits(
         String::new()
     } else {
         let path = root.join("phrases.db");
-        let mut args = vec!["build-phrases".into(), path.clone().into_os_string()];
-        args.extend(titles);
         phrase_build = Some(
-            anagram_cli::utilities::run_with_input_and_limits(
-                &args,
+            execute(
+                Operation::Phrases {
+                    output: path.clone(),
+                    sources: titles.into_iter().map(PathBuf::from).collect(),
+                },
                 control,
                 &mut std::io::empty(),
                 limits,

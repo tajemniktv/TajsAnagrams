@@ -18,6 +18,12 @@ The November 8 follow-up updates transitive `rustls-webpki` from 0.103.15 to
 and replaces yanked `clipboard-win` 5.4.1 with 5.4.3. The Dependabot merges alone
 had left the webpki advisory failing. No advisory exemptions were added.
 
+The November 12 scan also identified RUSTSEC-2026-0459 in bundled SQLite.
+The workspace uses `rusqlite 0.41.1` / `libsqlite3-sys 0.39.1` (SQLite 3.54.1),
+including the read-only phrase-index progress-handler API adjustment. The
+supported-target advisory scan passes without exemptions, and Rust 1.90 remains
+the declared validation toolchain.
+
 The frontend uses Vite 8 and its matching Svelte plugin 7. TypeScript is kept on
 6.0.3, the latest release supported by svelte-check's normal mode. TypeScript 7
 currently requires a second TypeScript installation and opt-in native checking;
