@@ -1,0 +1,2919 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-11-12",
+  "purpose": "Clean native desktop-default-equivalent development baseline and matched generation-strategy experiment; not a representative product quality gate.",
+  "source_head": "c49c3b69b2b92e54cc14081f1c217c56d6753012",
+  "source_dirty": false,
+  "artifacts": {
+    "local_directory": ".codex/docs/evidence/audit-2026-11-12",
+    "captures_sha256": "8e5eddc33dab6c7a0c45f17c6f07608fb524b002e9fb049c6e1f602ea78066d0",
+    "manifest_sha256": "05d5c27faeef171a520e223bf9d3a301008329c97a87cdda3996f758602177f4",
+    "quality_report_sha256": "f8ef222a3c17e794fcaa3eab5a967458e1ae99c821981a3cdb1f12bcf56147ff",
+    "capture_count": 400,
+    "complete_outputs_retained": true
+  },
+  "settings": {
+    "profile": "development",
+    "cases": 50,
+    "repeats": 2,
+    "seed": 121126,
+    "timeout_ms": 120000,
+    "strategies": [
+      "prefix",
+      "diverse"
+    ],
+    "strategy_application": "Each scheduled treatment overrides only generation.strategy; exact requests are retained in every capture. Treatments/trials/cases are jointly shuffled; each gets a separate empty/reuse cache.",
+    "requests": {
+      "actions_words": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "actionsspeaklouderthanwords"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "blue_lantern": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abeellnnrtu"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "blue_stone": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abdeeeglnnorstu"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "books-02": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "lohiseeachbcn"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "bright_ideas": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abdeghiirst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "bright_star": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abeghinorrstt"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "cats_chase_mice": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aaccceehimsst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "countquote-boat": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aaabbdeeeeggginnnooorrtuy"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "developers-03": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "amusingidiots"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "disguise-strahd": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "strahdvonzarovich"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "fresh_bread_rises": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abdeeefhirrrsss"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "gaps-thirteen": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aainrst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "gish-reference": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "tunidonndderenstarcetrethaef"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "glass_door": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "adeeghlnoooprssst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "green_tea": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aaeeeeeglnrstv"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "hips_dont_lie": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "dehiilnopst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "i_like_rain": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aeiiiklnr"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "keys_table": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "thekeysareonyourtable"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "knowledge_power": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "knowledgeispower"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "listen_silent": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "eilnst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "lost_keys": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "eklossty"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "lucas-02": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "indonesiajan"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "morning_train": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aaeeghiiimnnnorrrrsttv"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "multigrams-02": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "hightoadfenvigiltend"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "night_train": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aghiinnrtt"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "old_bridge": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "bcddeeeghiloorrsstw"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "opens_door": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "deeehhnoooprst"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "quiet_library": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aabeiilqrrtuy"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "quiet_machine": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "thismachinerunsquietly"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "quiet_place": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aaceeeilopqrstttu"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "quiet_rain": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aeiinqrtu"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "rain_window": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aadehiinnoprsttww"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "red_fox": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "adeeefloprssx"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "river_lights": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abeeeghhiilorrsttvv"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "river_runs_deep": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "deeeehinprrrstuv"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "she_reads_books": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "abdeehkoorsss"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "silver_cloud": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "acdeillorsuv"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "small_birds": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "smallbirdssingatdawn"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "testing_anagram_solver": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "testinganagramsolver"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "testing_shit": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "testingshit"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "turtles-01": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "pearherald"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "voldemort_reveal": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "iamlordvoldemort"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "walk_home": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aeeghhiklmnoottww"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "warm_bread": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aaabbddeemnrrrttuw"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "warm_bread_title": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aabdemrrw"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "we_need_sleep": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "deeeeelnpsw"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "welcome-housewarming": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "seawourmhing"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "whiskey-jameson": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "aejmnos"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "window_opens": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "deehinnoopstww"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      },
+      "wordmath-extolsrfia": {
+        "beam_width": 128,
+        "deep_all": false,
+        "deep_per_group": 100,
+        "exact_max_words": 5,
+        "generation": {
+          "allow_repeat": false,
+          "candidate_budget": 10000,
+          "exclude_regex": [],
+          "excluded": [],
+          "extra_short_words": [
+            "hi"
+          ],
+          "forbid_chars": "",
+          "hint_mode": "any",
+          "hints": [],
+          "max_word_length": 24,
+          "max_words": 6,
+          "min_word_length": 1,
+          "min_words": 1,
+          "min_zipf": 1.8,
+          "required": [],
+          "schema_version": 1,
+          "short_policy": "common",
+          "strategy": "prefix",
+          "text": "extolsrfia"
+        },
+        "order_mode": "auto",
+        "phrase_bonus_max": 6,
+        "phrase_rescore_top": 300,
+        "positive_bigrams": true,
+        "result_limit_per_group": 10,
+        "retained_orders": 56
+      }
+    }
+  },
+  "input_identities": {
+    "bigrams": {
+      "bytes": 5566017,
+      "sha256": "781c0596c3eea532d30bef9f3dba1d5137d652f00376260822c761a7584dfb8c"
+    },
+    "cases": {
+      "bytes": 29873,
+      "sha256": "8368892b01f9f553616e18ebe28c3f0301208a02abe83c995692c91641e02b60"
+    },
+    "cli": {
+      "bytes": 5763584,
+      "sha256": "e532078b539d96dc501f60b75dd0772cc9da0abd3095eaed886ad95ba56a55ea"
+    },
+    "desktop_defaults_source": {
+      "bytes": 12712,
+      "sha256": "35a1b8c9f5d697cb3ffebb7a3b271e3143e01b83664f8aef732c3829cc8069b4"
+    },
+    "dictionary": {
+      "bytes": 1839180,
+      "sha256": "49f34d7a7b5d4f7b5d88255a1963d582a8095c1c363d66cd535e597d02c4b7e5"
+    },
+    "measurement_tool": {
+      "bytes": 8080384,
+      "sha256": "6371f3860ed31476268e2be5d58faee870fcc405c7e354292fa37e198ed75247"
+    },
+    "unigrams": {
+      "bytes": 4956241,
+      "sha256": "51df159fd3de12b20e403c108f526e96dbd723d9cabdd5f17955cdc16059e690"
+    },
+    "wordnet/adj.exc": {
+      "bytes": 23019,
+      "sha256": "8824cc24bbedd797b9702316b27f07cd4c2b76b629539f0a1276f03926758016"
+    },
+    "wordnet/adv.exc": {
+      "bytes": 85,
+      "sha256": "e7291461b629abfe63301bbe1998cee09fd575ed7107abd7ea9763adb05bf0a8"
+    },
+    "wordnet/cntlist": {
+      "bytes": 911244,
+      "sha256": "2694cf6c60234cb5b997c5d02ce50663a73b3ad204afc59644d32451dd24fbf2"
+    },
+    "wordnet/cntlist.rev": {
+      "bytes": 911244,
+      "sha256": "a198580b8f705fa02797bba8b13e5cbe4a9f9f40cb1697e774c7fc6a5865b035"
+    },
+    "wordnet/cousin.exc": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "wordnet/data.adj": {
+      "bytes": 3167437,
+      "sha256": "ca1033bf627eb95f6cbb2864f8990be8e6a01a3c182e7d7c7094ccf8ead242cc"
+    },
+    "wordnet/data.adv": {
+      "bytes": 520168,
+      "sha256": "aea301f39ac1b24be9a880dbc6cc6331bc5391f58c7525a1b298a13c922f2ed3"
+    },
+    "wordnet/data.noun": {
+      "bytes": 15325523,
+      "sha256": "2cad22fe43461ee7ae61a564ae6a518c57445c8597e53542caddb5c26a6a5d94"
+    },
+    "wordnet/data.verb": {
+      "bytes": 2778475,
+      "sha256": "eb1cf196dab6e1b815a1c86fa20c909fb7413b2f34250d7fe60a0fb35ef59e03"
+    },
+    "wordnet/index.adj": {
+      "bytes": 825353,
+      "sha256": "7d2b4d4037f0571ca309ce2ebadbe860a1607d494a70cd40f9bd61bc25a57016"
+    },
+    "wordnet/index.adv": {
+      "bytes": 162795,
+      "sha256": "0ea0811bb06eeeb973805ab0b066cb724ebc9dc01f07583582b59579a5b4a36c"
+    },
+    "wordnet/index.noun": {
+      "bytes": 4792749,
+      "sha256": "799fad7c8084eb0f6f2a32ec737a251c85f51adb8b2603eb02bfebc4ce5ffa3d"
+    },
+    "wordnet/index.sense": {
+      "bytes": 7304224,
+      "sha256": "a09db263da96dbb3273064c60546530dee5927a2e5a39c90fb576cdbebbb1a22"
+    },
+    "wordnet/index.verb": {
+      "bytes": 524435,
+      "sha256": "e65b2d67274c8a5f9ba6f696fdc73f4546db2a138b362a3be582e3787c879c7a"
+    },
+    "wordnet/log.grind.3.1": {
+      "bytes": 2511,
+      "sha256": "7449fca5a8d02910d9ad891ef87ca58c2b0f6b0a3fe84bdcb027d9ba4bbacf0a"
+    },
+    "wordnet/noun.exc": {
+      "bytes": 38301,
+      "sha256": "fbde4026e4732d8698ca605edfd18cc0274312cf3751513d182bd2d89e47ce34"
+    },
+    "wordnet/sentidx.vrb": {
+      "bytes": 73166,
+      "sha256": "129e267389fe88ea413b90addda3fcfb2a42b009339298b60711676b2b5d9bf0"
+    },
+    "wordnet/sents.vrb": {
+      "bytes": 5319,
+      "sha256": "6fb59507c96c4aeb267e016ce4a654a1791a438815de98c52e7975df20db15c9"
+    },
+    "wordnet/verb.Framestext": {
+      "bytes": 1125,
+      "sha256": "e7edc9055e1fafb77622e1df54cb22da82bf5853527687c2b1409acd9c0dc49b"
+    },
+    "wordnet/verb.exc": {
+      "bytes": 38033,
+      "sha256": "dbbcf9a601b2d77e934e413b91d90e88ec7f933a8b77cfc00602a923b891b42c"
+    }
+  },
+  "integrity": {
+    "independent_output_checks": "Every successful capture checked by xtask verify (separate letter/constraint verifier) during collection.",
+    "errors": [
+      {
+        "case_id": "small_birds",
+        "strategy": "diverse",
+        "trial": 0,
+        "cache_state": "disk_cache_empty",
+        "error": {
+          "code": "timed_out",
+          "message": "timed_out"
+        }
+      },
+      {
+        "case_id": "small_birds",
+        "strategy": "diverse",
+        "trial": 0,
+        "cache_state": "disk_cache_reuse",
+        "error": {
+          "code": "timed_out",
+          "message": "timed_out"
+        }
+      },
+      {
+        "case_id": "small_birds",
+        "strategy": "diverse",
+        "trial": 1,
+        "cache_state": "disk_cache_empty",
+        "error": {
+          "code": "timed_out",
+          "message": "timed_out"
+        }
+      },
+      {
+        "case_id": "small_birds",
+        "strategy": "diverse",
+        "trial": 1,
+        "cache_state": "disk_cache_reuse",
+        "error": {
+          "code": "timed_out",
+          "message": "timed_out"
+        }
+      }
+    ],
+    "successful_cache_pairs_checked": 198,
+    "successful_repeat_pairs": 99,
+    "cache_bucket_differences": [],
+    "repeat_output_differences": []
+  },
+  "outcomes": {
+    "prefix": {
+      "variant": "native_solve_prefix_10000_120000ms_binary-e532078b539d",
+      "performance": [
+        {
+          "attempt_p50_ms": 1694.68005,
+          "attempt_p95_ms": 12519.98959,
+          "attempted_cases": 50,
+          "attempts": 100,
+          "cache_state": "disk_cache_empty",
+          "completed": 100,
+          "completed_p50_ms": 1694.68005,
+          "completed_p95_ms": 12519.98959,
+          "coverage": 1,
+          "deep_analyzed": 211.54,
+          "dimension": "all",
+          "expanded": null,
+          "failed": 0,
+          "generated": 7039.44,
+          "mrr": 0.15367460317460319,
+          "ndcg_at_10": 0.13935918991303495,
+          "ndcg_at_5": 0.12933620370362,
+          "orders_evaluated": 5105.14,
+          "peak_rss_bytes": 83564298.24,
+          "persistent_bytes": 27279.36,
+          "ranking": "desktop",
+          "recall_at_1": 0.09653846153846153,
+          "recall_at_10": 0.1746153846153846,
+          "recall_at_5": 0.1296153846153846,
+          "successful_metrics": {
+            "mrr": 0.15367460317460319,
+            "ndcg_at_10": 0.13935918991303495,
+            "ndcg_at_5": 0.12933620370362,
+            "recall_at_1": 0.09653846153846153,
+            "recall_at_10": 0.1746153846153846,
+            "recall_at_5": 0.1296153846153846
+          },
+          "variant": "native_solve_prefix_10000_120000ms_binary-e532078b539d"
+        },
+        {
+          "attempt_p50_ms": 202.43545,
+          "attempt_p95_ms": 268.4448699999997,
+          "attempted_cases": 50,
+          "attempts": 100,
+          "cache_state": "disk_cache_reuse",
+          "completed": 100,
+          "completed_p50_ms": 202.43545,
+          "completed_p95_ms": 268.4448699999997,
+          "coverage": 1,
+          "deep_analyzed": 211.54,
+          "dimension": "all",
+          "expanded": null,
+          "failed": 0,
+          "generated": 7039.44,
+          "mrr": 0.15367460317460319,
+          "ndcg_at_10": 0.13935918991303495,
+          "ndcg_at_5": 0.12933620370362,
+          "orders_evaluated": 5105.14,
+          "peak_rss_bytes": 29656145.92,
+          "persistent_bytes": 27279.36,
+          "ranking": "desktop",
+          "recall_at_1": 0.09653846153846153,
+          "recall_at_10": 0.1746153846153846,
+          "recall_at_5": 0.1296153846153846,
+          "successful_metrics": {
+            "mrr": 0.15367460317460319,
+            "ndcg_at_10": 0.13935918991303495,
+            "ndcg_at_5": 0.12933620370362,
+            "recall_at_1": 0.09653846153846153,
+            "recall_at_10": 0.1746153846153846,
+            "recall_at_5": 0.1296153846153846
+          },
+          "variant": "native_solve_prefix_10000_120000ms_binary-e532078b539d"
+        }
+      ],
+      "trials": [
+        {
+          "trial": 0,
+          "bags": 50,
+          "failures": 0,
+          "nonempty_bags": 50,
+          "intended_bags": [
+            "bright_ideas",
+            "gaps-thirteen",
+            "hips_dont_lie",
+            "knowledge_power",
+            "listen_silent",
+            "quiet_rain",
+            "river_runs_deep",
+            "warm_bread_title",
+            "we_need_sleep",
+            "welcome-housewarming",
+            "window_opens",
+            "wordmath-extolsrfia"
+          ],
+          "known_useful_bags": [
+            "developers-03",
+            "gaps-thirteen",
+            "gish-reference",
+            "knowledge_power",
+            "lucas-02",
+            "red_fox",
+            "testing_anagram_solver",
+            "testing_shit",
+            "turtles-01",
+            "welcome-housewarming",
+            "whiskey-jameson",
+            "wordmath-extolsrfia"
+          ],
+          "unresolved_usefulness_bags": [
+            "actions_words",
+            "blue_lantern",
+            "blue_stone",
+            "books-02",
+            "bright_ideas",
+            "bright_star",
+            "cats_chase_mice",
+            "countquote-boat",
+            "disguise-strahd",
+            "fresh_bread_rises",
+            "glass_door",
+            "green_tea",
+            "hips_dont_lie",
+            "i_like_rain",
+            "keys_table",
+            "listen_silent",
+            "lost_keys",
+            "morning_train",
+            "multigrams-02",
+            "night_train",
+            "old_bridge",
+            "opens_door",
+            "quiet_library",
+            "quiet_machine",
+            "quiet_place",
+            "quiet_rain",
+            "rain_window",
+            "river_lights",
+            "river_runs_deep",
+            "she_reads_books",
+            "silver_cloud",
+            "small_birds",
+            "voldemort_reveal",
+            "walk_home",
+            "warm_bread",
+            "warm_bread_title",
+            "we_need_sleep",
+            "window_opens"
+          ]
+        },
+        {
+          "trial": 1,
+          "bags": 50,
+          "failures": 0,
+          "nonempty_bags": 50,
+          "intended_bags": [
+            "bright_ideas",
+            "gaps-thirteen",
+            "hips_dont_lie",
+            "knowledge_power",
+            "listen_silent",
+            "quiet_rain",
+            "river_runs_deep",
+            "warm_bread_title",
+            "we_need_sleep",
+            "welcome-housewarming",
+            "window_opens",
+            "wordmath-extolsrfia"
+          ],
+          "known_useful_bags": [
+            "developers-03",
+            "gaps-thirteen",
+            "gish-reference",
+            "knowledge_power",
+            "lucas-02",
+            "red_fox",
+            "testing_anagram_solver",
+            "testing_shit",
+            "turtles-01",
+            "welcome-housewarming",
+            "whiskey-jameson",
+            "wordmath-extolsrfia"
+          ],
+          "unresolved_usefulness_bags": [
+            "actions_words",
+            "blue_lantern",
+            "blue_stone",
+            "books-02",
+            "bright_ideas",
+            "bright_star",
+            "cats_chase_mice",
+            "countquote-boat",
+            "disguise-strahd",
+            "fresh_bread_rises",
+            "glass_door",
+            "green_tea",
+            "hips_dont_lie",
+            "i_like_rain",
+            "keys_table",
+            "listen_silent",
+            "lost_keys",
+            "morning_train",
+            "multigrams-02",
+            "night_train",
+            "old_bridge",
+            "opens_door",
+            "quiet_library",
+            "quiet_machine",
+            "quiet_place",
+            "quiet_rain",
+            "rain_window",
+            "river_lights",
+            "river_runs_deep",
+            "she_reads_books",
+            "silver_cloud",
+            "small_birds",
+            "voldemort_reveal",
+            "walk_home",
+            "warm_bread",
+            "warm_bread_title",
+            "we_need_sleep",
+            "window_opens"
+          ]
+        }
+      ],
+      "existing_human_label_coverage": {
+        "useful_rows": 92,
+        "not_useful_rows": 268,
+        "unreviewed_rows": 2038,
+        "judgment_coverage": 0.1501251042535446,
+        "counting": "Display positions across two repeated trials; not independent bags or new judgments."
+      }
+    },
+    "diverse": {
+      "variant": "native_solve_diverse_10000_120000ms_binary-e532078b539d",
+      "performance": [
+        {
+          "attempt_p50_ms": 3252.4209,
+          "attempt_p95_ms": 27919.99861999997,
+          "attempted_cases": 50,
+          "attempts": 100,
+          "cache_state": "disk_cache_empty",
+          "completed": 98,
+          "completed_p50_ms": 3164.2967000000003,
+          "completed_p95_ms": 18364.415239999962,
+          "coverage": 0.98,
+          "deep_analyzed": 339.6734693877551,
+          "dimension": "all",
+          "expanded": null,
+          "failed": 2,
+          "generated": 6979.0204081632655,
+          "mrr": 0.15375,
+          "ndcg_at_10": 0.13935918991303495,
+          "ndcg_at_5": 0.12933620370362,
+          "orders_evaluated": 40836.26530612245,
+          "peak_rss_bytes": 91222893.71428572,
+          "persistent_bytes": 36529.63265306123,
+          "ranking": "desktop",
+          "recall_at_1": 0.09653846153846153,
+          "recall_at_10": 0.1746153846153846,
+          "recall_at_5": 0.1296153846153846,
+          "successful_metrics": {
+            "mrr": 0.1568877551020408,
+            "ndcg_at_10": 0.14220325501330097,
+            "ndcg_at_5": 0.1319757180649184,
+            "recall_at_1": 0.09850863422291993,
+            "recall_at_10": 0.17817896389324958,
+            "recall_at_5": 0.13226059654631084
+          },
+          "variant": "native_solve_diverse_10000_120000ms_binary-e532078b539d"
+        },
+        {
+          "attempt_p50_ms": 207.42595,
+          "attempt_p95_ms": 543.800745,
+          "attempted_cases": 50,
+          "attempts": 100,
+          "cache_state": "disk_cache_reuse",
+          "completed": 98,
+          "completed_p50_ms": 207.01454999999999,
+          "completed_p95_ms": 303.10049999999796,
+          "coverage": 0.98,
+          "deep_analyzed": 339.6734693877551,
+          "dimension": "all",
+          "expanded": null,
+          "failed": 2,
+          "generated": 6979.0204081632655,
+          "mrr": 0.15375,
+          "ndcg_at_10": 0.13935918991303495,
+          "ndcg_at_5": 0.12933620370362,
+          "orders_evaluated": 40836.26530612245,
+          "peak_rss_bytes": 30906535.18367347,
+          "persistent_bytes": 36529.63265306123,
+          "ranking": "desktop",
+          "recall_at_1": 0.09653846153846153,
+          "recall_at_10": 0.1746153846153846,
+          "recall_at_5": 0.1296153846153846,
+          "successful_metrics": {
+            "mrr": 0.1568877551020408,
+            "ndcg_at_10": 0.14220325501330097,
+            "ndcg_at_5": 0.1319757180649184,
+            "recall_at_1": 0.09850863422291993,
+            "recall_at_10": 0.17817896389324958,
+            "recall_at_5": 0.13226059654631084
+          },
+          "variant": "native_solve_diverse_10000_120000ms_binary-e532078b539d"
+        }
+      ],
+      "trials": [
+        {
+          "trial": 0,
+          "bags": 50,
+          "failures": 1,
+          "nonempty_bags": 49,
+          "intended_bags": [
+            "bright_ideas",
+            "gaps-thirteen",
+            "hips_dont_lie",
+            "knowledge_power",
+            "listen_silent",
+            "quiet_rain",
+            "river_runs_deep",
+            "warm_bread_title",
+            "we_need_sleep",
+            "welcome-housewarming",
+            "window_opens",
+            "wordmath-extolsrfia"
+          ],
+          "known_useful_bags": [
+            "developers-03",
+            "gaps-thirteen",
+            "gish-reference",
+            "knowledge_power",
+            "lucas-02",
+            "multigrams-02",
+            "red_fox",
+            "testing_anagram_solver",
+            "testing_shit",
+            "turtles-01",
+            "welcome-housewarming",
+            "whiskey-jameson",
+            "wordmath-extolsrfia"
+          ],
+          "unresolved_usefulness_bags": [
+            "actions_words",
+            "blue_lantern",
+            "blue_stone",
+            "books-02",
+            "bright_ideas",
+            "bright_star",
+            "cats_chase_mice",
+            "countquote-boat",
+            "disguise-strahd",
+            "fresh_bread_rises",
+            "glass_door",
+            "green_tea",
+            "hips_dont_lie",
+            "i_like_rain",
+            "keys_table",
+            "listen_silent",
+            "lost_keys",
+            "morning_train",
+            "night_train",
+            "old_bridge",
+            "opens_door",
+            "quiet_library",
+            "quiet_machine",
+            "quiet_place",
+            "quiet_rain",
+            "rain_window",
+            "river_lights",
+            "river_runs_deep",
+            "she_reads_books",
+            "silver_cloud",
+            "voldemort_reveal",
+            "walk_home",
+            "warm_bread",
+            "warm_bread_title",
+            "we_need_sleep",
+            "window_opens"
+          ]
+        },
+        {
+          "trial": 1,
+          "bags": 50,
+          "failures": 1,
+          "nonempty_bags": 49,
+          "intended_bags": [
+            "bright_ideas",
+            "gaps-thirteen",
+            "hips_dont_lie",
+            "knowledge_power",
+            "listen_silent",
+            "quiet_rain",
+            "river_runs_deep",
+            "warm_bread_title",
+            "we_need_sleep",
+            "welcome-housewarming",
+            "window_opens",
+            "wordmath-extolsrfia"
+          ],
+          "known_useful_bags": [
+            "developers-03",
+            "gaps-thirteen",
+            "gish-reference",
+            "knowledge_power",
+            "lucas-02",
+            "multigrams-02",
+            "red_fox",
+            "testing_anagram_solver",
+            "testing_shit",
+            "turtles-01",
+            "welcome-housewarming",
+            "whiskey-jameson",
+            "wordmath-extolsrfia"
+          ],
+          "unresolved_usefulness_bags": [
+            "actions_words",
+            "blue_lantern",
+            "blue_stone",
+            "books-02",
+            "bright_ideas",
+            "bright_star",
+            "cats_chase_mice",
+            "countquote-boat",
+            "disguise-strahd",
+            "fresh_bread_rises",
+            "glass_door",
+            "green_tea",
+            "hips_dont_lie",
+            "i_like_rain",
+            "keys_table",
+            "listen_silent",
+            "lost_keys",
+            "morning_train",
+            "night_train",
+            "old_bridge",
+            "opens_door",
+            "quiet_library",
+            "quiet_machine",
+            "quiet_place",
+            "quiet_rain",
+            "rain_window",
+            "river_lights",
+            "river_runs_deep",
+            "she_reads_books",
+            "silver_cloud",
+            "voldemort_reveal",
+            "walk_home",
+            "warm_bread",
+            "warm_bread_title",
+            "we_need_sleep",
+            "window_opens"
+          ]
+        }
+      ],
+      "existing_human_label_coverage": {
+        "useful_rows": 86,
+        "not_useful_rows": 270,
+        "unreviewed_rows": 3152,
+        "judgment_coverage": 0.10148232611174458,
+        "counting": "Display positions across two repeated trials; not independent bags or new judgments."
+      }
+    }
+  },
+  "paired_bag_outcomes": [
+    {
+      "case_id": "actions_words",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "blue_lantern",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "blue_stone",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "books-02",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "bright_ideas",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "bright_star",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "cats_chase_mice",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "countquote-boat",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "developers-03",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "disguise-strahd",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "fresh_bread_rises",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "gaps-thirteen",
+      "prefix": {
+        "intended": true,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "gish-reference",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "glass_door",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "green_tea",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "hips_dont_lie",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "i_like_rain",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "keys_table",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "knowledge_power",
+      "prefix": {
+        "intended": true,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "listen_silent",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "lost_keys",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "lucas-02",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "morning_train",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "multigrams-02",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "night_train",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "old_bridge",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "opens_door",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "quiet_library",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "quiet_machine",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "quiet_place",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "quiet_rain",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "rain_window",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "red_fox",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "river_lights",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "river_runs_deep",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "she_reads_books",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "silver_cloud",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "small_birds",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "testing_anagram_solver",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "testing_shit",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "turtles-01",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "voldemort_reveal",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "walk_home",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "warm_bread",
+      "prefix": {
+        "intended": false,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "warm_bread_title",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "we_need_sleep",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "welcome-housewarming",
+      "prefix": {
+        "intended": true,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "whiskey-jameson",
+      "prefix": {
+        "intended": false,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": false,
+        "known_useful": true
+      }
+    },
+    {
+      "case_id": "window_opens",
+      "prefix": {
+        "intended": true,
+        "known_useful": false
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": false
+      }
+    },
+    {
+      "case_id": "wordmath-extolsrfia",
+      "prefix": {
+        "intended": true,
+        "known_useful": true
+      },
+      "diverse": {
+        "intended": true,
+        "known_useful": true
+      }
+    }
+  ],
+  "decision": {
+    "production_default": "prefix",
+    "promotion": "Retain prefix. Both strategies recover intended references on 12/50 exposed bags per trial. Diverse adds one existing known-useful bag (multigrams-02), nearly doubles median cold latency and consistently times out on small_birds. This is a tradeoff on development evidence, not a demonstrated general-quality win.",
+    "next_evidence": "The protocol’s broader independent bag/source-family collection and contextual judgments remain outstanding. No experimental corpus/model/search default was installed."
+  },
+  "limitations": [
+    "50 development-exposed bags are not 50 independent source families or untouched holdout puzzles.",
+    "Two trials and two cache states are repeated observations of each bag, not independent quality samples.",
+    "Whole CLI-process wall time includes source intake and JSON transport; it does not measure WebView rendering or desktop IPC latency.",
+    "Resident memory is sampled per CLI process tree at 20 ms intervals; it is not a guaranteed peak or whole installed-application footprint.",
+    "OS filesystem cache and other workstation activity are uncontrolled; no causal before/after optimization speedup is claimed.",
+    "Existing permissive owner labels are matched to exact rendering/inventory; uncertain, conflicted and unjudged outputs remain unresolved.",
+    "No new labels were created, no experimental corpus/model was installed, and an unjudged output is not classified as useless.",
+    "Immutable managed-pack activation, broader parsed-corpus reuse and large review-list paging remain measured follow-up opportunities."
+  ]
+}

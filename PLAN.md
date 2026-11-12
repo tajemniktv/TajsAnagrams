@@ -28,9 +28,10 @@ assume custom files are immutable. Consider managed immutable packs only after
 measurements justify the extra activation/versioning machinery.
 
 Use explicit `smoke` and `development` evaluation profiles, keeping old manifests
-unchanged. Freeze complete development captures with clean source/build/data
-identity, repeated empty/reuse timings, failures and displayed rows retained.
-These exposed cases support regression diagnosis, not a representative product
+unchanged. The [v2 development baseline](tests/quality/native-baseline.v2.md)
+freezes complete outputs and failures from a clean build, repeated empty/reuse
+timings, and matched prefix/diverse treatments. Its exposed cases support
+regression diagnosis, not a representative product
 quality gate. The broader collection and contextual human review described in
 [the baseline protocol](tests/quality/README.md#next-native-baseline-protocol)
 remain necessary before claims about general usefulness or production promotion.

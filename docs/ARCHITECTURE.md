@@ -15,6 +15,7 @@ and close use this owner; domain snapshots retain their own results. A stale
 cancellation ID cannot stop a subsequent operation. Maintenance uses the same
 worker lifecycle as puzzle work. Database review commands run on blocking tasks,
 and indexed review-row/context lookups validate writes without loading all history.
+Aggregate review reads and exports use one database snapshot across all tables.
 
 `bridge.ts` owns frontend IPC. Wordle polling sends the last publication version;
 unchanged polls return no snapshot or candidate array. Changed publications keep

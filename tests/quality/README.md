@@ -339,7 +339,10 @@ not satisfy the independent collection and contextual judging requirements below
 
 ## Next native baseline protocol
 
-Status: **designed, not yet collected/frozen or accepted as a quality gate**.
+Status: the [v2 development baseline](native-baseline.v2.md) is collected and
+frozen with complete outputs, failures and repeated empty/reuse measurements.
+The broader independently collected and contextually judged product baseline
+below remains unfinished and **has not been accepted as a quality gate**.
 This is the canonical Phase 5 specification; `PLAN.md` tracks completion and
 `.codex/docs/AUDIT.md` records evidence. Keep the name **TajsBench** and extend
 the existing Rust tools rather than creating a parallel benchmark project.
