@@ -13,23 +13,72 @@ use std::{
     path::Path,
 };
 
-fn ascii(
-    path: &Path,
-    control: &Control,
-    identities: &mut Vec<DataIdentity>,
-    budget: &mut CorpusReadBudget,
-) -> io::Result<String> {
-    let role = format!("wordnet/{}", path.file_name().unwrap().to_string_lossy());
-    let snapshot = match Snapshot::load_with_budget(path, &role, control, budget) {
-        Ok(snapshot) => snapshot,
-        Err(error) => {
-            if error.kind() == io::ErrorKind::NotFound {
-                identities.push(Snapshot::absent(&role));
-            }
-            return Err(error);
+/// Exact source bytes owned by one solve; parsing is deferred until a result-cache miss.
+pub struct Sources {
+    files: HashMap<&'static str, Option<Snapshot>>,
+    pub identities: Vec<DataIdentity>,
+}
+impl Sources {
+    pub fn load(
+        directory: &Path,
+        control: &Control,
+        budget: &mut CorpusReadBudget,
+    ) -> io::Result<Self> {
+        let mut files = HashMap::new();
+        let mut identities = Vec::new();
+        for name in [
+            "data.verb",
+            "index.noun",
+            "index.verb",
+            "index.adj",
+            "index.adv",
+            "noun.exc",
+            "verb.exc",
+        ] {
+            let role = format!("wordnet/{name}");
+            let source =
+                match Snapshot::load_with_budget(&directory.join(name), &role, control, budget) {
+                    Ok(source) => {
+                        identities.push(source.identity().clone());
+                        Some(source)
+                    }
+                    Err(e)
+                        if e.kind() == io::ErrorKind::NotFound && !name.starts_with("index.") =>
+                    {
+                        identities.push(Snapshot::absent(&role));
+                        None
+                    }
+                    Err(e) => return Err(e),
+                };
+            files.insert(name, source);
         }
-    };
-    identities.push(snapshot.identity);
+        Ok(Self { files, identities })
+    }
+    pub fn parse(&self, control: &Control) -> io::Result<WordNet> {
+        let mut frames: HashMap<String, BTreeSet<u32>> = HashMap::new();
+        if let Some(source) = self.files["data.verb"].as_ref() {
+            for line in ascii(source, control)?.lines() {
+                control.check_io()?;
+                if let Some(entries) = parse_frames(line) {
+                    for (word, frame) in entries {
+                        frames.entry(word).or_default().insert(frame);
+                    }
+                }
+            }
+        }
+        Ok(WordNet {
+            nouns: index(self.files["index.noun"].as_ref().unwrap(), control)?,
+            verbs: index(self.files["index.verb"].as_ref().unwrap(), control)?,
+            adjs: index(self.files["index.adj"].as_ref().unwrap(), control)?,
+            advs: index(self.files["index.adv"].as_ref().unwrap(), control)?,
+            noun_exc: exceptions(self.files["noun.exc"].as_ref(), control)?,
+            verb_exc: exceptions(self.files["verb.exc"].as_ref(), control)?,
+            frames,
+            prepared: HashMap::new(),
+        })
+    }
+}
+fn ascii(snapshot: &Snapshot, control: &Control) -> io::Result<String> {
     let mut text = String::with_capacity(snapshot.bytes.len());
     for chunk in snapshot.bytes.chunks(16_384) {
         control.check_io()?;
@@ -38,14 +87,9 @@ fn ascii(
     Ok(text)
 }
 
-fn index(
-    path: &Path,
-    control: &Control,
-    identities: &mut Vec<DataIdentity>,
-    budget: &mut CorpusReadBudget,
-) -> io::Result<BTreeSet<String>> {
+fn index(snapshot: &Snapshot, control: &Control) -> io::Result<BTreeSet<String>> {
     let mut words = BTreeSet::new();
-    for line in ascii(path, control, identities, budget)?.lines() {
+    for line in ascii(snapshot, control)?.lines() {
         control.check_io()?;
         if line.is_empty() || line.starts_with(char::is_whitespace) {
             continue;
@@ -65,16 +109,13 @@ fn index(
 }
 
 fn exceptions(
-    path: &Path,
+    snapshot: Option<&Snapshot>,
     control: &Control,
-    identities: &mut Vec<DataIdentity>,
-    budget: &mut CorpusReadBudget,
 ) -> io::Result<HashMap<String, BTreeSet<String>>> {
-    let text = match ascii(path, control, identities, budget) {
-        Ok(text) => text,
-        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(HashMap::new()),
-        Err(e) => return Err(e),
+    let Some(snapshot) = snapshot else {
+        return Ok(HashMap::new());
     };
+    let text = ascii(snapshot, control)?;
     let mut result = HashMap::new();
     for line in text.lines() {
         control.check_io()?;
@@ -176,67 +217,8 @@ impl WordNet {
         control: &Control,
         budget: &mut CorpusReadBudget,
     ) -> io::Result<(Self, Vec<DataIdentity>)> {
-        let mut identities = Vec::new();
-        let mut frames: HashMap<String, BTreeSet<u32>> = HashMap::new();
-        let data = match ascii(
-            &directory.join("data.verb"),
-            control,
-            &mut identities,
-            budget,
-        ) {
-            Ok(data) => data,
-            Err(e) if e.kind() == io::ErrorKind::NotFound => String::new(),
-            Err(e) => return Err(e),
-        };
-        for line in data.lines() {
-            control.check_io()?;
-            if let Some(entries) = parse_frames(line) {
-                for (word, frame) in entries {
-                    frames.entry(word).or_default().insert(frame);
-                }
-            }
-        }
-        let lex = Self {
-            nouns: index(
-                &directory.join("index.noun"),
-                control,
-                &mut identities,
-                budget,
-            )?,
-            verbs: index(
-                &directory.join("index.verb"),
-                control,
-                &mut identities,
-                budget,
-            )?,
-            adjs: index(
-                &directory.join("index.adj"),
-                control,
-                &mut identities,
-                budget,
-            )?,
-            advs: index(
-                &directory.join("index.adv"),
-                control,
-                &mut identities,
-                budget,
-            )?,
-            noun_exc: exceptions(
-                &directory.join("noun.exc"),
-                control,
-                &mut identities,
-                budget,
-            )?,
-            verb_exc: exceptions(
-                &directory.join("verb.exc"),
-                control,
-                &mut identities,
-                budget,
-            )?,
-            frames,
-            prepared: HashMap::new(),
-        };
-        Ok((lex, identities))
+        let sources = Sources::load(directory, control, budget)?;
+        Ok((sources.parse(control)?, sources.identities))
     }
 
     /// Prepare immutable per-request lexical facts once instead of re-deriving

@@ -13,7 +13,7 @@ use crate::{
     ranking::{self, OrderMode},
     request::{self, Error, GenerateRequest},
     scoring::{self, Bigrams},
-    wordnet::WordNet,
+    wordnet::Sources as WordNetSources,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, io::Cursor, path::Path};
@@ -288,10 +288,13 @@ fn run(
         .versions
         .data
         .push(bigram_source.identity.clone());
-    let (mut lex, identities) =
-        WordNet::load_identified_with_budget(paths.wordnet, control, &mut corpus_budget)
-            .map_err(corpus)?;
-    progress.status.versions.data.extend(identities);
+    let wordnet_sources =
+        WordNetSources::load(paths.wordnet, control, &mut corpus_budget).map_err(corpus)?;
+    progress
+        .status
+        .versions
+        .data
+        .extend(wordnet_sources.identities.iter().cloned());
     let phrase = paths
         .phrase
         .map(|path| PhraseIndex::open_controlled_with_budget(path, control, &mut corpus_budget))
@@ -392,6 +395,8 @@ fn run(
         }
     }
     control.check().map_err(|e| Error::new(e, e))?;
+    let mut lex = wordnet_sources.parse(control).map_err(corpus)?;
+    drop(wordnet_sources);
     let unigrams =
         Unigrams::load(control.reader(Cursor::new(&unigram_source.bytes))).map_err(corpus)?;
     progress.stage(Stage::Generating);
