@@ -16,6 +16,7 @@ function harness(mode='play'){
   Object.assign(context,require('../apps/desktop/src/wordle-session.ts'));
   const expose=`globalThis.api={attachBoard(element){boardArea=element},setActive(value){active=value},setVisible(value){visible=value},setMode(value){mode=value;b=boards[mode]},focusBoard,accept,run,submit,typeKey,keydown,changeDraft,useWord,clueKey,effectiveHistory,effectiveRows,partialHistory,missingFeedback,tileClick,setFeedback,editRow,selectRow,removeRow,nextHint,drain,get board(){return b},get boards(){return boards},get active(){return active},attachStart(element){practiceStartButton=element},view(query,order){search=query;sort=order;return candidateWords()},dispose(){disposed=true}};`;
   vm.runInContext(ts.transpileModule(source+'\n'+expose,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,context);
+  vm.runInContext('api.setCorpora=corpora=>settings.corpora=corpora;',context);
   context.api.attachBoard(boardArea);
   return {api:context.api,commands,statuses,cancelled,document,boardArea,
     fail(error='Practice failed',i=commands.length-1){statuses[i].reject(new Error(error));},
@@ -26,6 +27,21 @@ function harness(mode='play'){
     complete(data={},i=commands.length-1){statuses[i].resolve({id:i+1,revision:commands[i].revision,active:false,history:[],finished:false,error:null,...data});}};
 }
 function enterWord(h,word='APPLE'){for(const letter of word)h.api.typeKey(letter);}
+test('custom vocabulary identity includes frequency sources used for ranking',()=>{
+  const h=harness();h.api.board.profile='custom';
+  h.api.setCorpora({dictionary:'unused-in-custom',unigrams:'first.txt'});
+  const first=h.api.clueKey(h.api.board);
+  h.api.setCorpora({dictionary:'unused-in-custom',unigrams:'second.txt'});
+  assert.notEqual(h.api.clueKey(h.api.board),first);
+});
+test('source restart intent survives filtering until the native session commits',async()=>{
+  const h=harness();h.api.board.draft='APPLE';h.api.board.marks=['gray',null,null,null,null];h.api.board.ready=true;h.api.board.restart=true;
+  h.api.accept({revision:h.api.board.revision,active:true,analysis:{profile:{fingerprint:'new-vocabulary'}}},'play');
+  const pending=h.api.run('analyze');await flush();
+  assert.equal(h.commands[0].restart,true);assert.equal(h.commands[0].expected_fingerprint,'new-vocabulary');
+  h.complete({analysis:{profile:{fingerprint:'new-vocabulary'}}});await pending;
+  assert.equal(h.api.board.restart,false);
+});
 function markRow(h){for(let i=0;i<5;i++)h.api.tileClick(0,i);}
 
 test('board typing replaces the selected letter and clears obsolete feedback',()=>{

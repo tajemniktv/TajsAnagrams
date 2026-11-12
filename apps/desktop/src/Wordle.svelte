@@ -58,11 +58,11 @@
   }
   let pendingFeedback = $derived(mode==='play'?missingFeedback(b):[]);
   let needsFeedback = $derived(pendingFeedback.length>0);
-  const clueKey = (board:Board) => JSON.stringify([board.length,board.attempts,board.profile,board.profile==='custom'?[prefs.answers_path,prefs.guesses_path]:settings.corpora,board.fixed,board.forbidden,board.bounds,board.remaining,effectiveRows(board)]);
+  const clueKey = (board:Board) => JSON.stringify([board.length,board.attempts,board.profile,settings.corpora?.unigrams,board.profile==='custom'?[prefs.answers_path,prefs.guesses_path]:settings.corpora?.dictionary,board.fixed,board.forbidden,board.bounds,board.remaining,effectiveRows(board)]);
   let stale = $derived(mode!=='practice' && b.analysis!==null && b.analyzedClues!==clueKey(b));
-  let lastCorpora=untrack(()=>JSON.stringify(settings.corpora));
-  $effect(()=>{const current=JSON.stringify(settings.corpora);if(current!==lastCorpora){lastCorpora=current;untrack(()=>{
-    for(const target of ['play','instant'] as const)if(boards[target].profile!=='custom'){boards[target].analysis=null;boards[target].revision++;}
+  let lastCorpora=untrack(()=>JSON.stringify([settings.corpora?.dictionary,settings.corpora?.unigrams]));
+  $effect(()=>{const current=JSON.stringify([settings.corpora?.dictionary,settings.corpora?.unigrams]);if(current!==lastCorpora){lastCorpora=current;untrack(()=>{
+    for(const target of ['play','instant'] as const){boards[target].analysis=null;boards[target].revision++;}
     if(mode!=='practice')changed();
   });}});
   function recheckVocabulary(){b.fingerprint=null;b.restart=true;b.analysis=null;changed();}
@@ -136,7 +136,7 @@
   }
   function accept(snapshot:WordleSnapshot,target:Mode,analyzedClues?:string|null){
     const board=boards[target];if(snapshot.revision!==board.revision)return;
-    if(snapshot.analysis&&!snapshot.error){board.analysis=snapshot.analysis;board.fingerprint=snapshot.analysis.profile?.fingerprint??null;board.restart=false;if(sessionNotice.startsWith('Puzzle restored.'))sessionNotice='Puzzle restored.';if(analyzedClues!==undefined)board.analyzedClues=analyzedClues;}
+    if(snapshot.analysis&&!snapshot.error){board.analysis=snapshot.analysis;board.fingerprint=snapshot.analysis.profile?.fingerprint??null;if(!snapshot.active)board.restart=false;if(sessionNotice.startsWith('Puzzle restored.'))sessionNotice='Puzzle restored.';if(analyzedClues!==undefined)board.analyzedClues=analyzedClues;}
     if(snapshot.error)board.error=snapshot.error;
     if(target==='practice'&&(snapshot.analysis||snapshot.error)){
       board.history=snapshot.history;board.finished=snapshot.finished;board.revealed=snapshot.revealed_answer??null;board.started=!!snapshot.analysis;

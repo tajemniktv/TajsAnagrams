@@ -310,10 +310,13 @@ pub fn read(data: &Path) -> Result<Value> {
     if !data.join("reviews.sqlite").exists() {
         return Ok(json!({"schema_version":1,"captures":[],"judgments":[],"preferences":[]}));
     }
-    let c = db(data)?;
+    let mut c = db(data)?;
+    // Commands run concurrently: captures, judgments and preferences must be
+    // exported from one database snapshot, never three different moments.
+    let snapshot = c.transaction().map_err(|e| e.to_string())?;
     let mut result = json!({"schema_version":1,"rubric":"standalone-usefulness-v1","clustering":"Repeated rows/trials are not independent puzzles. Compare by case/source family; unknown family is not inferred.","storage":data.join("reviews.sqlite")});
     for table in ["captures", "judgments", "preferences"] {
-        let mut stmt = c
+        let mut stmt = snapshot
             .prepare(&format!("SELECT payload FROM {table} ORDER BY rowid"))
             .map_err(|e| e.to_string())?;
         let values = stmt
@@ -326,6 +329,7 @@ pub fn read(data: &Path) -> Result<Value> {
             .collect::<Result<Vec<_>>>()?;
         result[table] = json!(values);
     }
+    snapshot.commit().map_err(|e| e.to_string())?;
     Ok(result)
 }
 #[derive(Deserialize, Serialize)]
