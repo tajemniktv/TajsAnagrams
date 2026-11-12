@@ -1,6 +1,6 @@
 [CmdletBinding()]
 # KeepBuildCache remains accepted for existing callers; retention is now default.
-param([switch]$TestOnly, [switch]$KeepBuildCache)
+param([switch]$TestOnly, [switch]$KeepBuildCache, [switch]$RefreshReview)
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $desktop = Join-Path $project 'apps/desktop'
@@ -15,8 +15,10 @@ try {
     $env:CARGO_TARGET_DIR = $build
     & node (Join-Path $desktop 'node_modules/@tauri-apps/cli/tauri.js') build --no-bundle -- --locked
     if ($LASTEXITCODE -ne 0) { throw 'Desktop build failed; installed app unchanged' }
-    & cargo xtask review
-    if ($LASTEXITCODE -ne 0) { throw 'Stored TajsBench review refresh failed; installed app unchanged' }
+    if ($RefreshReview) {
+        & cargo xtask review
+        if ($LASTEXITCODE -ne 0) { throw 'Requested TajsBench review refresh failed; installed app unchanged' }
+    }
     $candidate = Join-Path $build 'release/TajsAnagrams.exe'
     if (-not (Test-Path -LiteralPath $candidate)) { throw 'Desktop executable missing' }
     if ($TestOnly -or $env:CI) { Write-Output "Test/CI executable (not installed or restarted): $candidate"; return }

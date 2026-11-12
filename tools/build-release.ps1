@@ -1,7 +1,7 @@
 # Publish the current native CLI release and one rotating backup; retain Cargo's cache.
 # This is a development CLI build, not a desktop-app dogfood/CI entrypoint.
 [CmdletBinding()]
-param()
+param([switch]$RefreshReview)
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $target = Join-Path $project 'build'
@@ -45,8 +45,10 @@ try {
     & cargo build --release --locked -p anagram-cli --target-dir $build
     if ($LASTEXITCODE -ne 0) { throw 'Release build failed; existing releases are untouched.' }
     $candidate = Join-Path $build 'release/anagram-cli.exe'
-    & cargo xtask review
-    if ($LASTEXITCODE -ne 0) { throw 'Stored TajsBench review refresh failed; existing releases are untouched.' }
+    if ($RefreshReview) {
+        & cargo xtask review
+        if ($LASTEXITCODE -ne 0) { throw 'Requested TajsBench review refresh failed; existing releases are untouched.' }
+    }
     $fixtures = Get-Content -LiteralPath (Join-Path $project 'contracts/fixtures.json') -Raw | ConvertFrom-Json
     $request = ($fixtures | Where-Object { $_.schema -eq 'GenerateRequest' -and $_.valid } | Select-Object -First 1).value
     $output = ($request | ConvertTo-Json -Depth 20 -Compress) | & $candidate generate (Join-Path $project 'tests/fixtures/dictionary.txt')
