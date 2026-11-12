@@ -3,12 +3,7 @@ use crate::jobs::Desktop;
 use anagram_core::{control::Control, training};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::{
-    fs,
-    io::Read,
-    path::Path,
-    time::{Duration, Instant},
-};
+use std::{fs, io::Read, path::Path};
 
 #[derive(Clone, Default, Serialize)]
 pub struct Snapshot {
@@ -55,58 +50,6 @@ impl Desktop {
         self.operation(60, move |control| {
             train(Path::new(&dataset), &directory, &options, control)
         })
-    }
-    pub fn operation(
-        &self,
-        seconds: u64,
-        work: impl FnOnce(&Control) -> Result<Value, String> + Send + 'static,
-    ) -> Result<(), String> {
-        let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
-        if inner.closing
-            || inner.job.active
-            || inner.experiment.active
-            || inner.wordle.snapshot.active
-        {
-            return Err("Wait for the current solve or training run to finish".into());
-        }
-        if let Some(worker) = inner.worker.take() {
-            let _ = worker.join();
-        }
-        inner.control = Control::with_deadline(Instant::now() + Duration::from_secs(seconds));
-        inner.experiment = Snapshot {
-            active: true,
-            ..Default::default()
-        };
-        let control = inner.control.clone();
-        let shared = self.inner.clone();
-        #[cfg(test)]
-        let worker_gate = inner.worker_gate.take();
-        match std::thread::Builder::new()
-            .name("experimental-training".into())
-            .spawn(move || {
-                #[cfg(test)]
-                if let Some(gate) = worker_gate {
-                    gate.wait();
-                }
-                let result =
-                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work(&control)))
-                        .unwrap_or_else(|_| Err("Training stopped unexpectedly".into()));
-                if let Ok(mut inner) = shared.lock() {
-                    inner.experiment.active = false;
-                    match result {
-                        Ok(report) => inner.experiment.report = Some(report),
-                        Err(error) => inner.experiment.error = Some(error),
-                    }
-                }
-            }) {
-            Ok(worker) => inner.worker = Some(worker),
-            Err(error) => {
-                inner.experiment.active = false;
-                inner.experiment.error = Some(error.to_string());
-                return Err(error.to_string());
-            }
-        }
-        Ok(())
     }
 }
 

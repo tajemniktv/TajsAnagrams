@@ -213,6 +213,7 @@
       "properties": {
         "cache_bytes": {
           "default": 8388608,
+          "description": "Optional feedback-matrix allocation only; not a total heap/memoization cap.",
           "format": "uint",
           "minimum": 0,
           "type": "integer"
@@ -255,6 +256,7 @@
         },
         "timeout_ms": {
           "default": 2000,
+          "description": "Local recommendation deadline, checked between scoring passes. Preparation\nand a complete guess/answer pass may overrun it; caller deadlines still apply.",
           "format": "uint64",
           "minimum": 0,
           "type": "integer"
@@ -294,6 +296,14 @@
       "minimum": 0,
       "type": "integer"
     },
+    "expected_fingerprint": {
+      "default": null,
+      "description": "Durable non-Practice sessions must verify the exact previously used corpus.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "guesses_path": {
       "type": "string"
     },
@@ -305,6 +315,11 @@
     },
     "request": {
       "$ref": "#/$defs/AnalysisRequest"
+    },
+    "restart": {
+      "default": false,
+      "description": "Explicitly recheck all supplied clues against a newly selected vocabulary.",
+      "type": "boolean"
     },
     "revision": {
       "format": "uint64",

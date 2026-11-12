@@ -62,10 +62,12 @@ export type WordleCommand = {
   "action": SessionAction;
   "answers_path": string;
   "attempts": number;
+  "expected_fingerprint"?: string | null;
   "guesses_path": string;
   "mode": Mode;
   "profile": ProfileKind;
   "request": AnalysisRequest;
+  "restart"?: boolean;
   "revision": number;
   "word": string;
 };

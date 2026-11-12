@@ -6,6 +6,8 @@ use std::{
 };
 fn command(mode: Mode, action: SessionAction) -> SessionCommand {
     SessionCommand {
+        restart: false,
+        expected_fingerprint: None,
         mode,
         action,
         revision: 1,
@@ -167,6 +169,62 @@ fn old_settings_get_default_preferences() {
     let s: crate::settings::Settings = serde_json::from_value(json).unwrap();
     assert_eq!(s.wordle.length, 5);
     assert_eq!(s.wordle.attempts, 6);
+}
+#[test]
+fn restored_clues_verify_content_identity_and_require_explicit_recheck() {
+    let (temp, app) = setup();
+    let mut c = command(Mode::Play, SessionAction::Filter);
+    app.wordle_start(c.clone()).unwrap();
+    let first = wait(&app).analysis.unwrap();
+    c.expected_fingerprint = Some(first.profile.fingerprint.clone());
+    c.request.partial_history = vec![PartialHistoryRow {
+        word: "apple".into(),
+        feedback: vec![Some(Mark::Green), None, None, None, None],
+    }];
+    app.wordle_start(c.clone()).unwrap();
+    assert!(wait(&app).error.is_none());
+    fs::write(
+        temp.path().join("dictionary.txt"),
+        "ample\nalley\nother\ncrane\nstone\n",
+    )
+    .unwrap();
+    app.wordle_start(c.clone()).unwrap();
+    assert!(
+        wait(&app)
+            .error
+            .unwrap()
+            .contains("Saved vocabulary changed")
+    );
+    c.expected_fingerprint = None;
+    c.restart = true;
+    app.wordle_start(c).unwrap();
+    let updated = wait(&app);
+    assert!(updated.error.is_none(), "{:?}", updated.error);
+    assert_ne!(
+        updated.analysis.unwrap().profile.fingerprint,
+        first.profile.fingerprint
+    );
+    app.shutdown();
+}
+#[test]
+fn unchanged_status_does_not_serialize_candidate_payloads() {
+    let (_temp, app) = setup();
+    app.wordle_start(command(Mode::Instant, SessionAction::Filter))
+        .unwrap();
+    wait(&app);
+    let inner = app.inner.lock().unwrap();
+    let initial = inner.wordle.update(None);
+    assert!(
+        !initial["snapshot"]["analysis"]["candidates"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    let unchanged = inner.wordle.update(Some(inner.wordle.version));
+    assert!(unchanged["snapshot"].is_null());
+    assert!(unchanged.to_string().len() < 64);
+    drop(inner);
+    app.shutdown();
 }
 #[test]
 fn changed_source_content_invalidates_vocabulary_and_requires_history_restart() {

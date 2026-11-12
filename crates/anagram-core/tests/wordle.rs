@@ -17,6 +17,27 @@ fn vocab(guesses: &str, answers: Option<&str>) -> Vocabulary {
 fn run(v: &Vocabulary, r: &AnalysisRequest) -> Analysis {
     analyze(v, r, &Control::default(), |_| {}).unwrap()
 }
+#[test]
+fn objective_describes_the_actual_ranking_path() {
+    let v = vocab("aaaa\naaab\naaba\nabaa\nbaaa", None);
+    let mut r = AnalysisRequest {
+        length: 4,
+        attempts_remaining: 2,
+        ..Default::default()
+    };
+    assert_eq!(run(&v, &r).objective, "win_probability_then_penalized_cost");
+    r.strategy = Strategy::Entropy;
+    assert_eq!(
+        run(&v, &r).objective,
+        "information_gain_then_expected_remaining"
+    );
+    r.attempts_remaining = 0;
+    assert_eq!(run(&v, &r).objective, "none");
+    assert_eq!(
+        filter(&v, &r, &Control::default()).unwrap().0.objective,
+        "candidate_filtering"
+    );
+}
 
 // Independent positional consumption oracle; no pattern encoding or count-table reuse.
 fn oracle(answer: &str, guess: &str) -> Vec<Mark> {

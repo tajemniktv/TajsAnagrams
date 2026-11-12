@@ -1,5 +1,5 @@
 //! Opt-in, local review evidence. No solver scores or judgments are training input.
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -36,7 +36,7 @@ fn now() -> Result<u128> {
 }
 fn db(data: &Path) -> Result<Connection> {
     fs::create_dir_all(data).map_err(|e| e.to_string())?;
-    let c = Connection::open(data.join("reviews.sqlite")).map_err(|e| e.to_string())?;
+    let mut c = Connection::open(data.join("reviews.sqlite")).map_err(|e| e.to_string())?;
     c.busy_timeout(std::time::Duration::from_secs(5))
         .map_err(|e| e.to_string())?;
     c.execute_batch(
@@ -45,6 +45,17 @@ fn db(data: &Path) -> Result<Connection> {
       CREATE TABLE IF NOT EXISTS preferences(id TEXT PRIMARY KEY, payload TEXT NOT NULL);",
     )
     .map_err(|e| e.to_string())?;
+    if c.pragma_query_value(None, "user_version", |r| r.get::<_, u32>(0))
+        .map_err(|e| e.to_string())?
+        < 1
+    {
+        let tx = c.transaction().map_err(|e| e.to_string())?;
+        tx.execute_batch("CREATE TABLE IF NOT EXISTS review_rows(row_id TEXT NOT NULL,capture_id TEXT NOT NULL,context_id TEXT NOT NULL,judgeable INTEGER NOT NULL,PRIMARY KEY(row_id,capture_id));
+          CREATE INDEX IF NOT EXISTS review_rows_context ON review_rows(context_id,row_id,judgeable);
+          INSERT OR IGNORE INTO review_rows SELECT json_extract(r.value,'$.id'),c.id,json_extract(c.payload,'$.context_id'),json_extract(r.value,'$.judgeable') FROM captures c,json_each(c.payload,'$.rows') r;
+          PRAGMA user_version=1;").map_err(|e|e.to_string())?;
+        tx.commit().map_err(|e| e.to_string())?;
+    }
     Ok(c)
 }
 fn bounded(path: &Path) -> Result<Vec<u8>> {
@@ -167,6 +178,18 @@ pub fn store(data: &Path, runs: &[Value]) -> Result<usize> {
                 params![r["id"].as_str(), r.to_string()],
             )
             .map_err(|e| e.to_string())?;
+        for row in r["rows"].as_array().ok_or("Missing capture rows")? {
+            tx.execute(
+                "INSERT OR IGNORE INTO review_rows VALUES(?1,?2,?3,?4)",
+                params![
+                    row["id"].as_str(),
+                    r["id"].as_str(),
+                    r["context_id"].as_str(),
+                    row["judgeable"].as_bool()
+                ],
+            )
+            .map_err(|e| e.to_string())?;
+        }
     }
     tx.commit().map_err(|e| e.to_string())?;
     Ok(added)
@@ -327,14 +350,15 @@ pub fn judge(data: &Path, j: Judgment) -> Result<()> {
     {
         return Err("Invalid judgment, reason or note (maximum 2000 bytes)".into());
     }
-    let state = read(data)?;
-    if !state["captures"].as_array().unwrap().iter().any(|r| {
-        r["rows"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|row| row["id"] == j.id && row["judgeable"] == true)
-    }) {
+    let c = db(data)?;
+    if !c
+        .query_row(
+            "SELECT EXISTS(SELECT 1 FROM review_rows WHERE row_id=?1 AND judgeable=1)",
+            [&j.id],
+            |r| r.get::<_, bool>(0),
+        )
+        .map_err(|e| e.to_string())?
+    {
         return Err("Unknown or blank output; judgments cannot create results".into());
     }
     let value = json!({"id":j.id,"verdict":j.verdict,"reasons":j.reasons,"note":j.note,"task_fit":j.task_fit,"looked_up":j.looked_up,"recorded_at_unix_ms":now()?,"provenance":"Personal desktop review; ranks visible; not population-wide or necessarily blinded","rubric":"standalone-usefulness-v1"});
@@ -355,29 +379,26 @@ pub fn prefer(data: &Path, p: Preference) -> Result<()> {
     {
         return Err("Invalid pairwise preference".into());
     }
-    let state = read(data)?;
-    let run = state["captures"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|r| r["id"] == p.capture_id)
+    let c = db(data)?;
+    let context: String = c
+        .query_row(
+            "SELECT json_extract(payload,'$.context_id') FROM captures WHERE id=?1",
+            [&p.capture_id],
+            |r| r.get(0),
+        )
+        .optional()
+        .map_err(|e| e.to_string())?
         .ok_or("Unknown capture")?;
-    let ids = state["captures"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter(|c| c["context_id"] == run["context_id"])
-        .flat_map(|c| c["rows"].as_array().unwrap())
-        .filter(|r| r["judgeable"] == true)
-        .filter_map(|r| r["id"].as_str())
-        .collect::<BTreeSet<_>>();
-    if !ids.contains(p.left.as_str()) || !ids.contains(p.right.as_str()) {
+    let contains = |id: &str| {
+        c.query_row("SELECT EXISTS(SELECT 1 FROM review_rows WHERE context_id=?1 AND row_id=?2 AND judgeable=1)",params![context,id],|r|r.get::<_,bool>(0)).map_err(|e|e.to_string())
+    };
+    if !contains(&p.left)? || !contains(&p.right)? {
         return Err("Pair must belong to the same puzzle/context".into());
     }
     let mut pair = [p.left.clone(), p.right.clone()];
     pair.sort();
-    let id = hash(&json!([run["context_id"], pair]));
-    let value = json!({"id":id,"capture_id":p.capture_id,"context_id":run["context_id"],"left":p.left,"right":p.right,"choice":p.choice,"recorded_at_unix_ms":now()?,"presentation":"Explicit randomized left/right; actual identities retained","provenance":"Personal pairwise preference; separate from standalone verdicts"});
+    let id = hash(&json!([context, pair]));
+    let value = json!({"id":id,"capture_id":p.capture_id,"context_id":context,"left":p.left,"right":p.right,"choice":p.choice,"recorded_at_unix_ms":now()?,"presentation":"Explicit randomized left/right; actual identities retained","provenance":"Personal pairwise preference; separate from standalone verdicts"});
     db(data)?.execute("INSERT INTO preferences VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload",params![id,value.to_string()]).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -413,6 +434,45 @@ mod tests {
             task_fit: None,
             looked_up: false,
         }
+    }
+    #[test]
+    fn old_review_database_migrates_and_writes_use_only_indexed_rows() {
+        let temp = scratch();
+        let capture = capture(run()).unwrap();
+        let c = Connection::open(temp.path().join("reviews.sqlite")).unwrap();
+        c.execute_batch("CREATE TABLE captures(id TEXT PRIMARY KEY,payload TEXT NOT NULL);CREATE TABLE judgments(id TEXT PRIMARY KEY,payload TEXT NOT NULL);CREATE TABLE preferences(id TEXT PRIMARY KEY,payload TEXT NOT NULL);").unwrap();
+        c.execute(
+            "INSERT INTO captures VALUES(?1,?2)",
+            params![capture["id"].as_str(), capture.to_string()],
+        )
+        .unwrap();
+        drop(c);
+        let row = capture["rows"][0]["id"].as_str().unwrap();
+        judge(temp.path(), judgment(row, Some("useful"))).unwrap();
+        let c = db(temp.path()).unwrap();
+        assert_eq!(
+            c.pragma_query_value(None, "user_version", |r| r.get::<_, u32>(0))
+                .unwrap(),
+            1
+        );
+        // An unrelated historical payload must not be parsed to validate this ID.
+        c.execute(
+            "INSERT INTO captures VALUES('unrelated','invalid historical payload')",
+            [],
+        )
+        .unwrap();
+        drop(c);
+        judge(temp.path(), judgment(row, Some("unsure"))).unwrap();
+        prefer(
+            temp.path(),
+            Preference {
+                capture_id: capture["id"].as_str().unwrap().into(),
+                left: row.into(),
+                right: capture["rows"][1]["id"].as_str().unwrap().into(),
+                choice: "tie".into(),
+            },
+        )
+        .unwrap();
     }
     #[test]
     fn ranks_context_uncertainty_notes_and_export_survive_reopen() {

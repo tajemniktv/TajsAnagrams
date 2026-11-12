@@ -133,6 +133,12 @@ pub enum SessionAction {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct SessionCommand {
+    /// Explicitly recheck all supplied clues against a newly selected vocabulary.
+    #[serde(default)]
+    pub restart: bool,
+    /// Durable non-Practice sessions must verify the exact previously used corpus.
+    #[serde(default)]
+    pub expected_fingerprint: Option<String>,
     pub mode: Mode,
     pub action: SessionAction,
     pub revision: u64,
@@ -163,6 +169,8 @@ pub struct SearchBudget {
     /// Disable only multi-step endgame search, retaining its heuristic fallback.
     /// Used for matched ablations; the interactive default remains enabled.
     pub exact_endgame: bool,
+    /// Local recommendation deadline, checked between scoring passes. Preparation
+    /// and a complete guess/answer pass may overrun it; caller deadlines still apply.
     pub timeout_ms: u64,
     /// Initial seed/widening increment, never a permanent guess shortlist.
     pub initial_batch: usize,
@@ -170,6 +178,7 @@ pub struct SearchBudget {
     pub max_states: usize,
     /// Bypass soft phase targets, retaining caller/hard deadlines and state limits.
     pub full_search: bool,
+    /// Optional feedback-matrix allocation only; not a total heap/memoization cap.
     pub cache_bytes: usize,
     /// Ordinary ranking target. Deeper adaptive endgames share twice this budget:
     /// exact work yields after the first target so fallback ranking can resume.

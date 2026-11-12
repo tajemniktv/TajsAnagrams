@@ -21,16 +21,31 @@ fn wordle_start(
     state.wordle_start(command)
 }
 #[tauri::command]
-fn wordle_status(
-    state: State<'_, Desktop>,
-) -> Result<anagram_core::wordle::SessionSnapshot, String> {
+fn wordle_status(known_version: Option<u64>, state: State<'_, Desktop>) -> Result<Value, String> {
     Ok(state
         .inner
         .lock()
         .map_err(|e| e.to_string())?
         .wordle
-        .snapshot
+        .update(known_version))
+}
+#[tauri::command]
+fn operation_status(state: State<'_, Desktop>) -> Result<Option<jobs::ActiveOperation>, String> {
+    Ok(state
+        .inner
+        .lock()
+        .map_err(|e| e.to_string())?
+        .operation
         .clone())
+}
+#[tauri::command]
+fn cancel_operation(id: u64, state: State<'_, Desktop>) -> Result<(), String> {
+    state
+        .inner
+        .lock()
+        .map_err(|e| e.to_string())?
+        .cancel_operation(id);
+    Ok(())
 }
 #[tauri::command]
 fn wordle_page(
@@ -42,9 +57,9 @@ fn wordle_page(
 }
 #[tauri::command]
 fn wordle_cancel(id: u64, state: State<'_, Desktop>) -> Result<(), String> {
-    let inner = state.inner.lock().map_err(|e| e.to_string())?;
+    let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
     if inner.wordle.snapshot.active && inner.wordle.snapshot.id == id {
-        inner.control.cancel();
+        inner.cancel_operation(id);
     }
     Ok(())
 }
@@ -74,12 +89,15 @@ fn review_enabled(state: &Desktop) -> Result<(), String> {
     Ok(())
 }
 #[tauri::command]
-fn review_state(state: State<'_, Desktop>) -> Result<Value, String> {
+async fn review_state(state: State<'_, Desktop>) -> Result<Value, String> {
     review_enabled(&state)?;
-    review::read(&state.data)
+    let data = state.data.clone();
+    tauri::async_runtime::spawn_blocking(move || review::read(&data))
+        .await
+        .map_err(|e| e.to_string())?
 }
 #[tauri::command]
-fn review_capture(id: u64, state: State<'_, Desktop>) -> Result<usize, String> {
+async fn review_capture(id: u64, state: State<'_, Desktop>) -> Result<usize, String> {
     review_enabled(&state)?;
     let run = {
         let inner = state.inner.lock().map_err(|e| e.to_string())?;
@@ -95,20 +113,32 @@ fn review_capture(id: u64, state: State<'_, Desktop>) -> Result<usize, String> {
         r["status"] = serde_json::json!(inner.job.status);
         r
     };
-    review::store(&state.data, &[run])
+    let data = state.data.clone();
+    tauri::async_runtime::spawn_blocking(move || review::store(&data, &[run]))
+        .await
+        .map_err(|e| e.to_string())?
 }
 fn json_option(value: &Option<Value>) -> Value {
     value.clone().unwrap_or(Value::Null)
 }
 #[tauri::command]
-fn review_judge(judgment: review::Judgment, state: State<'_, Desktop>) -> Result<(), String> {
+async fn review_judge(judgment: review::Judgment, state: State<'_, Desktop>) -> Result<(), String> {
     review_enabled(&state)?;
-    review::judge(&state.data, judgment)
+    let data = state.data.clone();
+    tauri::async_runtime::spawn_blocking(move || review::judge(&data, judgment))
+        .await
+        .map_err(|e| e.to_string())?
 }
 #[tauri::command]
-fn review_prefer(preference: review::Preference, state: State<'_, Desktop>) -> Result<(), String> {
+async fn review_prefer(
+    preference: review::Preference,
+    state: State<'_, Desktop>,
+) -> Result<(), String> {
     review_enabled(&state)?;
-    review::prefer(&state.data, preference)
+    let data = state.data.clone();
+    tauri::async_runtime::spawn_blocking(move || review::prefer(&data, preference))
+        .await
+        .map_err(|e| e.to_string())?
 }
 #[tauri::command]
 async fn review_import(
@@ -248,18 +278,18 @@ fn training_status(state: State<'_, Desktop>) -> Result<experimental::Snapshot, 
 }
 #[tauri::command]
 fn cancel_training(state: State<'_, Desktop>) -> Result<(), String> {
-    let inner = state.inner.lock().map_err(|e| e.to_string())?;
-    if inner.experiment.active {
-        inner.control.cancel();
+    let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
+    if inner.experiment.active
+        && let Some(operation) = inner.operation.clone()
+    {
+        inner.cancel_operation(operation.id);
     }
     Ok(())
 }
 #[tauri::command]
 fn save_settings(settings: settings::Settings, state: State<'_, Desktop>) -> Result<(), String> {
     let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
-    if inner.job.active || inner.experiment.active || inner.wordle.snapshot.active {
-        return Err("Wait for the current solve before changing settings.".into());
-    }
+    inner.ensure_idle()?;
     settings::save(&state.data, &settings)?;
     inner.settings = settings;
     inner.notice = None;
@@ -296,9 +326,9 @@ fn job_result(id: u64, state: State<'_, Desktop>) -> Result<Option<Value>, Strin
 }
 #[tauri::command]
 fn cancel_job(id: u64, state: State<'_, Desktop>) -> Result<(), String> {
-    let inner = state.inner.lock().map_err(|e| e.to_string())?;
+    let mut inner = state.inner.lock().map_err(|e| e.to_string())?;
     if inner.job.id == id && inner.job.active {
-        inner.control.cancel();
+        inner.cancel_operation(id);
     }
     Ok(())
 }
@@ -392,6 +422,16 @@ fn copy_results(id: u64, state: State<'_, Desktop>) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 #[tauri::command]
+fn copy_text(text: String) -> Result<(), String> {
+    if text.len() > 4096 {
+        return Err("Text exceeds clipboard limit".into());
+    }
+    arboard::Clipboard::new()
+        .map_err(|e| e.to_string())?
+        .set_text(text)
+        .map_err(|e| e.to_string())
+}
+#[tauri::command]
 async fn export_results(
     id: u64,
     format: String,
@@ -439,6 +479,8 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             wordle_start,
+            operation_status,
+            cancel_operation,
             wordle_status,
             wordle_page,
             wordle_cancel,
@@ -464,6 +506,7 @@ fn main() {
             cancel_job,
             choose_path,
             copy_results,
+            copy_text,
             export_results
         ])
         .build(tauri::generate_context!())

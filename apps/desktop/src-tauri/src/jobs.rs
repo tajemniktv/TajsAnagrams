@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
     thread::JoinHandle,
+    time::{Duration, Instant},
 };
 
 #[derive(Clone, Serialize, Default)]
@@ -16,7 +17,15 @@ pub struct Snapshot {
     pub result: Option<Value>,
     pub error: Option<String>,
 }
+#[derive(Clone, Serialize)]
+pub struct ActiveOperation {
+    pub id: u64,
+    pub kind: &'static str,
+    pub cancelling: bool,
+}
 pub struct Inner {
+    pub operation: Option<ActiveOperation>,
+    operation_sequence: u64,
     pub wordle: crate::wordle::HostState,
     pub experiment: crate::experimental::Snapshot,
     pub settings: Settings,
@@ -30,6 +39,36 @@ pub struct Inner {
     pub worker_gate: Option<Arc<std::sync::Barrier>>,
     #[cfg(test)]
     pub panic_after_progress: bool,
+}
+impl Inner {
+    pub fn ensure_idle(&self) -> Result<(), String> {
+        if self.closing || self.operation.is_some() {
+            return Err("An operation is already running or the app is closing. Wait for it, or cancel it first".into());
+        }
+        Ok(())
+    }
+    pub fn admit(&mut self, kind: &'static str) -> Result<u64, String> {
+        self.ensure_idle()?;
+        if let Some(worker) = self.worker.take() {
+            let _ = worker.join();
+        }
+        self.operation_sequence += 1;
+        let id = self.operation_sequence;
+        self.operation = Some(ActiveOperation {
+            id,
+            kind,
+            cancelling: false,
+        });
+        Ok(id)
+    }
+    pub fn cancel_operation(&mut self, id: u64) {
+        if let Some(operation) = &mut self.operation
+            && operation.id == id
+        {
+            operation.cancelling = true;
+            self.control.cancel();
+        }
+    }
 }
 pub struct Desktop {
     pub inner: Arc<Mutex<Inner>>,
@@ -130,6 +169,8 @@ impl Desktop {
         Ok(Self {
             data,
             inner: Arc::new(Mutex::new(Inner {
+                operation: None,
+                operation_sequence: 0,
                 wordle: Default::default(),
                 settings,
                 notice,
@@ -194,24 +235,15 @@ impl Desktop {
             limits.admit(&request)
         }
         .map_err(|e| e.message)?;
-        if inner.closing
-            || inner.job.active
-            || inner.experiment.active
-            || inner.wordle.snapshot.active
-        {
-            return Err("A solve is already running. Cancel it and wait for completion before starting another.".into());
-        }
+        inner.ensure_idle()?;
         if !generation_only {
             inner.settings.corpora.validate()?;
-        }
-        if let Some(worker) = inner.worker.take() {
-            let _ = worker.join();
         }
         let mut settings = inner.settings.clone();
         settings.request = serde_json::to_value(&request).map_err(|e| e.to_string())?;
         settings::save(&self.data, &settings)?;
         inner.settings = settings.clone();
-        let id = inner.job.id + 1;
+        let id = inner.admit("anagrams")?;
         inner.review_context = json!({"origin":"installed desktop capture; no source family supplied", "request":settings.request,"extended":extended,"generation_only":generation_only,"limits":limits,"configured_corpora":settings.corpora,"configured_model":settings.model,"started_at_unix_ms":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|e|e.to_string())?.as_millis()});
         inner.job = Snapshot {
             id,
@@ -320,12 +352,14 @@ impl Desktop {
                         }
                     }
                     inner.job.active = false;
+                    inner.operation = None;
                 }
             });
         match spawn {
             Ok(worker) => inner.worker = Some(worker),
             Err(error) => {
                 inner.job.active = false;
+                inner.operation = None;
                 inner.job.error = Some(error.to_string());
                 return Err(error.to_string());
             }
@@ -346,13 +380,7 @@ impl Desktop {
     }
     pub fn clear_cache(&self) -> Result<(), String> {
         let inner = self.inner.lock().map_err(|e| e.to_string())?;
-        if inner.job.active
-            || inner.experiment.active
-            || inner.wordle.snapshot.active
-            || inner.closing
-        {
-            return Err("Wait for the active solve before clearing the cache".into());
-        }
+        inner.ensure_idle()?;
         let path = inner.settings.runtime.cache_path(&self.data);
         if !path.exists() {
             return Ok(());
@@ -372,5 +400,53 @@ impl Desktop {
             "wordle_frequencies_available":Path::new(&inner.settings.corpora.unigrams).is_file(),"corpus_error":inner.settings.corpora.validate().err(),"data_directory":self.data,
             "engine_version":env!("CARGO_PKG_VERSION"),"active_jobs":1,"queue_capacity":0}),
         )
+    }
+}
+
+impl Desktop {
+    pub fn operation(
+        &self,
+        seconds: u64,
+        work: impl FnOnce(&Control) -> Result<Value, String> + Send + 'static,
+    ) -> Result<(), String> {
+        let mut inner = self.inner.lock().map_err(|e| e.to_string())?;
+        inner.admit("maintenance")?;
+        inner.control = Control::with_deadline(Instant::now() + Duration::from_secs(seconds));
+        inner.experiment = crate::experimental::Snapshot {
+            active: true,
+            ..Default::default()
+        };
+        let control = inner.control.clone();
+        let shared = self.inner.clone();
+        #[cfg(test)]
+        let worker_gate = inner.worker_gate.take();
+        match std::thread::Builder::new()
+            .name("TajsAnagrams-maintenance".into())
+            .spawn(move || {
+                #[cfg(test)]
+                if let Some(gate) = worker_gate {
+                    gate.wait();
+                }
+                let result =
+                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work(&control)))
+                        .unwrap_or_else(|_| Err("Operation stopped unexpectedly".into()));
+                if let Ok(mut inner) = shared.lock() {
+                    inner.experiment.active = false;
+                    inner.operation = None;
+                    match result {
+                        Ok(report) => inner.experiment.report = Some(report),
+                        Err(error) => inner.experiment.error = Some(error),
+                    }
+                }
+            }) {
+            Ok(worker) => inner.worker = Some(worker),
+            Err(error) => {
+                inner.experiment.active = false;
+                inner.operation = None;
+                inner.experiment.error = Some(error.to_string());
+                return Err(error.to_string());
+            }
+        }
+        Ok(())
     }
 }

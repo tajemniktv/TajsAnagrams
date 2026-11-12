@@ -217,7 +217,7 @@ pub fn filter(
         length: request.length,
         attempts_remaining: request.attempts_remaining,
         guess_policy: request.guess_policy,
-        objective: "win_probability_then_penalized_cost".into(),
+        objective: "candidate_filtering".into(),
         profile: v.profile.clone(),
         candidate_count: ids.len(),
         candidates: ids
@@ -645,6 +645,7 @@ pub fn recommend(
     }
     if ids.is_empty() || r.attempts_remaining == 0 {
         result.method = "no_next_guess".into();
+        result.objective = "none".into();
         return Ok(());
     }
     let control = if r.budget.timeout_ms == 0 {
@@ -673,6 +674,7 @@ pub fn recommend(
         result.strategic = Some(rec.clone());
         result.answer = Some(rec);
         result.method = "optimal_for_profile".into();
+        result.objective = "win_probability_then_penalized_cost".into();
         result.optimal_for_profile = true;
         result.guess_space_complete = true;
         result.evaluated_guesses = ids.len();
@@ -750,6 +752,12 @@ pub fn recommend(
         )?;
     }
     ranking.publish(result);
+    result.objective = if ranking.two_turn {
+        "win_probability_then_penalized_cost"
+    } else {
+        "information_gain_then_expected_remaining"
+    }
+    .into();
     result.method = if ranking.two_turn {
         "two_turn_search"
     } else {
@@ -761,6 +769,9 @@ pub fn recommend(
         // Exact work uses at most the first target, leaving time for fallback
         // widening if the state, memory-intake, or time budget is exhausted.
         let complete = exact_search(v, r, ids, &guesses, &soft_control(1), result);
+        if complete {
+            result.objective = "win_probability_then_penalized_cost".into();
+        }
         caller.check().map_err(str::to_owned)?;
         if !complete {
             ranking.widen(r.budget.initial_batch, caller, &soft_control(2))?;

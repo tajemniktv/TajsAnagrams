@@ -30,8 +30,22 @@ struct Session {
 #[derive(Default)]
 pub struct HostState {
     pub snapshot: SessionSnapshot,
+    pub version: u64,
     sessions: HashMap<Mode, Session>,
     cache: Option<(String, Arc<Vocabulary>)>,
+}
+impl HostState {
+    fn publish(&mut self, snapshot: SessionSnapshot) {
+        self.version += 1;
+        self.snapshot = snapshot;
+    }
+    pub fn update(&self, known_version: Option<u64>) -> serde_json::Value {
+        if known_version == Some(self.version) {
+            serde_json::json!({"version":self.version,"snapshot":null})
+        } else {
+            serde_json::json!({"version":self.version,"snapshot":self.snapshot})
+        }
+    }
 }
 fn fail(e: impl std::fmt::Display) -> String {
     e.to_string()
@@ -159,6 +173,15 @@ fn execute(
         vocabulary(app, command, settings, control)?
     };
     if !practice
+        && command
+            .expected_fingerprint
+            .as_ref()
+            .is_some_and(|expected| *expected != v.profile.fingerprint)
+    {
+        return Err("Saved vocabulary changed. Recheck the clues with the current vocabulary or start a new puzzle.".into());
+    }
+    if !practice
+        && !command.restart
         && (!command.request.history.is_empty() || !command.request.partial_history.is_empty())
         && previous
             .as_ref()
@@ -251,7 +274,11 @@ fn execute(
         },
         error: None,
     };
-    app.inner.lock().map_err(fail)?.wordle.snapshot = make(analysis.clone(), true);
+    app.inner
+        .lock()
+        .map_err(fail)?
+        .wordle
+        .publish(make(analysis.clone(), true));
     if matches!(command.action, SessionAction::Analyze) {
         wordle::recommend(&v, &command.request, &ids, control, &mut analysis)?;
     }
@@ -270,28 +297,18 @@ impl Desktop {
         command.request.budget = wordle::SearchBudget::default();
         command.request.strategy = wordle::Strategy::Adaptive;
         let mut inner = self.inner.lock().map_err(fail)?;
-        if inner.closing
-            || inner.job.active
-            || inner.experiment.active
-            || inner.wordle.snapshot.active
-        {
-            return Err("Wait for the current operation, or cancel it first".into());
-        }
-        if let Some(worker) = inner.worker.take() {
-            let _ = worker.join();
-        }
-        let id = inner.wordle.snapshot.id + 1;
+        let id = inner.admit("wordle")?;
         inner.control = Control::with_deadline(Instant::now() + Duration::from_secs(30));
         let control = inner.control.clone();
         let previous = inner.wordle.sessions.get(&command.mode).cloned();
         let settings = inner.settings.clone();
-        inner.wordle.snapshot = SessionSnapshot {
+        inner.wordle.publish(SessionSnapshot {
             id,
             revision: command.revision,
             mode: command.mode,
             active: true,
             ..Default::default()
-        };
+        });
         let app = Desktop {
             inner: self.inner.clone(),
             data: self.data.clone(),
@@ -314,7 +331,7 @@ impl Desktop {
                     match result {
                         Ok((session, snapshot)) => {
                             inner.wordle.sessions.insert(command.mode, session);
-                            inner.wordle.snapshot = snapshot;
+                            inner.wordle.publish(snapshot);
                         }
                         Err(error) => {
                             let mut snapshot = inner
@@ -328,16 +345,19 @@ impl Desktop {
                             snapshot.mode = command.mode;
                             snapshot.active = false;
                             snapshot.error = Some(error);
-                            inner.wordle.snapshot = snapshot;
+                            inner.wordle.publish(snapshot);
                         }
                     }
+                    inner.operation = None;
                 }
             });
         match spawned {
             Ok(worker) => inner.worker = Some(worker),
             Err(e) => {
                 inner.wordle.snapshot.active = false;
+                inner.operation = None;
                 inner.wordle.snapshot.error = Some(e.to_string());
+                inner.wordle.version += 1;
                 return Err(e.to_string());
             }
         }

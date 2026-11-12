@@ -124,6 +124,7 @@
       "properties": {
         "cache_bytes": {
           "default": 8388608,
+          "description": "Optional feedback-matrix allocation only; not a total heap/memoization cap.",
           "format": "uint",
           "minimum": 0,
           "type": "integer"
@@ -166,6 +167,7 @@
         },
         "timeout_ms": {
           "default": 2000,
+          "description": "Local recommendation deadline, checked between scoring passes. Preparation\nand a complete guess/answer pass may overrun it; caller deadlines still apply.",
           "format": "uint64",
           "minimum": 0,
           "type": "integer"
