@@ -1,7 +1,11 @@
 <script lang="ts">
   import { Copy, Download } from '@lucide/svelte';
   import type { SolveResult, RankedResult, GeneratedResult, Job } from './bridge';
-  let { result, job, oncopy, onexport }: { result: SolveResult | null; job: Job | null; oncopy: () => void; onexport: (format: 'txt' | 'json') => void } = $props();
+  import { bridge, message } from './bridge';
+  let { result, job, oncopy, onexport, onrequire, onexclude }: { result: SolveResult | null; job: Job | null; oncopy: () => void; onexport: (format: 'txt' | 'json') => void; onrequire:(word:string)=>void; onexclude:(word:string)=>void } = $props();
+  let selected=$state(''),copyMessage=$state('');
+  let pinned=$state<string[]>([]);
+  async function copyPhrase(phrase:string){try{await bridge.copyText(phrase);copyMessage='Phrase copied';}catch(e){copyMessage=message(e);}}
   let format = $state<'txt' | 'json'>('txt');
   let generated = $derived(result && Array.isArray((result as GeneratedResult).bags) ? result as GeneratedResult : null);
   let buckets = $derived(result && !generated ? Object.entries((result as RankedResult).buckets).sort(([a], [b]) => +a - +b) : []);
@@ -15,7 +19,7 @@
       return end > start ? bucket.slice(start, end).map((row, i) => ({ ...row, count, rank: start + i + 1 })) : [];
     });
   });
-  $effect(() => { void result; page = 0; });
+  $effect(() => { void result; page = 0; selected=''; });
   let counts = $derived(job?.status?.counts);
 </script>
 <section class="results" aria-labelledby="result-heading">
@@ -31,11 +35,13 @@
   {#if total}
     <div class="actions"><button disabled={page === 0} onclick={() => page--}>Previous</button><span>Page {page + 1} / {Math.ceil(total / 100)} · {total.toLocaleString()} results</span><button disabled={(page + 1) * 100 >= total} onclick={() => page++}>Next</button></div>
     {#if generated}<p class="hint">Unranked word bags. No word-order scoring or ranked-result cache was used.</p><div class="table-scroll"><table><thead><tr><th>#</th><th>Words</th><th>Bag</th></tr></thead><tbody>{#each generated.bags.slice(page*100,(page+1)*100) as bag,i}<tr><td>{page*100+i+1}</td><td>{bag.length}</td><td>{bag.join(' ')}</td></tr>{/each}</tbody></table></div>
-    {:else}<div class="table-scroll"><table><thead><tr><th>#</th><th>Words</th><th>Score</th><th>Phrase</th></tr></thead><tbody>{#each rows as row}<tr><td>{row.rank}</td><td>{row.count}</td><td class="score">{row.final.toFixed(2)}</td><td class="phrase">{row.display_phrase || row.best_order.join(' ')}</td></tr>{/each}</tbody></table></div>{/if}
+    {:else}<div class="table-scroll"><table><thead><tr><th>Phrase</th><th>Rank in group</th><th>Actions</th></tr></thead><tbody>{#each rows as row,i}{@const phrase=row.display_phrase || row.best_order.join(' ')}{#if i===0||rows[i-1].count!==row.count}<tr class="result-group"><th colspan="3" scope="rowgroup">{row.count} {row.count==='1'?'word':'words'}</th></tr>{/if}<tr><td class="phrase">{phrase}</td><td>{row.rank}</td><td><div class="actions"><button aria-label={`Copy ${phrase}`} onclick={()=>copyPhrase(phrase)}>Copy</button><button aria-pressed={pinned.includes(phrase)} onclick={()=>pinned=pinned.includes(phrase)?pinned.filter(p=>p!==phrase):[...pinned,phrase].slice(-10)}>Pin</button><button aria-expanded={selected===phrase} onclick={()=>selected=selected===phrase?'':phrase}>Refine</button></div></td></tr>{#if selected===phrase}<tr><td colspan="3"><p class="hint">Score {row.final.toFixed(2)} · choose a word to require or exclude on the next search.</p><div class="result-words">{#each row.best_order as word}<button onclick={()=>onrequire(word)}>Require {word}</button><button onclick={()=>onexclude(word)}>Exclude {word}</button>{/each}</div></td></tr>{/if}{/each}</tbody></table></div>{/if}
     {#if !generated}<p class="hint">Scores compare candidates for this search, not probabilities. {result?.status.cache.hit ? 'Reused a verified local result.' : 'Computed on this PC.'}</p>{/if}
   {:else if !job?.active && (job?.error || job?.status?.state === 'failed' || job?.status?.state === 'timed_out')}
     <div class="empty"><h3>{job?.status?.state === 'timed_out' ? 'Solve timed out' : 'Solve failed'}</h3><p>{job?.error || 'No result was published.'} Adjust your options and try another solve.</p></div>
   {:else if !job?.active}
     <div class="empty"><h3>{job?.status?.state === 'cancelled' ? 'Solve cancelled' : result ? 'No matching phrases' : 'A new arrangement starts here'}</h3><p>{job?.status?.state === 'cancelled' ? 'The worker has stopped. Change your options or start another solve when ready.' : result ? 'Try fewer constraints, a wider word range, or a larger candidate budget.' : 'Enter your letters, add any clues, and solve locally. Your words stay on this PC.'}</p></div>
   {/if}
+  {#if pinned.length}<details open><summary>Pinned phrases</summary>{#each pinned as phrase}<div class="actions"><span class="phrase">{phrase}</span><button onclick={()=>copyPhrase(phrase)}>Copy</button><button aria-label={`Unpin ${phrase}`} onclick={()=>pinned=pinned.filter(p=>p!==phrase)}>Unpin</button></div>{/each}</details>{/if}
+  {#if copyMessage}<p role="status">{copyMessage}</p>{/if}
 </section>

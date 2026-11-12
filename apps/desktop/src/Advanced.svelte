@@ -6,7 +6,6 @@
     if (mode === 'custom') return;
     extended = mode === 'exhaustive';
     request.generation.candidate_budget = mode === 'quick' ? 10000 : mode === 'exhaustive' ? 0 : 100000;
-    request.generation.min_words = 2; request.generation.max_words = Math.max(2, request.generation.max_words); request.generation.max_word_length = Math.max(2, request.generation.max_word_length); request.generation.min_word_length = 2; request.generation.min_zipf = 2.7;
   }
 </script>
 <details class="advanced">

@@ -16,6 +16,7 @@ export type CorpusKey = 'dictionary' | 'unigrams' | 'bigrams' | 'wordnet' | 'phr
 export interface Settings { wordle: WordlePreferences; schema_version: number; developer_mode: boolean; theme: 'dark' | 'light' | 'system'; corpora: Record<CorpusKey, string>; model: string; request: SolveRequest; runtime: {cache_path: string; cache_entries: number; cache_bytes: number; custom_limits: boolean; limits: DeploymentLimits} }
 export interface Bootstrap { wordle_frequencies_available: boolean; settings: Settings; notice: string | null; limits: DeploymentLimits; corpus_error: string | null; data_directory: string; engine_version: string; active_jobs: number; queue_capacity: number }
 export interface Job { id: number; active: boolean; status: JobStatus | null; error: string | null }
+export interface ActiveOperation { id: number; kind: 'anagrams' | 'wordle' | 'maintenance'; cancelling: boolean }
 export interface TrainingStatus { active: boolean; error: string | null; report: { model_path: string; baseline: { groups: number; recall1: number; mrr: number }; held_out: { groups: number; recall1: number; mrr: number } } | null }
 export type Verdict = 'useful' | 'not_useful' | 'unsure';
 export interface ReviewRow { id: string; phrase: string; rank: number; word_count: number; score: number; judgeable: boolean }
@@ -24,9 +25,19 @@ export interface ReviewJudgment { id: string; verdict: Verdict | null; reasons: 
 export interface ReviewPreference { id?: string; capture_id: string; left: string; right: string; choice: 'left' | 'right' | 'tie' | 'both_bad' | 'unsure' }
 export interface ReviewState { schema_version: number; captures: ReviewCapture[]; judgments: ReviewJudgment[]; preferences: ReviewPreference[]; storage?: string }
 // All desktop transport lives here. Browser development never fabricates a solver.
+let wordleVersion: number | null = null;
+let wordleSnapshot: WordleSnapshot | null = null;
 export const bridge = {
+  copyText: (text:string) => invoke<void>('copy_text', {text}),
+  operationStatus: () => invoke<ActiveOperation | null>('operation_status'),
+  cancelOperation: (id: number) => invoke<void>('cancel_operation', {id}),
   wordleStart: (command: WordleCommand) => invoke<number>('wordle_start', {command}),
-  wordleStatus: () => invoke<WordleSnapshot>('wordle_status'),
+  wordleStatus: async () => {
+    const update = await invoke<{version:number;snapshot:WordleSnapshot|null}>('wordle_status', {knownVersion:wordleVersion});
+    if(update.snapshot) { wordleSnapshot=update.snapshot; wordleVersion=update.version; }
+    if(!wordleSnapshot) throw new Error('Wordle status unavailable');
+    return wordleSnapshot;
+  },
   wordlePage: (mode: 'play' | 'instant' | 'practice', offset: number) => invoke<WordleSnapshot>('wordle_page', {mode, offset}),
   wordleCancel: (id: number) => invoke<void>('wordle_cancel', {id}),
   wordlePreferences: (preferences: WordlePreferences) => invoke<void>('wordle_preferences', {preferences}),

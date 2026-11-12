@@ -6,6 +6,8 @@
   let base = $state(''); let unigrams = $state(''); let titles = $state('');
   async function pick(kind: 'dictionary' | 'unigrams' | 'titles') { try { const path = await bridge.choose(kind); if(!path) return; if(kind === 'dictionary') base = path; else if(kind === 'unigrams') unigrams = path; else titles += (titles ? '\n' : '') + path; } catch(e) { error = message(e); } }
   let report = $state<Record<string, unknown> | null>(null); let error = $state(''); let cancelling = $state(false);
+  let readiness = $state('Checking installed data…');
+  onMount(()=>{void bridge.bootstrap().then(boot=>{if(!disposed)readiness=boot.corpus_error?'Solving data needs setup or repair.':'Solving data files are available.';}).catch(()=>{if(!disposed)readiness='Use Validate to check solving data.';});});
   let timer: ReturnType<typeof setTimeout>; let disposed = false; let revision = 0;
   async function refresh(restore = false) {
     if(disposed) return;
@@ -30,19 +32,21 @@
   <h3>Diagnostics</h3><p class="hint">Configured paths, last solve identities (SHA-256), timings in milliseconds, effective budgets and cache flags. Last-solve evidence may predate settings changes. Nothing is uploaded.</p>
   <button onclick={inspect}>Refresh diagnostics</button>
 {:else}
-  <h3>Data management</h3>
-  <p class="hint">Validate the paths in General, or prepare a new corpus set. Updates never overwrite your current set. Selecting a prepared set changes the settings draft; Save settings activates it.</p>
-  <button disabled={busy} onclick={() => run({kind:'validate',corpora:$state.snapshot(settings.corpora),model:settings.model})}>Validate selected corpora and model</button>
+  <h3>Solving data</h3><p role="status">{readiness}</p>
+  <p class="hint">Download or repair data, then select the prepared set and save settings. Previous files are kept.</p>
+  <button disabled={busy} onclick={() => run({kind:'validate',corpora:$state.snapshot(settings.corpora),model:settings.model})}>Validate data</button>
   <h3>Download / prepare / update</h3>
   <p class="hint">Leave the source folder blank to download the dictionary, Norvig counts and WordNet from their original providers. Optional Wikimedia title dumps can be large. Each source is limited to 2 GiB; the whole operation to one hour. Downloads are cancellable and fail after 30 seconds without network data. No downloads start until you press the button.</p>
+  <details><summary>Offline sources and optional phrases</summary>
   <label>Offline source folder (optional)<div class="path-field"><input disabled={busy} bind:value={source}/><button disabled={busy} onclick={browse}>Browse</button></div></label>
   <p class="hint">Offline filenames: base.txt, count_1w.txt, count_2w.txt, wordnet.tar.gz; optional enwiktionary.gz and enwiki.gz.</p>
   <label class="check"><input disabled={busy} type="checkbox" bind:checked={wiktionary}/>Include Wiktionary phrases</label>
   <label class="check"><input disabled={busy} type="checkbox" bind:checked={wikipedia}/>Include Wikipedia phrases</label>
+  </details>
   <p class="hint">Phrase preparation automatically uses up to 8 parsing workers, bounded batches and a 64 MiB database cache. SQLite writes remain serial; cancellation stays available. The completed report includes worker and database-update counts.</p>
   <button disabled={busy} onclick={() => run({kind:'prepare',source,wiktionary,wikipedia})}>{source ? 'Prepare new set from local sources' : 'Download and prepare new set'}</button>
   <button disabled={busy} onclick={reopen}>Open existing set manifest</button>
-  <h3>Independent preparation tools</h3>
+  {#if settings.developer_mode}<h3>Independent preparation tools</h3>
   <p class="hint">Prepare only a dictionary or phrase database from arbitrary local files. Outputs get new folders in user-data/prepared; select the result and Save settings to activate it.</p>
   <label>Base dictionary<div class="path-field"><input disabled={busy} bind:value={base}/><button disabled={busy} onclick={() => pick('dictionary')}>Browse</button></div></label>
   <label>Unigram counts<div class="path-field"><input disabled={busy} bind:value={unigrams}/><button disabled={busy} onclick={() => pick('unigrams')}>Browse</button></div></label>
@@ -52,9 +56,10 @@
   <button disabled={busy || !titles.trim()} onclick={() => run({kind:'phrases',sources:titles.split('\n').map(s => s.trim()).filter(Boolean)})}>Build phrase database only</button>
   {#if typeof report?.dictionary === 'string'}<button onclick={() => settings.corpora.dictionary = String(report?.dictionary)}>Select prepared dictionary</button>{/if}
   {#if typeof report?.database === 'string'}<button onclick={() => settings.corpora.phrase = String(report?.database)}>Select phrase database</button>{/if}
+  {/if}
   {#if report?.corpora}<p class="hint">Set report available. Previous files remain untouched. After selecting an older set, use Validate to recheck its files.</p><button disabled={busy} onclick={select}>Select prepared set</button>{/if}
 {/if}
 {#if busy}<p role="status">{cancelling ? 'Cancelling; waiting for the worker…' : 'Working locally. Settings are locked until completion.'}</p><button disabled={cancelling} onclick={cancel}>Cancel</button>{/if}
 {#if error}<p class="error" role="alert">{error}</p>{/if}
-{#if report}<h3>Report</h3><pre>{JSON.stringify(report,null,2)}</pre>{/if}
+{#if report}<p role="status">{report.corpora?'New data set prepared. Select it and save settings to use it.':'Operation completed.'}</p><details><summary>Report details</summary><pre>{JSON.stringify(report,null,2)}</pre></details>{/if}
 <style>h3{margin:18px 0 12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto;font-size:12px;padding:12px;background:var(--bg)}</style>
